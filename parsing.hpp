@@ -64,11 +64,6 @@ class parsing
 					std::cout << "Error Brackets " << std::endl;
 					exit(1);
 				}
-				if (brackets.size() == 0)
-				{
-					std::cout << "Unclosed bracket" << std::endl;
-					exit(1);
-				}
 				brackets.pop();
 			}
 			return buff;
@@ -116,10 +111,15 @@ class parsing
 					tem.clear();
 					// std::cout << directory << std::endl;
 				}
+				else {
+					std::cout << "Error undefined variable" << std::endl;
+					exit(1);
+				}
 			}
 			temp.location = locations;
 			servers_data.push_back(temp);
 		}
+
 
 		template <typename inputIterator> 
 		inputIterator advance_(inputIterator iter) {
@@ -132,7 +132,7 @@ class parsing
 				temp.push_back(*iter);
 				iter++;
 			}
-			temp.push_back("};");
+			// temp.push_back("};");
 			save_data(temp);
  			// std::cout << lines << std::endl;
 			return iter;
@@ -151,16 +151,19 @@ class parsing
 					// std::cout << "*" << buff << "*" << std::endl;
 					before_file.push_back(buff);
 				}
-				if ((before_file.end() - 1)->find("};") == std::string::npos)
+				if ((before_file.end() - 1)->find("};") == std::string::npos || brackets.size() > 0)
 				{
 					std::cout << "Error in brackets" << std::endl;
 					exit(1);
 				}
+				// std::cout << " size >> "  <<  before_file.size() << std::endl;
 				for (std::vector <std::string>::iterator it = before_file.begin(); it != before_file.end(); it++) 
 				{
 					if (it->find("server {") != std::string::npos)
 						it = advance_(it);
 				}
+				// std::cout << "/// * *   "   <<  servers_data.size() << std::endl;
+				std::cout << servers_data.at(0).location.find("/comments")->second["root"];
 			}
 			else { std::cout << "File Not Found" << std::endl;
 				exit(1);

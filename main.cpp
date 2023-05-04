@@ -11,4 +11,5 @@ int main(int argc, char **argv) {
 		std::cout <<"Error : Invalid Arguments" << std::endl;
 		exit(1);
 	}
+
 }
