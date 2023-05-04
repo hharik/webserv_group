@@ -97,6 +97,12 @@ class parsing
 				{
 					std::string directory = it->substr(it->find(" ") + 1);
 					it++;
+					if (directory.find_first_of("{}") != std::string::npos)
+					{
+						std::cout << "Error location directory ended with a bracket "  << std::endl;
+						exit(1);
+					}
+					std::cout << "dir < " << directory << std::endl;
 					std::map<std::string, std::string> tem;
 					while (it->find("}") == std::string::npos)
 					{
@@ -115,6 +121,10 @@ class parsing
 					std::cout << "Error undefined variable" << std::endl;
 					exit(1);
 				}
+			}
+			if (locations.size() == 0)
+			{
+				std::cout << "Please provide at least one location" << std::endl;
 			}
 			temp.location = locations;
 			servers_data.push_back(temp);
@@ -163,7 +173,7 @@ class parsing
 						it = advance_(it);
 				}
 				// std::cout << "/// * *   "   <<  servers_data.size() << std::endl;
-				std::cout << servers_data.at(0).location.find("/comments")->second["root"];
+				std::cout << servers_data.at(0).location.find("/test/urmom")->second["root"];
 			}
 			else { std::cout << "File Not Found" << std::endl;
 				exit(1);
