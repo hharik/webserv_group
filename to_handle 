@@ -1,0 +1,29 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{
+    server_name   localhost:9090  
+	max_body_size 1024
+    root /var/www/
+	listen 9090
+	auto_indexing on
+	error	./var/www/404.html
+	location /test/urmom
+	{
+		root /var/www/
+	}
+	};
+
+
+	*****************************************#just hardcoded this example server{
