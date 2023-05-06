@@ -16,19 +16,17 @@ struct data_serv {
 class parsing
 {
 	private:
-		
 		std::string filename;
-	
 		std::stack <std::string> brackets;
 		std::ifstream file;
 		std::vector<data_serv> servers_data;
 	public:
 		int check_ints(std::string str) {
 			for (std::string::iterator it = str.begin(); it != str.end() ; it++)
-				{
-					if (!isdigit(*it))
-						return -1;
-				}
+			{
+				if (!isdigit(*it))
+					return -1;
+			}
 			return 0;
 		}
 		parsing(std::string name) : filename(name), file(), servers_data() {
@@ -158,7 +156,7 @@ class parsing
 						int i = 0;
 						if (_key == "root" && _value.find_last_of("/") != _value.length() - 1)
 							_value.append("/");
-						else if (_key == "cgi" || _key == "redirect")
+						else if (_key == "cgi" || _key == "redirect" || _key == "allowed_methods")
 						{
 							// std::cout << " /////////////////   " << _value << std::endl;
 							while(getline(a, buff, ' '))
@@ -174,12 +172,13 @@ class parsing
 								}
 								i++;
 							}
-							if (i != 2)
+							if (i != 2 && (_key == "cgi" || _key == "redirect"))
 							{
 								std::cout << "error in "  << _key << std::endl;
 								exit(1);
 							}
 						}
+						
 						if (_value.find_first_of("{}") == std::string::npos)
 							tem.insert(std::make_pair(_key, _value));
 						for (std::map<std::string, std::string>::iterator oit = tem.begin(); oit != tem.end(); oit++)
@@ -262,7 +261,9 @@ class parsing
 				exit(1);
 			}
 		}
-		
+	std::vector<data_serv> get_server_data() const { 
+		return servers_data;
+	}
 	~parsing() {}
 };
 
