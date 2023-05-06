@@ -1,6 +1,7 @@
 #include "parsing.hpp"
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <fstream>
 #include <unistd.h>
 #include "request.hpp"
@@ -37,9 +38,12 @@ int main(int argc, char **argv) {
 		while (true)
 		{
 			struct sockaddr_in host_addr;
+			char ip_da[25];
 			new_socket = accept(socketfd, (struct sockaddr *)&host_addr, (socklen_t *)&host_addr);
+			inet_ntop(AF_INET, &host_addr.sin_addr, ip_da, INET_ADDRSTRLEN);
+
 			int valread = recv(new_socket, buffer, sizeof(buffer), 0);
-			std::cout << " here is the client ip"  <<  host_addr.sin_addr.s_addr << std::endl;
+			std::cout << " here is the client ip "  <<  ip_da << std::endl;
 			// std::cout << buffer << std::endl;
 			std::string te = buffer;
 			req.parse(te);
