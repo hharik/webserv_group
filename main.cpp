@@ -4,11 +4,13 @@
 #include <arpa/inet.h>
 #include <fstream>
 #include <unistd.h>
+#include <fcntl.h>
 #include "request.hpp"
 int main(int argc, char **argv) {
 	if (argc == 2)
 	{
 		parsing file((std::string(argv[1])));
+		file.mime();
 		file.readAndParse();
 		request req;
 		char buffer[8000];
@@ -35,20 +37,43 @@ int main(int argc, char **argv) {
 		if (listen(socketfd, 10) != 0)
 			std::cout << "Listen is failed " << std::endl;
 		
+			struct sockaddr_in host_addr;
+			new_socket = accept(socketfd, (struct sockaddr *)&host_addr, (socklen_t *)&host_addr);
 		while (true)
 		{
-			struct sockaddr_in host_addr;
-			char ip_da[25];
-			new_socket = accept(socketfd, (struct sockaddr *)&host_addr, (socklen_t *)&host_addr);
-			inet_ntop(AF_INET, &host_addr.sin_addr, ip_da, INET_ADDRSTRLEN);
+			// fcntl(socketfd, F_SETFL, O_NONBLOCK);
+			// char ip_da[25];
+			// inet_ntop(AF_INET, &host_addr.sin_addr, ip_da, INET_ADDRSTRLEN);
+
 
 			int valread = recv(new_socket, buffer, sizeof(buffer), 0);
-			std::cout << " here is the client ip "  <<  ip_da << std::endl;
-			// std::cout << buffer << std::endl;
-			std::string te = buffer;
-			req.parse(te);
-
-			close(new_socket);
+			// std::cout << "hello  << " << std::endl;
+			// std::string f = buffer;
+			// std::cout << " here is the client ip "  <<  ip_da << std::endl;
+			// std::string te = buffer;
+			// req.parse(te);
+			// std::cout << valread << "|" << buffer << "|" << std::endl;
+			// int j = 0;
+			std::string hff;
+			if (valread > 0)
+				hff.append(buffer, valread);
+			// std::cout << hff << std::endl;
+			req.parse(hff);
+			// while (j < 2432)
+			// {
+			// 	std::cout << buffer[j] << std::endl;
+			// 	j++;
+			// }
+			// sleep(2);
+			// memset(buffer, 0, 8000);
+			// std::cout << "lll\n";
+			// valread = recv(new_socket, buffer, 7999, 0);
+			// // buffer[valread] = 0;
+			// // std::cout << buffer << std::endl;
+			// exit(1);
+			// std::string a = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
+			// send(new_socket, a.c_str(), a.size(), 0);
+			// close(new_socket);
 		}
 	}
 	else

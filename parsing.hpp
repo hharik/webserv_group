@@ -8,6 +8,7 @@
 # include <map>
 # include <sstream>
 
+std::map<std::string, std::string> mime_type;
 struct data_serv {
 	std::map<std::string, std::map<std::string, std::string> > location;
 	std::map <std::string, std::string> default_data;
@@ -181,8 +182,8 @@ class parsing
 						
 						if (_value.find_first_of("{}") == std::string::npos)
 							tem.insert(std::make_pair(_key, _value));
-						for (std::map<std::string, std::string>::iterator oit = tem.begin(); oit != tem.end(); oit++)
-							std::cout << oit->first << " " <<  oit->second <<  std::endl;
+						// for (std::map<std::string, std::string>::iterator oit = tem.begin(); oit != tem.end(); oit++)
+						// 	std::cout << oit->first << " " <<  oit->second <<  std::endl;
 						it++;
 					}
 					locations.insert(std::make_pair(directory, tem));
@@ -261,6 +262,26 @@ class parsing
 				exit(1);
 			}
 		}
+
+	void mime() { 
+		std::ifstream file_mime;
+		std::string buff;
+		file_mime.open("mime_type.txt");
+		if (file_mime.is_open())
+		{
+			while (getline(file_mime, buff))
+			{
+				// std::cout << buff << std::endl;
+				size_t pos = buff.find_last_of(" ");
+				std::string key = buff.substr(0, buff.find(" "));
+				std::string value_ = buff.substr(pos + 1);
+				mime_type.insert(std::make_pair(key, value_));
+			}
+		} else {
+			std::cout << "mime type is not found" << std::endl;
+			exit(1);
+		}
+	}
 	std::vector<data_serv> get_server_data() const { 
 		return servers_data;
 	}
