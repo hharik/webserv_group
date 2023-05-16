@@ -7,7 +7,8 @@
 # include <stack>
 # include <map>
 # include <sstream>
-
+# define INSERV 10
+# define OUTSERV 5
 std::map<std::string, std::string> mime_type;
 struct data_serv {
 	std::map<std::string, std::map<std::string, std::string> > location;
@@ -19,6 +20,7 @@ class parsing
 	private:
 		std::string filename;
 		std::stack <std::string> brackets;
+		std::stack<std::string> end_brackets;
 		std::ifstream file;
 		std::vector<data_serv> servers_data;
 	public:
@@ -30,7 +32,7 @@ class parsing
 			}
 			return 0;
 		}
-		parsing(std::string name) : filename(name), file(), servers_data() {
+		parsing(std::string name) : filename(name), file(), servers_data(), end_brackets() {
 		}
 		std::string trim(std::string line, std::string whitespaces)
 		{
@@ -53,6 +55,21 @@ class parsing
 				beginSpace = buff.find_first_of(whitespaces, beginSpace + 1);
 			}
 			size_t che;
+			if ((che  = buff.find("server {")) != std::string::npos)
+			{
+				// std::cout << buff << std::endl;
+				end_brackets.push("{;");
+			}
+			if ((che = buff.find("};")) != std::string::npos)
+			{
+				if (end_brackets.size() == 0)
+				{
+					std::cout << "ERROR " << std::endl;
+					exit(1);
+				}
+				else 
+					end_brackets.pop();
+			}
 			if ((che = buff.find_first_of("{")) != std::string::npos)
 			{
 				if (buff.find("{", che + 1) != std::string::npos || buff.find("}", che + 1) != std::string::npos)
@@ -75,6 +92,10 @@ class parsing
 		}
 		void save_data(std::vector <std::string> server)
 		{
+			// for (std::vector<std::string>::iterator it = server.begin(); it != server.end(); it++)
+			// 	std::cout << *it << std::endl;
+			// std::cout << "THEE ENDDDDDDDDD " << std::endl;
+			// exit(1);
 			data_serv temp;
 			std::map<std::string, std::map<std::string, std::string> > locations;
 			size_t pos;
@@ -145,7 +166,7 @@ class parsing
 						exit(1);
 					}
 					std::map<std::string, std::string> tem;
-					while (it->find("}") == std::string::npos)
+					while (it->find("}") == std::string::npos )
 					{
 						size_t pos = it->find(" ");
 						std::string _key = it->substr(0, pos);
@@ -179,9 +200,11 @@ class parsing
 								exit(1);
 							}
 						}
-						
+						// std::cout << *it <<  "  ~~~~" << std::endl;
 						if (_value.find_first_of("{}") == std::string::npos)
 							tem.insert(std::make_pair(_key, _value));
+						else if (_value.find("};") != std::string::npos)
+							exit(1);
 						// for (std::map<std::string, std::string>::iterator oit = tem.begin(); oit != tem.end(); oit++)
 						// 	std::cout << oit->first << " " <<  oit->second <<  std::endl;
 						it++;
@@ -205,54 +228,75 @@ class parsing
 		}
 
 
-		template <typename inputIterator> 
-		inputIterator advance_(inputIterator iter) {
-			std::string lines;
-			std::vector <std::string> temp;
-
-			while (iter->find("};") == std::string::npos)
-			{
-				// std::cout <<"*" <<  *iter <<  "*" << std::endl;
-				temp.push_back(*iter);
-				iter++;
-			}
-			// temp.push_back("};");
-			save_data(temp);
- 			// std::cout << lines << std::endl;
-			return iter;
-		}
-
 		void readAndParse()
 		{ 
 			std::string buff;
 			file.open(filename);
 			if (file.is_open())
 			{
+				std::string tess;
 				std::vector <std::string> before_file;
 				while(getline(file, buff))
 				{
 					//first reduce spaces
 					buff = reduce(buff, " \t\n\r\v\f");
 					// std::cout << "*" << buff << "*" << std::endl;
+					tess += buff;
 					before_file.push_back(buff);
 					// std::cout << buff << std::endl;
 				}
-				if ((before_file.end() - 1)->find("};") == std::string::npos || brackets.size() > 0)
+				// std::cout << *(before_file.end() - 1) << std::endl;
+				if ((before_file.end() - 1)->find("};") == std::string::npos || brackets.size() > 0 || end_brackets.size() > 0)
 				{
 					std::cout << "Error in brackets" << std::endl;
 					exit(1);
 				}
+				int i = 0;
 				// std::cout << " size >> "  <<  before_file.size() << std::endl;
-				for (std::vector <std::string>::iterator it = before_file.begin(); it != before_file.end(); it++) 
+				// for (std::vector <std::string>::iterator it = before_file.begin(); it != before_file.end(); it++) 
+				 // {
+				std::vector<std::string> temp;
+				size_t pos = 0;
+				for (std::vector <std::string>::iterator it = before_file.begin(); it != before_file.end(); it++)
 				{
 					if (it->find("server {") != std::string::npos)
-						it = advance_(it);
-					if (it->find("server{") != std::string::npos)
+						i = INSERV;
+					if (it->find("};") != std::string::npos )
 					{
-						std::cout << "Error "<< std::endl;
-						exit(1);
+						i = OUTSERV;
+						// std::cout << "helloo world "<< std::endl;
+						save_data(temp);
+						// std::cout << "\n\n\n\n\nhello world !!!!" << std::endl;
+						temp.clear();
 					}
+					if (i == INSERV)
+					{
+						temp.push_back(*it);
+					}
+					// else {
+					// 	std::cout << "\n\n\nShitt << \n\n\n" << std::endl; 
+					// 	exit(1);
+					// }
+					// if (it->find("};") && (it + 1))
+					// if (it->find("};") != std::string::npos)
+					// {
+					// 	std::cout << *it << "  r " << *(it + 1)  << "* "  << std::endl;
+					// 	std::cout << "Error" << std::endl;
+					// 	exit(1);
+					// }
 				}
+ 					// if (it->find("server {") != std::string::npos)
+					// {
+					// 	i = INSERV;
+					// }
+					// if (it->find("server {") != std::string::npos)
+					// 	it = advance_(it);
+					// if (it->find("server{") != std::string::npos)
+					// {
+					// 	std::cout << "Error "<< std::endl;
+					// 	exit(1);
+					// }
+				// }
 				// for (std::map<std::string, std::string>::iterator it = servers_data.at(0).default_data.begin(); it !=servers_data.at(0).default_data.end(); it++)
 				// 	std::cout << it->first  << " "  << it->second << std::endl;
 				// std::cout << "/// * *   "   <<  servers_data.size() << std::endl;

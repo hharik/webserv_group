@@ -2,7 +2,7 @@
 
 #define REQUEST_HPP_
 
-
+#include	<algorithm>
 #include "parsing.hpp"
 
 
@@ -44,41 +44,18 @@ class request {
 
 	void	save_files(std::string body) 
 	{
-		// std::cout << body << "\n THE END "    << std::endl;
-		std::size_t pos = 0;
-		// while ()
-		// {
+		std::string::iterator first = body.begin();
+		std::string::iterator last = std::search(first, body.end(), d_header.boundary.begin(), d_header.boundary.end());
+		size_t pos = 0;
+		std::string test;
+		// if ((pos = body.find(d_header.boundary)) != std::string::npos)
+		// std::copy(first, last, test);
+		std::cout << test << " - "  << std::endl;
 
-		// }
-		// 	exit(1);
-			// pos = body.find(d_header.boundary, pos +1);
-		// }
+		exit(1);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		// std::vector<std::string> files;
-		// size_t pos = 0;
-		// while ((pos = body.find(d_header.boundary, pos)) !=  std::string::npos)
-		// {
-		// 	pos += d_header.boundary.length();
-		// 	size_t new_pos = body.find(d_header.boundary, pos);
-		// 	std::cout << body.substr(pos, new_pos - pos);
-		// }
 	}
+
 	std::string time_date()
 	{
 			time_t curr_time;
@@ -98,7 +75,6 @@ class request {
 		// std::cout <<"  content lemgf  : " <<  d_header.Content_Length << std::endl;
 		if (file.empty() == true)
 		{
-			// std::cout <<  d_header.Host  << " /                    **********  \n";
 			std::string name = time_date();
 			std::cout <<  "  / * * / */ -" << d_header.Content_type << std::endl;
 			file = name + "." + mime_type.find(d_header.Content_type)->second;
@@ -183,32 +159,23 @@ class request {
 			}
 			header.erase(0, header.find("\r\n\r\n") + 4);
 		}
-	// std::cout << header << std::endl;
+	std::cout << header << std::endl;
+	if (d_header.method == "POST")
+	{
 		if (d_header.boundary.empty() == true)
 		{
 			save_binary(header);
-		// 	std::string filename = time_date();
-		// 	std::string extension = "." + mime_type.find(d_header.Content_type)->second;
-		// 	std::cout << " file to open > "  << filename + extension << std::endl;
-		// 	file_obj.open(filename + extension, std::ifstream::binary);
-        // }
-        }
-		// std::cout <<  "here is the incremented  " <<  size << std::endl;
-		// std::cout << "here is the total content_len " << d_header.Content_Length << std::endl;
-		// 	if (file_obj.is_open())
-		// 	{
-
-		// 	}
-		// }
-
-
-
-			// save_files(header);
-		// else
-		// 	save_binary(header);
-		// std::cout << header << std::endl;
-		// exit(1);
-			// d_header.print();
+		}
+		else { 
+			save_files(header);
+		}
+	}
+	// save_files(header);
+	// else
+	// 	save_binary(header);
+	// std::cout << header << std::endl;
+	// exit(1);
+		// d_header.print();
 	// header =  &header[header.find("\r\n") + 4];
 	// std::cout << "header \n" << header << std::endl;
 
