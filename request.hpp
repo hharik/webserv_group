@@ -32,29 +32,36 @@ class request {
 
 	data_header d_header;
 	std::string file;
+	long rsize;
+	int chunked_size;
 	int size;
+	bool end_of_file;
 	std::fstream file_obj;
 
 
 	public:
 
-	request() : size(0)  { }
+	request() : rsize(0) , size(0), chunked_size(0), end_of_file(false)  { }
 	~request() {}
 
+	// void	getfilename(std::string::iterator &first, std::string::iterator &last)
+	// {
+		
+	// }
 
-	void	save_files(std::string body) 
-	{
-		std::string::iterator first = body.begin();
-		std::string::iterator last = std::search(first, body.end(), d_header.boundary.begin(), d_header.boundary.end());
-		size_t pos = 0;
-		std::string test;
-		// if ((pos = body.find(d_header.boundary)) != std::string::npos)
-		// std::copy(first, last, test);
-		std::cout << test << " - "  << std::endl;
-
-		exit(1);
-
-	}
+	// void	save_files(std::string &body) 
+	// {
+	// 	while (body.empty() == true)
+	// 	{
+	// 		std::string::iterator first = body.begin();
+	// 		std::string::iterator last;
+	// 		last = std::search(body.begin(), body.end(), d_header.boundary.begin(), d_header.boundary.end());
+	// 		if (file_obj.is_open() == false)
+	// 		{
+	// 			getfilename(first, last);
+	// 		}
+	// 	}
+	// }
 
 	std::string time_date()
 	{
@@ -70,6 +77,127 @@ class request {
 			return std::string(date_string);
 		
 	}
+
+
+	std::string copy_until(std::string::iterator first, std::string::iterator last, std::string to_find = "\r\n") {
+		std::string temp;
+		while (first < last)
+		{
+			if (*first == '\r' && *(first + 1) && *(first + 1) == '\n')
+			{
+				break ;
+			}
+			temp += *first;
+			first++;
+		}
+		return temp;
+	}
+
+
+	void save_chunked(std::string &body)
+	{
+		// std::cout << body << " \n THE END " << std::endl;
+		std::string::iterator first = body.begin();
+		std::string::iterator last;
+		std::string to_delete = "\r\n";
+		if (file_obj.is_open() == false)
+		{
+			if (file.empty() == true)
+			{
+				body.insert(0, "\r\n");
+				std::string name = time_date();
+				file = name + "." + mime_type.find(d_header.Content_type)->second;
+				// std::cout <<  file << std::endl;
+			}
+			// body.erase(0, body.find(to_delete));
+			file_obj.open(file, std::fstream::out | std::fstream::app | std::fstream::binary);
+		}
+		
+		rsize += body.length(); 
+		long index = 0;
+		std::string temp;
+		// std::cout << body << std::endl;
+		std::stringstream stream;
+		while (rsize > chunked_size && end_of_file == false)
+		{
+			index  = chunked_size + body.length() - rsize;
+			if (index < 0)
+				exit(122);
+			//copy until buff + a + 2 till body.end(), 
+			// temp = body.substr(body.begin() + index + 2, body.size());
+			temp = copy_until(body.begin() + index + 2, body.end());
+			if (temp == "0")
+				end_of_file = true;
+			stream << temp;
+			stream >> std::hex >> chunked_size;
+			chunked_size += temp.size() + 4;
+			body.erase(index, index + temp.size() + 4);
+			// std::cerr << temp << std::endl;
+			// exit(1);
+		}
+		// std::cout << body << std::endl;
+		file_obj << body;
+		file_obj.close();
+		if (index == 0 && end_of_file == true)
+			d_header.res_status = 200;
+	// 	if (chunked_size == 0)
+		// 	{
+		// 		std::cout << "heeel " << std::endl;
+		// 		std::stringstream stream;
+		// 		std::string::iterator fff = std::search(body.begin(), body.end(), to_delete.begin(), to_delete.end());
+		// 		std::string::iterator endd = std::search(fff + 1, body.end(), to_delete.begin(), to_delete.end());
+		// 		std::string tes = std::string(fff, endd);
+		// 		// std::cout <<"*"<<  tes << " - * -* " << std::endl;
+		// 		body.erase(body.begin(), endd);
+		// 		stream << tes;
+		// 		stream >> std::hex >> chunked_size;
+		// 		chunked_size -= (tes.size());
+		// 	}
+		// 	// std::cout << body  << std::endl;
+		// 	if (chunked_size > 0)
+		// 	{
+		// 		if (body.length() >= chunked_size)
+		// 		{
+		// 			std::cout << "heree iss  " << std::endl;
+		// 			file_obj << body.substr(0, chunked_size);
+		// 			body.erase(chunked_size);
+		// 			chunked_size = 0;
+		// 		}
+		// 		else if (body.length() < chunked_size)
+		// 		{
+		// 			std::cout << "heeel " << std::endl;
+		// 			file_obj << body;
+		// 			chunked_size -= body.length();
+		// 			body.clear();
+		// 			break ;
+		// 		}
+		// 	}
+		// }
+		// if (chunked_size > 0)
+	
+		// size_t pos = 0;
+		// while ((first = std::search(first,body.end(), to_delete.begin(), to_delete.end())) != last)
+		// {
+		// 	last = std::search(first + 1, body.end(), to_delete.begin(), to_delete.end());
+		// 	std::cout << std::string(first, last);
+		// 	body.erase(first,last);
+		// 	first ++;
+		// 	// first += 2;
+		// 	// if (last != body.end())
+		// 	// {
+		// 	// 	body.erase(first, last);
+		// 	// 	first += 2;
+		// 	// }
+		// 	// if (end_pos != std::string::npos)
+		// 	// {
+		// 	// 	body.erase(pos, end_pos);
+		// 	// }
+		// 	// pos += 2;
+		// std::cout << body << std::endl;
+		// }
+	
+	}
+
 	void save_binary(std::string header)
 	{
 		// std::cout <<"  content lemgf  : " <<  d_header.Content_Length << std::endl;
@@ -96,7 +224,8 @@ class request {
 
 	void parse(std::string header) 
 	{
-		// std::cout << header << std::endl;
+		// std::cout << header  << "\n THE END" << std::endl;
+		// std::cout << "THE END "<< std::endl;
 		std::string tes;
 		if (d_header.Host.empty() == true)
 		{
@@ -159,17 +288,32 @@ class request {
 			}
 			header.erase(0, header.find("\r\n\r\n") + 4);
 		}
-	std::cout << header << std::endl;
-	if (d_header.method == "POST")
-	{
-		if (d_header.boundary.empty() == true)
+		// std::cout << header << std::endl;
+		// std::cout << " THE END" << std::endl;
+		if (d_header.method == "POST")
 		{
-			save_binary(header);
+			if (d_header.Content_Length == 0)
+			{
+				d_header.res_status = 400;
+			}
+			else if (d_header.transfer_encoding.empty() == false)
+			{
+				if (d_header.transfer_encoding.find("chunked") == std::string::npos || (d_header.boundary.empty() == false && d_header.transfer_encoding.find("chunked") == std::string::npos))
+				{
+					d_header.res_status = 501;
+				}
+				else 
+				{
+					
+					save_chunked(header);
+				}
+				// save_files(header);
+			}
+			else if (d_header.boundary.empty() == true)
+			{
+				save_binary(header);
+			}
 		}
-		else { 
-			save_files(header);
-		}
-	}
 	// save_files(header);
 	// else
 	// 	save_binary(header);

@@ -1,3 +1,5 @@
+
+
 #include "parsing.hpp"
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -13,13 +15,13 @@ int main(int argc, char **argv) {
 		file.mime();
 		file.readAndParse();
 		request req;
-		char buffer[8000];
+		char buffer[1024];
 		int socketfd;
 		struct sockaddr_in my_add;
 		socketfd = socket(PF_INET, SOCK_STREAM, 0);
 		my_add.sin_family = AF_INET;
 		my_add.sin_port = htons(4040);
-		my_add.sin_addr.s_addr = INADDR_ANY;
+		my_add.sin_addr.s_addr = inet_addr("127.0.0.1");
 		int enable = 1;
 		int new_socket;
 		if (setsockopt(socketfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable)) == -1)
@@ -44,7 +46,6 @@ int main(int argc, char **argv) {
 			// fcntl(socketfd, F_SETFL, O_NONBLOCK);
 			// char ip_da[25];
 			// inet_ntop(AF_INET, &host_addr.sin_addr, ip_da, INET_ADDRSTRLEN);
-
 
 			int valread = recv(new_socket, buffer, sizeof(buffer), 0);
 			// std::cout << "hello  << " << std::endl;
