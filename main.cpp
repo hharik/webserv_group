@@ -41,6 +41,7 @@ int main(int argc, char **argv) {
 		
 			struct sockaddr_in host_addr;
 			new_socket = accept(socketfd, (struct sockaddr *)&host_addr, (socklen_t *)&host_addr);
+			std::string hff;
 		while (true)
 		{
 			// fcntl(socketfd, F_SETFL, O_NONBLOCK);
@@ -48,6 +49,10 @@ int main(int argc, char **argv) {
 			// inet_ntop(AF_INET, &host_addr.sin_addr, ip_da, INET_ADDRSTRLEN);
 
 			int valread = recv(new_socket, buffer, sizeof(buffer), 0);
+			if (valread < 0){
+				std::cout << "faileeeeed\n";
+			}
+
 			// std::cout << "hello  << " << std::endl;
 			// std::string f = buffer;
 			// std::cout << " here is the client ip "  <<  ip_da << std::endl;
@@ -55,12 +60,16 @@ int main(int argc, char **argv) {
 			// req.parse(te);
 			// std::cout << valread << "|" << buffer << "|" << std::endl;
 			// int j = 0;
-			std::string hff;
 			if (valread > 0)
+			{
+				std::cout << "0: " << hff.size() << std::endl;	
 				hff.append(buffer, valread);
-			// std::cout << hff << std::endl;
-			req.parse(hff);
-			// while (j < 2432)
+				std::cout << "1: " << hff.size() << std::endl;	
+				// std::cout << hff << std::endl;
+				req.parse(hff);
+				std::cout <<"2: " <<  hff.size() << std::endl;	
+			}
+				// while (j < 2432)
 			// {
 			// 	std::cout << buffer[j] << std::endl;
 			// 	j++;

@@ -66,13 +66,30 @@ int main() {
 
     return 0;
 }
-  std::string request =   "POST /upload HTTP/1.1\r\n"
+
+
+"\r\n84f25\r\n"
+
+std::string request =   "POST /upload HTTP/1.1\r\n"
                           "Host: example.com\r\n"
                           "Transfer-Encoding: chunked\r\n"
-                          "\r\n"
+                         
+						  "\r\n"
                           "4\r\n"
+
                           "Wiki\r\n"
                           "5\r\n"
                           "pedia\r\n"
                           "E\r\n"
                           " in\r\n\r\nchunks.\r\n"
+
+hexa 946 
+
+// chunked size 2374  
+// 2381 size without \r\n added
+// after deleting first hexa size is 2378 
+// still has the \r\n is the first + 2 // changed it to + 4 
+
+
+chunked  2374 
+body size \r\n 2376 \r\n6354\r\n
