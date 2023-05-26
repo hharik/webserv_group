@@ -102,7 +102,6 @@ class request {
 			file_obj.open(file, std::fstream::out | std::fstream::app | std::fstream::binary);
 		}
 		std::stringstream to_hex;
-		// exit(1);
 		while (chunked_size != 0)
 		{
 			if (chunked_size == -2) // kata3ni badya dyal lbody fih chunked
@@ -117,41 +116,26 @@ class request {
 					end_of_file = true;
 				to_hex << test;
 				to_hex >> std::hex >> chunked_size;
-
 				body.erase(0, test.length() + 4);
 			}
 			if (chunked_size >= body.size())
 			{
-				// std::cout << "CHUNKED > SIZE" << std::endl;
-				// std::cout << "chunked Size: " << chunked_size << std::endl;
-				// std::cout << "Body Size: " << body.size() << std::endl;
 				file_obj << body;
 				chunked_size -= body.size();
 				body.clear();
-				// std::cout << "chunked Size: " << chunked_size << std::endl;
-				
 				if (chunked_size == 0) chunked_size = -2;
 				break ;
 			}
-			else 
+			else
 			{
-				// std::cout << "ELSE EE " << std::endl;
-				// std::cout << "chunked Size1: " << chunked_size << std::endl;
-				// std::cout << "Body Size1: " << body.size() << std::endl;
 				file_obj << body.substr(0, chunked_size);
 				body.erase(0, chunked_size);
 				chunked_size = -2;
-				
 				if (body.size() <= 2 || body.find("\r\n", 2) == std::string::npos)
 				{
-					// std::cout << "BODYY "  << body.size() << std::endl;
 					break ;
 				}
-				// std::cout << "hello" << std::endl;
 			}
-
-			// std::cout << body << std::endl;
-			// exit(1);
 		}
 		file_obj.close();
 	}
@@ -197,7 +181,7 @@ class request {
 			d_header.res_status = 200;
 	}
 
-	void save_binary(std::string header)
+	void save_binary(std::string &header)
 	{
 		if (file.empty() == true)
 		{
@@ -205,17 +189,18 @@ class request {
 			std::cout <<  "  / * * / */ -" << d_header.Content_type << std::endl;
 			file = name + "." + mime_type.find(d_header.Content_type)->second;
 		}
-		std::cout << " file to open > "  << file << std::endl;
 		file_obj.open(file, std::fstream::out | std::fstream::binary | std::fstream::app);
 		if (file_obj.is_open())
 		{
 			size += header.size();
 			file_obj << header;
+			header.clear();
 		}
 		file_obj.close();
-		if (d_header.Content_Length == size)
+		if (size == d_header.Content_Length)
 		{
 			file.clear();
+			header.clear();
 			d_header.res_status = 200;
 		}
 	}
@@ -318,12 +303,12 @@ class request {
 		{
 			if (d_header.transfer_encoding.empty() == true && d_header.Content_Length ==  -2)
 			{
-				std::cout << " hee " << std::endl;
 				d_header.res_status = 400;
 				return;
 			}
 			else if (d_header.transfer_encoding.empty() == false)
 			{
+				std::cout << "heelerr" << std::endl;
 				save_chunk_improve(header);
 				// save_chunked(header);
 			}
