@@ -12,8 +12,6 @@
 std::map<std::string, std::string> mime_type;
 struct data_serv {
 	std::map<std::string, std::map<std::string, std::string> > location;
-	// std::map <std::string, std::string> default_data;
-
 
 	std::string server_name;
 	std::string port;
@@ -302,6 +300,17 @@ class parsing
 					{
 						temp.push_back(*it);
 					}
+				}
+				std::map<std::string, bool> encounted;
+				for (std::vector<data_serv>::iterator it = servers_data.begin(); it != servers_data.end(); it++)
+				{
+					// std::cout << it->port << std::endl;
+					if (encounted.find(it->port) != encounted.end())
+					{
+						std::cout << "error please use differnt port" << std::endl;
+						exit(1);
+					}
+					encounted[it->port] = true;
 				}
 			}
 			else { std::cout << "File Not Found" << std::endl;
