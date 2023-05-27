@@ -76,13 +76,6 @@ class request {
 	}
 
 
-
-
-
-
-
-
-
 	void	save_chunk_improve(std::string &body) {
 		
 		// std::cout << body <<   " \n THE END  " << std::endl; 
@@ -111,7 +104,7 @@ class request {
 				std::string::iterator te_end =  std::search(first + 1, body.end(), to_delete.begin(), to_delete.end());
 
 
-				std::string test = std::string(first + 2, te_end);
+				std::string test(first + 2, te_end);
 				if (test == "0")
 					end_of_file = true;
 				to_hex << test;
@@ -139,7 +132,8 @@ class request {
 		}
 		file_obj.close();
 	}
-  /* HERE IS THE EMMDDD */
+
+	/* HERE IS THE EMMDDD */
 	void save_chunked(std::string &body)
 	{
 		std::string::iterator first = body.begin();
@@ -281,12 +275,9 @@ class request {
 				{
 					break ;
 				}
-				// std::cout << buffer  <<  std::endl;
 			}
 			header.erase(0, header.find("\r\n\r\n") + 4);
 		}
-		// std::cout << header << std::endl;
-		// std::cout << " THE END" << std::endl;
 		if (d_header.transfer_encoding.empty() == false)
 		{
 			
@@ -297,7 +288,6 @@ class request {
 				d_header.res_status = 501;
 				return ;
 			}
-		
 		}
 		if (d_header.method == "POST")
 		{
@@ -308,9 +298,7 @@ class request {
 			}
 			else if (d_header.transfer_encoding.empty() == false)
 			{
-				std::cout << "heelerr" << std::endl;
 				save_chunk_improve(header);
-				// save_chunked(header);
 			}
 			else // needs to check for cgi  
 			{
