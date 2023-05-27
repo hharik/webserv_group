@@ -12,7 +12,16 @@
 std::map<std::string, std::string> mime_type;
 struct data_serv {
 	std::map<std::string, std::map<std::string, std::string> > location;
-	std::map <std::string, std::string> default_data;
+	// std::map <std::string, std::string> default_data;
+
+
+	std::string server_name;
+	std::string port;
+	std::string auto_index;
+	std::string root_dir;
+	long long	max_body_size;
+	std::map<int, std::string> errors;
+
 };
 
 class parsing
@@ -92,33 +101,30 @@ class parsing
 		}
 		void save_data(std::vector <std::string> server)
 		{
-			// for (std::vector<std::string>::iterator it = server.begin(); it != server.end(); it++)
-			// 	std::cout << *it << std::endl;
-			// std::cout << "THEE ENDDDDDDDDD " << std::endl;
-			// exit(1);
 			data_serv temp;
 			std::map<std::string, std::map<std::string, std::string> > locations;
 			size_t pos;
 
 			std::vector <std::string>::iterator it = server.begin();
-			// std::cout << " * ** * *" <<  *(it + 1) << std::endl;
 
 			while (it != server.end())
 			{
 				// save default data
 				std::string _value;
 				pos = it->find(" ");
-				// std::cout << "*" << *it	<< "*num " << std::endl;
-				if ((it->find("server_name ")) != std::string::npos)
+				if ((it->find("listen ")) != std::string::npos && temp.server_name.empty() == true)
 				{
+					size_t point = 0;
+			
 					_value = it->substr(pos + 1);
-					// std::cout << _value <<  " here is the server_name " << std::endl;
-					if (_value.find(":") == std::string::npos && _value.find_last_of(".") == std::string::npos)
+					if ((point = _value.find(":")) == std::string::npos)
 					{
 						std::cout << "Server_name not provided and doesnt have a specific port" << std::endl;
 						exit(1);
 					}
-					temp.default_data.insert(std::make_pair("server_name", _value));
+					temp.port = it->substr(it->find(":") + 1);
+					temp.server_name = it->substr(pos + 1);
+					// temp.default_data.insert(std::make_pair("server_name", _value));
 				}
 				else if ((it->find("max_body_size ")) != std::string::npos)
 				{
@@ -128,32 +134,42 @@ class parsing
 						std::cout << "Error : Max body size isnt int" << std::endl;
 						exit(1);
 					}
-					temp.default_data.insert(std::make_pair("max_body_size", _value));
+					temp.max_body_size =  std::atoi(_value.c_str());
+					// std::cout << temp.max_body_size << std::endl;
+					// temp.default_data.insert(std::make_pair("max_body_size", _value));
 				}
-				else if ((it->find("listen ")) != std::string::npos)
-				{
-					_value = it->substr(pos + 1);
-					if (check_ints(_value) == -1 || atoi(_value.c_str()) > 65535)
-					{
-						std::cout << "Error : listen" << std::endl;
-						exit(1);
-					}
-					temp.default_data.insert(std::make_pair("listen", _value));
-				}
+				// else if ((it->find("listen ")) != std::string::npos)
+				// {
+				// 	_value = it->substr(pos + 1);
+				// 	if (check_ints(_value) == -1 || atoi(_value.c_str()) > 65535)
+				// 	{
+				// 		std::cout << "Error : listen" << std::endl;
+				// 		exit(1);
+				// 	}
+
+				// 	// temp.default_data.insert(std::make_pair("listen", _value));
+				// }
 				else if ((it->find("root ")) != std::string::npos)
 				{
-					_value = it->substr(pos + 1);
-					temp.default_data.insert(std::make_pair("root", _value));
+					temp.root_dir = it->substr(pos + 1);
+					// temp.default_data.insert(std::make_pair("root", _value));
 				}
 				else if ((it->find("auto_indexing ")) != std::string::npos)
 				{
-					_value = it->substr(pos + 1);
-					temp.default_data.insert(std::make_pair("auto_indexing", _value));
+					temp.auto_index = it->substr(pos + 1);
+					// temp.default_data.insert(std::make_pair("auto_indexing", _value));
 				}
 				else if ((it->find("error ")) != std::string::npos)
 				{
-					_value =  it->substr(pos + 1);
-					temp.default_data.insert(std::make_pair("error", _value));
+					_value = it->substr(pos + 1);
+					std::string status = _value.substr(0, _value.find(" "));
+					std::string path = _value.substr(_value.find(" ") + 1);
+					if (check_ints(status) == -1) {
+						std::cout << "Error, please specify error status" << std::endl;
+						exit(1);
+					}
+					temp.errors.insert(std::make_pair(std::atoi(status.c_str()), path));
+					// // temp.default_data.insert(std::make_pair("error", _value));
 				}
 				else if (it->find("server {") != std::string::npos ) { }
 				else if (it->find("location ") != std::string::npos)
@@ -171,8 +187,6 @@ class parsing
 						size_t pos = it->find(" ");
 						std::string _key = it->substr(0, pos);
 						std::string _value = it->substr(pos + 1);
-						// std::cout << _value << std::endl;
-						//need to check for cgi and redirections
 						std::stringstream  a(_value);
 						std::string buff;
 						int i = 0;
@@ -200,20 +214,38 @@ class parsing
 								exit(1);
 							}
 						}
-						// std::cout << *it <<  "  ~~~~" << std::endl;
-						if (_value.find_first_of("{}") == std::string::npos)
-							tem.insert(std::make_pair(_key, _value));
-						else if (_value.find("};") != std::string::npos)
+						else if (_key == "error") {
+							std::cout << "Can't specify error pages in location " << std::endl;
 							exit(1);
-						// for (std::map<std::string, std::string>::iterator oit = tem.begin(); oit != tem.end(); oit++)
-						// 	std::cout << oit->first << " " <<  oit->second <<  std::endl;
+						}
+						if (_value.find_first_of("{}") == std::string::npos)
+						{
+							if (_key == "cgi" || _key == "redirect")
+							{
+								size_t po = _value.find(" ");
+								_key += " " + _value.substr(0, po);
+								_value.erase(0,  _value.find(" "));
+							}
+							tem.insert(std::make_pair(_key, _value));
+						}
+						else if (_value.find("};") != std::string::npos)
+						{
+							std::cout << "ERROR " << std::endl;
+							exit(1);
+						}
 						it++;
 					}
+					// for(std::map<std::string,std::string>::iterator it = tem.begin(); it != tem.end(); it++)
+					// {
+					// 	std::cout << it->first << "* *" << it->second << std::endl;
+					// }
+					// std::cout << "THEE END " << std::endl;
 					locations.insert(std::make_pair(directory, tem));
 					tem.clear();
 					// std::cout << directory << std::endl;
 				}
 				else {
+					std::cout << *it << std::endl;
 					std::cout << "Error undefined variable" << std::endl;
 					exit(1);
 				}
@@ -222,6 +254,7 @@ class parsing
 			if (locations.size() == 0)
 			{
 				std::cout << "Please provide at least one location" << std::endl;
+				exit(1);
 			}
 			temp.location = locations;
 			servers_data.push_back(temp);
@@ -245,16 +278,12 @@ class parsing
 					before_file.push_back(buff);
 					// std::cout << buff << std::endl;
 				}
-				// std::cout << *(before_file.end() - 1) << std::endl;
 				if ((before_file.end() - 1)->find("};") == std::string::npos || brackets.size() > 0 || end_brackets.size() > 0)
 				{
 					std::cout << "Error in brackets" << std::endl;
 					exit(1);
 				}
 				int i = 0;
-				// std::cout << " size >> "  <<  before_file.size() << std::endl;
-				// for (std::vector <std::string>::iterator it = before_file.begin(); it != before_file.end(); it++) 
-				 // {
 				std::vector<std::string> temp;
 				size_t pos = 0;
 				for (std::vector <std::string>::iterator it = before_file.begin(); it != before_file.end(); it++)
@@ -273,34 +302,7 @@ class parsing
 					{
 						temp.push_back(*it);
 					}
-					// else {
-					// 	std::cout << "\n\n\nShitt << \n\n\n" << std::endl; 
-					// 	exit(1);
-					// }
-					// if (it->find("};") && (it + 1))
-					// if (it->find("};") != std::string::npos)
-					// {
-					// 	std::cout << *it << "  r " << *(it + 1)  << "* "  << std::endl;
-					// 	std::cout << "Error" << std::endl;
-					// 	exit(1);
-					// }
 				}
- 					// if (it->find("server {") != std::string::npos)
-					// {
-					// 	i = INSERV;
-					// }
-					// if (it->find("server {") != std::string::npos)
-					// 	it = advance_(it);
-					// if (it->find("server{") != std::string::npos)
-					// {
-					// 	std::cout << "Error "<< std::endl;
-					// 	exit(1);
-					// }
-				// }
-				// for (std::map<std::string, std::string>::iterator it = servers_data.at(0).default_data.begin(); it !=servers_data.at(0).default_data.end(); it++)
-				// 	std::cout << it->first  << " "  << it->second << std::endl;
-				// std::cout << "/// * *   "   <<  servers_data.size() << std::endl;
-				// std::cout << servers_data.at(0).location.find("/test/urmom")->second["root"];
 			}
 			else { std::cout << "File Not Found" << std::endl;
 				exit(1);
