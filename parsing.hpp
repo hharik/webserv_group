@@ -121,7 +121,7 @@ class parsing
 						exit(1);
 					}
 					temp.port = it->substr(it->find(":") + 1);
-					temp.server_name = it->substr(pos + 1);
+					temp.server_name = it->substr(pos + 1, point);
 					// temp.default_data.insert(std::make_pair("server_name", _value));
 				}
 				else if ((it->find("max_body_size ")) != std::string::npos)
@@ -307,7 +307,7 @@ class parsing
 					// std::cout << it->port << std::endl;
 					if (encounted.find(it->port) != encounted.end())
 					{
-						std::cout << "error please use differnt port" << std::endl;
+						std::cout << "Error: Duplicate port found" << std::endl;
 						exit(1);
 					}
 					encounted[it->port] = true;
