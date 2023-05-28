@@ -1,15 +1,29 @@
 #ifndef PARSING_HPP_
 #define PARSING_HPP_
-# include <iostream>
-# include <fstream>
-# include <ostream>
-# include <vector>
-# include <stack>
+
+#include <sys/_types/_size_t.h>
+#pragma once
+
+#include <iostream>
+#include <sys/_types/_socklen_t.h>
+#include <sys/types.h>
+#include <sys/event.h>
+#include <sys/time.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <vector>
+/* hamid includes */
 # include <map>
+# include <stack>
+# include <fstream>
 # include <sstream>
+
 # define INSERV 10
 # define OUTSERV 5
-std::map<std::string, std::string> mime_type;
+
+
 struct data_serv {
 	std::map<std::string, std::map<std::string, std::string> > location;
 
@@ -29,8 +43,9 @@ class parsing
 		std::stack <std::string> brackets;
 		std::stack<std::string> end_brackets;
 		std::ifstream file;
-		std::vector<data_serv> servers_data;
 	public:
+		std::map<std::string, std::string> mime_type;
+		std::vector<data_serv> servers_data;
 		int check_ints(std::string str) {
 			for (std::string::iterator it = str.begin(); it != str.end() ; it++)
 			{
@@ -40,6 +55,7 @@ class parsing
 			return 0;
 		}
 		parsing(std::string name) : filename(name), file(), servers_data(), end_brackets() {
+			std::cout << "parsing constructor ... " << std::endl;
 		}
 		std::string trim(std::string line, std::string whitespaces)
 		{
@@ -122,6 +138,8 @@ class parsing
 					}
 					temp.port = it->substr(it->find(":") + 1);
 					temp.server_name = it->substr(pos + 1, point);
+					// std::cout << temp.server_name << " EHEE " << temp.port << std::endl;
+					// std::cout << " //-/ -/  " <<  it->substr(pos + 1) << std::endl;
 					// temp.default_data.insert(std::make_pair("server_name", _value));
 				}
 				else if ((it->find("max_body_size ")) != std::string::npos)
@@ -307,7 +325,7 @@ class parsing
 					// std::cout << it->port << std::endl;
 					if (encounted.find(it->port) != encounted.end())
 					{
-						std::cout << "Error: Duplicate port found" << std::endl;
+						std::cout << "error please use differnt port" << std::endl;
 						exit(1);
 					}
 					encounted[it->port] = true;
@@ -318,7 +336,7 @@ class parsing
 			}
 		}
 
-	void mime() { 
+	void mime() {
 		std::ifstream file_mime;
 		std::string buff;
 		file_mime.open("mime_type.txt");
