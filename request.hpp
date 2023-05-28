@@ -276,7 +276,12 @@ class request {
 					break ;
 				}
 			}
-			header.erase(0, header.find("\r\n\r\n") + 4);
+			if (header.find("\r\n\r\n") != std::string::npos)
+				header.erase(0, header.find("\r\n\r\n") + 4);
+			else {
+				
+				return ;
+			}
 		}
 		if (d_header.transfer_encoding.empty() == false)
 		{
