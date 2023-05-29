@@ -6,15 +6,14 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/28 15:43:32 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/05/28 15:47:35 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/05/29 14:01:32 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef USER_DATA_HPP
 #define USER_DATA_HPP
 
-class Client;
-class Socket;
+#include "parsing.hpp"
 
 class User_data
 {

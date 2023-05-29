@@ -6,32 +6,14 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 14:50:54 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/05/28 15:50:36 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/05/29 14:01:25 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef SOCKET_HPP
 #define SOCKET_HPP
 
-// #pragma once
-
-// #include <iostream>
-// #include <sys/_types/_socklen_t.h>
-// #include <sys/types.h>
-// #include <sys/event.h>
-// #include <sys/time.h>
-// #include <sys/types.h>
-// #include <sys/socket.h>
-// #include <netdb.h>
-// #include <fcntl.h>
-// #include <unistd.h>
-// #include <vector>
-
-// #include "server.hpp"
 #include "parsing.hpp"
-#include "user_data.hpp"
-
-class Client;
 
 class Socket
 {

@@ -6,7 +6,7 @@
 #    By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/05/27 13:30:26 by ajemraou          #+#    #+#              #
-#    Updated: 2023/05/28 16:15:36 by ajemraou         ###   ########.fr        #
+#    Updated: 2023/05/29 14:33:06 by ajemraou         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,9 +16,11 @@ CC = g++
 CFLAGE = 
 
 SRC =	main.cpp \
-		client.cpp \
+		parsing.cpp \
 		server.cpp \
 		socket.cpp \
+		client.cpp \
+		request.cpp \
 		user_data.cpp
 	
 NAME = webserv
@@ -40,3 +42,6 @@ fclean : clean
 	rm -f $(NAME)
 
 re : fclean all
+
+r : re
+	clear ; ./webserv config.conf

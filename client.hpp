@@ -6,30 +6,16 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 14:51:32 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/05/28 16:51:13 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/05/29 13:58:49 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-
-#include "server.hpp"
-#include "user_data.hpp"
+#include "request.hpp"
 #include "response.hpp"
-
-// #include <iostream>
-// #include <sys/_types/_socklen_t.h>
-// #include <sys/types.h>
-// #include <sys/event.h>
-// #include <sys/time.h>
-// #include <sys/types.h>
-// #include <sys/socket.h>
-// #include <netdb.h>
-// #include <fcntl.h>
-// #include <vector>
-// #include <unistd.h>
-class response;
+#include "parsing.hpp"
 
 class Client
 {
@@ -40,8 +26,9 @@ class Client
 	struct	sockaddr client;
 	socklen_t	len;
 	int				nbytes;
-	std::string		client_request;
+	std::string		request_buffer;
 	response		client_response;
+	request			client_request;
 public:
 	Client();
 	// bool			is_reading;
