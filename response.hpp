@@ -1,11 +1,17 @@
 #ifndef RESPONSE_HPP_
 #define RESPONSE_HPP_
+<<<<<<< HEAD
 #include <iostream>
 
+=======
+
+#include "request.hpp"
+>>>>>>> 243ad6e7211f47db6f73f9995fdf167efdfa8cce
 
 class response {
 	std::string msg;
 	public:
+<<<<<<< HEAD
 		response() {
 			
 		}
@@ -56,6 +62,10 @@ class response {
 				msg += " Created\r\nContent-Type: text/html\r\n\r\n";
 			}
 		}
+=======
+	request		client_request;
+		response() {}
+>>>>>>> 243ad6e7211f47db6f73f9995fdf167efdfa8cce
 };
 
 

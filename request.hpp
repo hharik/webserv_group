@@ -3,9 +3,8 @@
 #define REQUEST_HPP_
 
 #include	<algorithm>
+
 #include "parsing.hpp"
-
-
 
 struct data_header {
 	std::string Content_type;
@@ -88,7 +87,7 @@ class request {
 			{
 				body.insert(0, "\r\n");
 				std::string name = time_date();
-				file = name + "." + mime_type.find(d_header.Content_type)->second;
+				file = name + "." + parsing::mime_type.find(d_header.Content_type)->second;
 				// std::cout <<  file << std::endl;
 			}
 			// body.erase(0, body.find(to_delete));
@@ -106,7 +105,10 @@ class request {
 
 				std::string test(first + 2, te_end);
 				if (test == "0")
+				{
 					end_of_file = true;
+					d_header.res_status = 200;
+				}
 				to_hex << test;
 				to_hex >> std::hex >> chunked_size;
 				body.erase(0, test.length() + 4);
@@ -130,7 +132,8 @@ class request {
 				}
 			}
 		}
-		file_obj.close();
+		if (end_of_file == true)
+			file_obj.close();
 	}
 
 	/* HERE IS THE EMMDDD */
@@ -145,7 +148,7 @@ class request {
 			{
 				body.insert(0, "\r\n");
 				std::string name = time_date();
-				file = name + "." + mime_type.find(d_header.Content_type)->second;
+				file = name + "." + parsing::mime_type.find(d_header.Content_type)->second;
 			}
 			file_obj.open(file, std::fstream::out | std::fstream::app | std::fstream::binary);
 		}
@@ -181,7 +184,7 @@ class request {
 		{
 			std::string name = time_date();
 			std::cout <<  "  / * * / */ -" << d_header.Content_type << std::endl;
-			file = name + "." + mime_type.find(d_header.Content_type)->second;
+			file = name + "." + parsing::mime_type.find(d_header.Content_type)->second;
 		}
 		file_obj.open(file, std::fstream::out | std::fstream::binary | std::fstream::app);
 		if (file_obj.is_open())
@@ -195,14 +198,13 @@ class request {
 		{
 			file.clear();
 			header.clear();
+			end_of_file = true;
 			d_header.res_status = 200;
 		}
 	}
 
 	void parse(std::string &header) 
 	{
-		// std::cout << header  << "\n THE END" << std::endl;
-		// std::cout << "THE END "<< std::endl;
 		std::string tes;
 		if (d_header.Host.empty() == true)
 		{
@@ -279,7 +281,7 @@ class request {
 			if (header.find("\r\n\r\n") != std::string::npos)
 				header.erase(0, header.find("\r\n\r\n") + 4);
 			else {
-				
+				d_header.res_status = 431;
 				return ;
 			}
 		}
@@ -309,6 +311,11 @@ class request {
 			{
 				save_binary(header);
 			}
+		}
+		if (d_header.method.find("GET") != std::string::npos)
+		{
+			end_of_file = true;
+			return ;
 		}
 	}
 
