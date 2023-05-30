@@ -154,20 +154,23 @@ void request::save_binary(std::string &header)
 		std::cout <<  "  / * * / */ -" << d_header.Content_type << std::endl;
 		file = name + "." + parsing::mime_type.find(d_header.Content_type)->second;
 	}
-	file_obj.open(file, std::fstream::out | std::fstream::binary | std::fstream::app);
+	if (file_obj.is_open() == false)
+		file_obj.open(file, std::fstream::out | std::fstream::binary | std::fstream::app);
 	if (file_obj.is_open())
 	{
 		size += header.size();
 		file_obj << header;
 		header.clear();
 	}
-	file_obj.close();
+	// file_obj.close();
 	if (size == d_header.Content_Length)
 	{
 		file.clear();
 		header.clear();
 		end_of_file = true;
 		d_header.res_status = 200;
+		size = 0;
+		file_obj.close();
 	}
 }
 
@@ -246,7 +249,13 @@ void request::parse(std::string &header)
 				break ;
 			}
 		}
-		header.erase(0, header.find("\r\n\r\n") + 4);
+		if (header.find("\r\n\r\n") != std::string::npos)
+			header.erase(0, header.find("\r\n\r\n") + 4);
+		else
+		{
+			d_header.res_status = 431;
+			return ;
+		}
 	}
 	if (d_header.transfer_encoding.empty() == false)
 	{
@@ -275,7 +284,7 @@ void request::parse(std::string &header)
 			save_binary(header);
 		}
 	}
-	if (d_header.method.find("GET") != std::string::npos)
+	else if (d_header.method.find("GET") != std::string::npos)
 	{
 		end_of_file = true;
 		return ;

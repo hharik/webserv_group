@@ -34,7 +34,7 @@ class response;
 // macros
 
 #define BACKLOG 10
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 5000
 
 
 struct data_serv {
