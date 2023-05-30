@@ -6,22 +6,14 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:06:59 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/05/28 16:29:26 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/05/29 14:23:16 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "server.hpp"
-#include "parsing.hpp"
-#include "socket.hpp"
 #include "client.hpp"
 #include "user_data.hpp"
-// #include "parsing.hpp"
-#include <cstdio>
-#include <cstdlib>
-#include <string>
-#include <sys/event.h>
-#include <vector>
-#include <list>
+#include "server.hpp"
+#include "socket.hpp"
 
 Server::Server(const std::string &config_file):parser(config_file), servers()
 {
@@ -38,8 +30,8 @@ Server::Server(const std::string &config_file):parser(config_file), servers()
 	for (int i = 0;it != end;it++ , i++)
 	{
 		servers.push_back(new Socket());
-		std::cout << "host : " << it->server_name << std::endl;
-		std::cout << "port : " << it->port << std::endl;
+		// std::cout << "host : " << it->server_name << std::endl;
+		// std::cout << "port : " << it->port << std::endl;
 		servers[i]->Create_the_socket(it->server_name, it->port);
 		servers[i]->attach_server_socket( kq );
 		events_size++;
@@ -58,7 +50,7 @@ void	Server::Create_http_servers()
 		for(int i = 0; i < events_nbr; i++)
 		{
 			user_data = (User_data*)events[i].udata;
-			/* new client to establish the connection with this server through this socket */
+			/* new client need to establish the connection with this server through this socket */
 			if (events[i].filter == EVFILT_READ && user_data->get_status() == true)
 			{
 				events_size++;

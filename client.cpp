@@ -6,16 +6,14 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 16:39:08 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/05/28 17:10:29 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/05/29 14:27:18 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "client.hpp"
-#include <cstdlib>
-// this will be removed ... 
-// #include "server.hpp"
-// #include "socket.hpp"
-// #include "user_data.hpp"
+#include "user_data.hpp"
+#include "request.hpp"
+#include "response.hpp"
 
 Client::Client()
 {
@@ -60,12 +58,17 @@ void	Client::read_from_socket()
 	nbytes = recv(fd, buffer, BUFFER_SIZE, 0);
 	if ( nbytes > 0 )
 	{
-		client_request.append(buffer, nbytes);
-		// client_response.
+		request_buffer.append(buffer, nbytes);
+		client_request.parse(request_buffer);
 	}
 	else
 	{
 		perror("recv");
 		exit(EXIT_FAILURE);
+	}
+	if (client_request.end_of_file == true)
+	{
+		std::cout << "finish..." <<std::endl;
+		std::cout << request_buffer << std::endl;
 	}
 }

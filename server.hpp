@@ -6,40 +6,14 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 14:49:46 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/05/28 17:16:54 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/05/29 14:01:14 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-// #pragma once
-
-// #include <iostream>
-// #include <sys/_types/_socklen_t.h>
-// #include <sys/types.h>
-// #include <sys/event.h>
-// #include <sys/time.h>
-// #include <sys/socket.h>
-// #include <netdb.h>
-// #include <fcntl.h>
-// #include <unistd.h>
-// #include <vector>
-// /* hamid includes */
-// # include <map>
-// # include <stack>
-// # include <fstream>
-
 #include "parsing.hpp"
-#include "socket.hpp"
-#include "user_data.hpp"
-#include <vector>
-
-// macros
-#define BACKLOG 10
-#define BUFFER_SIZE 1024
-
-class parsing;
 
 class Server
 {

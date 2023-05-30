@@ -6,13 +6,13 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 14:52:53 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/05/28 17:14:39 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/05/29 14:14:41 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "server.hpp"
-#include "socket.hpp"
 
+std::map<std::string, std::string> parsing::mime_type;
 
 int main(int ac, char **av)
 {

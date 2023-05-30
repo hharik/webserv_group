@@ -2,8 +2,6 @@
 
 #define REQUEST_HPP_
 
-#include	<algorithm>
-
 #include "parsing.hpp"
 
 struct data_header {
@@ -35,107 +33,18 @@ class request {
 	long rsize;
 	int chunked_size;
 	int size;
-	bool end_of_file;
-	std::fstream file_obj;
 
 
 	public:
+	bool end_of_file;
+	std::fstream file_obj;
 
-	request() : rsize(0) , size(0), chunked_size(-2), end_of_file(false)  { }
-	~request() {}
+	request();
+	~request();
 
-	std::string time_date()
-	{
-			time_t curr_time;
-			tm * curr_tm;
-			char date_string[100];
-			char time_string[100];
-
-			time(&curr_time);
-			curr_tm = localtime(&curr_time);
-
-			strftime(date_string, 50, "%B-%d-%Y-%T", curr_tm);
-			return std::string(date_string);
-		
-	}
-
-
-	std::string copy_until(std::string::iterator first, std::string::iterator last, std::string to_find = "\r\n") {
-		std::string temp;
-		while (first < last)
-		{
-			if (*first == '\r' && *(first + 1) && *(first + 1) == '\n')
-			{
-				break ;
-			}
-			temp += *first;
-			first++;
-		}
-		return temp;
-	}
-
-
-	void	save_chunk_improve(std::string &body) {
-		
-		// std::cout << body <<   " \n THE END  " << std::endl; 
-		std::string::iterator first = body.begin();
-		std::string::iterator last;
-		std::string to_delete = "\r\n";
-		if (file_obj.is_open() == false)
-		{
-			if (file.empty() == true)
-			{
-				body.insert(0, "\r\n");
-				std::string name = time_date();
-				file = name + "." + parsing::mime_type.find(d_header.Content_type)->second;
-				// std::cout <<  file << std::endl;
-			}
-			// body.erase(0, body.find(to_delete));
-			file_obj.open(file, std::fstream::out | std::fstream::app | std::fstream::binary);
-		}
-		std::stringstream to_hex;
-		while (chunked_size != 0)
-		{
-			if (chunked_size == -2) // kata3ni badya dyal lbody fih chunked
-			{
-				first = std::search(body.begin(), body.end(), to_delete.begin(), to_delete.end());
-
-				std::string::iterator te_end =  std::search(first + 1, body.end(), to_delete.begin(), to_delete.end());
-
-
-				std::string test(first + 2, te_end);
-				if (test == "0")
-				{
-					end_of_file = true;
-					d_header.res_status = 200;
-				}
-				to_hex << test;
-				to_hex >> std::hex >> chunked_size;
-				body.erase(0, test.length() + 4);
-			}
-			if (chunked_size >= body.size())
-			{
-				file_obj << body;
-				chunked_size -= body.size();
-				body.clear();
-				if (chunked_size == 0) chunked_size = -2;
-				break ;
-			}
-			else
-			{
-				file_obj << body.substr(0, chunked_size);
-				body.erase(0, chunked_size);
-				chunked_size = -2;
-				if (body.size() <= 2 || body.find("\r\n", 2) == std::string::npos)
-				{
-					break ;
-				}
-			}
-		}
-		if (end_of_file == true)
-			file_obj.close();
-	}
-
+	std::string time_date();
+	std::string copy_until(std::string::iterator first, std::string::iterator last, std::string to_find);
+	void	save_chunk_improve(std::string &body);
 	/* HERE IS THE EMMDDD */
 	void save_chunked(std::string &body)
 	{
@@ -283,7 +192,7 @@ class request {
 			else {
 				d_header.res_status = 431;
 				return ;
-			}
+			}	
 		}
 		if (d_header.transfer_encoding.empty() == false)
 		{

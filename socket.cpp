@@ -6,23 +6,16 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/26 18:03:44 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/05/28 16:38:03 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/05/29 14:20:38 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "socket.hpp"
 #include "client.hpp"
 #include "user_data.hpp"
-#include <_stdio.h>
-#include <cstdlib>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <string>
-#include <sys/event.h>
 
 Socket::Socket()
 {
-	std::cout << "default constructor" << std::endl;
 	user_data = new User_data();
 	reuseaddr_opt = 1;
 	events_nbr = 0;
@@ -102,7 +95,7 @@ int	Socket::Create_the_socket( const std::string &hostname, const std::string &s
 
 void	Socket::attach_server_socket( int kq )
 {
-	std::cout << "attch_server_socket . . fd : " << sockfd << std::endl;
+	// std::cout << "attch_server_socket . . fd : " << sockfd << std::endl;
 	// struct kevent server_ev;
 	user_data->set_status(true);
 	user_data->set_socket(this);
