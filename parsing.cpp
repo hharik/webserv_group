@@ -194,6 +194,8 @@ void parsing::save_data(std::vector <std::string> server)
 					std::cout << "Can't specify error pages in location " << std::endl;
 					exit(1);
 				}
+				if (_key == "upload" &&  _value.find_last_of("/") != value.length() - 1)
+					_value.append("/");
 				if (_value.find_first_of("{}") == std::string::npos)
 				{
 					if (_key == "cgi" || _key == "redirect")
@@ -213,9 +215,10 @@ void parsing::save_data(std::vector <std::string> server)
 			}
 			// for(std::map<std::string,std::string>::iterator it = tem.begin(); it != tem.end(); it++)
 			// {
-			// 	std::cout << it->first << "* *" << it->second << std::endl;
+			// 	std::cout << it->first << "* *" << it->second  << "* "<< std::endl;
 			// }
 			// std::cout << "THEE END " << std::endl;
+			// exit(1);
 			locations.insert(std::make_pair(directory, tem));
 			tem.clear();
 			// std::cout << directory << std::endl;

@@ -223,6 +223,7 @@ void request::parse(std::string &header)
 			}
 			if (buffer.find("Content-Type:") != std::string::npos)
 			{
+				std::cout << buffer << std::endl; 
 				d_header.Content_type = buffer.substr(pos + 2);
 				d_header.Content_type.pop_back();
 				// std::cout << " \n\n\n" <<  buffer <<  " just tryiubg /*/*/" << std::endl;
@@ -257,6 +258,12 @@ void request::parse(std::string &header)
 			return ;
 		}
 	}
+
+	if (d_header.Content_type.empty() == true)
+	{
+		d_header.res_status = 415;
+		return ;
+	}
 	if (d_header.transfer_encoding.empty() == false)
 	{
 		
@@ -268,7 +275,8 @@ void request::parse(std::string &header)
 			return ;
 		}
 	}
-	if (d_header.method == "POST")
+	
+	if (d_header.method == "POST") 
 	{
 		if (d_header.transfer_encoding.empty() == true && d_header.Content_Length ==  -2)
 		{

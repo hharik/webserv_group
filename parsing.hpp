@@ -34,12 +34,11 @@ class response;
 // macros
 
 #define BACKLOG 10
-#define BUFFER_SIZE 5000
+#define BUFFER_SIZE 2000
 
 
 struct data_serv {
 	std::map<std::string, std::map<std::string, std::string> > location;
-
 	std::string server_name;
 	std::string port;
 	std::string auto_index;

@@ -70,8 +70,8 @@ void	Client::read_from_socket()
 	{
 		std::cout << "finish..." <<std::endl;
 		std::cout << request_buffer << std::endl;
-		// std::string se = "HTTP/1.1 200 Created\r\nContent-Type: text/html\r\n\r\n";
-		// send(fd, se.c_str(), se.size(), 0);
-		// close(fd);
+		std::string se = "HTTP/1.1 200 Created\r\nContent-Type: text/html\r\n\r\n";
+		send(fd, se.c_str(), se.size(), 0);
+		close(fd);
 	}
 }

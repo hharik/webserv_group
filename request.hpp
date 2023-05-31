@@ -27,7 +27,6 @@ struct data_header {
 };
 
 class request {
-
 	data_header d_header;
 	std::string file;
 	long rsize;
