@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/30 14:48:59 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/01 01:11:05 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/01 13:38:46 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,14 +24,14 @@ void	Message::Request_message( std::string &buffer )
 	client_request.parse(buffer);
 }
 
-void	Message::Respons_message( int fd )
+void	Message::Respons_message( int fd, std::string &buffer )
 {
 	client_response.find_required_location();
 }
 
-bool	Message::eof()
+bool	Message::eoh()
 {
-	return client_request.end_of_file;
+	return client_request.end_of_header;
 }
 
 int	Message::status_code()

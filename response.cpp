@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/30 12:25:24 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/01 02:44:31 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/01 13:05:05 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,6 +82,7 @@ int	response::find_required_location( )
 	}
 	return (0);
 }
+
 
 // void	response::set_start_line( const std::string http_version, int status )
 // {

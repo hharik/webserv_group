@@ -20,7 +20,6 @@ class response {
 	std::string			server;
 public:
 	response( const data_serv *, const data_header* );
-
 	int		find_required_location(  );
 	void	create_header();
 	void	parse_the_uri();

@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/30 14:45:56 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/01 01:10:43 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/01 13:38:33 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,6 @@ struct data_header {
 	std::string method;
 	std::string uri;
 	std::string http_version;
-
 	std::string boundary;
 	int res_status;
 	data_header() : Content_Length(-2), res_status(-2) {std::cout << "data_header ... created " << std::endl;}
@@ -48,9 +47,9 @@ class Message
 public:
 	Message( const data_serv * );
 	void	Request_message( std::string& );
-	void	Respons_message( int );
+	void	Respons_message( int, std::string& );
 	int		status_code();
-	bool	eof();
+	bool	eoh();
 };
 
 #endif /* MESSAGE_HPP */

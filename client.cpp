@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 16:39:08 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/01 01:14:02 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/01 14:20:53 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,23 +56,17 @@ void	Client::read_from_socket()
 	memset(buffer, 0, BUFFER_SIZE);
 	nbytes = recv(fd, buffer, BUFFER_SIZE, 0);
 	if ( nbytes > 0 )
-	{
 		request_buffer.append(buffer, nbytes);
-		client_message.Request_message(request_buffer);
-		std::cout << "=================" << std::endl;
-		std::cout << "buffer : " << buffer << std::endl;
-		std::cout << "================" << std::endl;
-		std::cout << request_buffer << std::endl;
-	}
 	else
 	{
 		perror("recv");
 		exit(EXIT_FAILURE);
 	}
-	if (client_message.eof() == true || client_message.status_code())
+	if (client_message.eoh() == false)
+		client_message.Request_message(request_buffer);
+	if (client_message.eoh() == true || client_message.status_code() > 0)
 	{
-		std::cout << "finish..." <<std::endl;
-		client_message.Respons_message( fd );
+		client_message.Respons_message( fd , request_buffer);
 		// std::cout << request_buffer << std::endl;
 		// std::string se = "HTTP/1.1 200 Created\r\nContent-Type: text/html\r\n\r\n";
 		// send(fd, se.c_str(), se.size(), 0);

@@ -152,6 +152,11 @@ void parsing::save_data(std::vector <std::string> server)
 		else if (it->find("location ") != std::string::npos)
 		{
 			std::string directory = it->substr(it->find(" ") + 1);
+			if (directory.find_first_of("/") != 0)
+			{
+				std::cout << "error, please add a slash at the first of location name" << std::endl;
+				exit(1);
+			}
 			it++;
 			if (directory.find_first_of("{}") != std::string::npos || directory.find("/") == std::string::npos)
 			{
