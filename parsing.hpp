@@ -27,6 +27,7 @@ class Socket;
 class User_data;
 class request;
 class response;
+struct data_header;
 // #include "user_data.hpp"
 
 # define INSERV 10

@@ -1,9 +1,9 @@
 
-#include "request.hpp"
+#include "message.hpp"
 
-request::request() : rsize(0) , size(0), chunked_size(-2), end_of_file(false)
+request::request( const data_serv *dptr, data_header *hptr ) : server_data(dptr), d_header(hptr), rsize(0) , size(0), chunked_size(-2), end_of_file(false)
 {
-
+	d_header->print();
 }
 
 request::~request()
@@ -55,7 +55,7 @@ void	request::save_chunk_improve(std::string &body)
 		{
 			body.insert(0, "\r\n");
 			std::string name = time_date();
-			file = name + "." + parsing::mime_type.find(d_header.Content_type)->second;
+			file = name + "." + parsing::mime_type.find(d_header->Content_type)->second;
 			// std::cout <<  file << std::endl;
 		}
 		// body.erase(0, body.find(to_delete));
@@ -75,7 +75,7 @@ void	request::save_chunk_improve(std::string &body)
 			if (test == "0")
 			{
 				end_of_file = true;
-				d_header.res_status = 200;
+				d_header->res_status = 200;
 			}
 			to_hex << test;
 			to_hex >> std::hex >> chunked_size;
@@ -116,7 +116,7 @@ void request::save_chunked(std::string &body)
 		{
 			body.insert(0, "\r\n");
 			std::string name = time_date();
-			file = name + "." + parsing::mime_type.find(d_header.Content_type)->second;
+			file = name + "." + parsing::mime_type.find(d_header->Content_type)->second;
 		}
 		file_obj.open(file, std::fstream::out | std::fstream::app | std::fstream::binary);
 	}
@@ -143,7 +143,7 @@ void request::save_chunked(std::string &body)
 	file_obj << body;
 	file_obj.close();
 	if (index == 0 && end_of_file == true)
-		d_header.res_status = 200;
+		d_header->res_status = 200;
 }
 
 void request::save_binary(std::string &header)
@@ -151,8 +151,8 @@ void request::save_binary(std::string &header)
 	if (file.empty() == true)
 	{
 		std::string name = time_date();
-		std::cout <<  "  / * * / */ -" << d_header.Content_type << std::endl;
-		file = name + "." + parsing::mime_type.find(d_header.Content_type)->second;
+		std::cout <<  "  / * * / */ -" << d_header->Content_type << std::endl;
+		file = name + "." + parsing::mime_type.find(d_header->Content_type)->second;
 	}
 	if (file_obj.is_open() == false)
 		file_obj.open(file, std::fstream::out | std::fstream::binary | std::fstream::app);
@@ -163,12 +163,12 @@ void request::save_binary(std::string &header)
 		header.clear();
 	}
 	// file_obj.close();
-	if (size == d_header.Content_Length)
+	if (size == d_header->Content_Length)
 	{
 		file.clear();
 		header.clear();
 		end_of_file = true;
-		d_header.res_status = 200;
+		d_header->res_status = 200;
 		size = 0;
 		file_obj.close();
 	}
@@ -177,7 +177,7 @@ void request::save_binary(std::string &header)
 void request::parse(std::string &header) 
 {
 	std::string tes;
-	if (d_header.Host.empty() == true)
+	if (d_header->Host.empty() == true)
 	{
 		// std::cout << header << std::endl; 
 		std::string first_line, buffer, token;
@@ -188,27 +188,27 @@ void request::parse(std::string &header)
 		{
 			if (i > 2)
 			{
-				d_header.res_status = 400;
+				d_header->res_status = 400;
 				return ;
 			}
 			else if (i == 0)
-				d_header.method = token;
+				d_header->method = token;
 			else if (i == 1)
-				d_header.uri = token;
+				d_header->uri = token;
 			else if (i == 2)
-				d_header.http_version = token;
+				d_header->http_version = token;
 		}
 		std::string allowed_char = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~:/?#[]@!$&'()*+,;=";
-		for (std::string::iterator it = d_header.uri.begin(); it != d_header.uri.end(); it++)
+		for (std::string::iterator it = d_header->uri.begin(); it != d_header->uri.end(); it++)
 			if (allowed_char.find(*it) == std::string::npos)
 			{
-				d_header.res_status = 400;
+				d_header->res_status = 400;
 				std::cout << "ERRORR " << std::endl;
 				return ;
 			}
-		if (d_header.uri.length() > 2048)
+		if (d_header->uri.length() > 2048)
 		{
-			d_header.res_status = 414;
+			d_header->res_status = 414;
 			return ;
 		}
 		// still need to check for request entity too large
@@ -217,33 +217,33 @@ void request::parse(std::string &header)
 			size_t pos = buffer.find(":");
 			if (buffer.find("Content-Length:") != std::string::npos)
 			{
-				d_header.Content_Length = atoi((buffer.substr(pos + 2)).c_str());
+				d_header->Content_Length = atoi((buffer.substr(pos + 2)).c_str());
 				// d_header.Content_Length.pop_back();
 				// std::cout << d_header.Content_Length << std::endl;
 			}
 			if (buffer.find("Content-Type:") != std::string::npos)
 			{
 				std::cout << buffer << std::endl; 
-				d_header.Content_type = buffer.substr(pos + 2);
-				d_header.Content_type.pop_back();
+				d_header->Content_type = buffer.substr(pos + 2);
+				d_header->Content_type.pop_back();
 				// std::cout << " \n\n\n" <<  buffer <<  " just tryiubg /*/*/" << std::endl;
-				if (d_header.Content_type.find("multipart/form-data") != std::string::npos)
+				if (d_header->Content_type.find("multipart/form-data") != std::string::npos)
 				{
-					d_header.boundary = buffer.substr(buffer.find_last_of("boundary=") + 1);
-					d_header.boundary.pop_back();
+					d_header->boundary = buffer.substr(buffer.find_last_of("boundary=") + 1);
+					d_header->boundary.pop_back();
 				}
 				// std::cout << d_header.boundary << std::endl;
 				// std::cout << d_header.Content_type	<< 	std::endl;
 			}
 			if (buffer.find("Host:") != std::string::npos)
 			{
-				d_header.Host = buffer.substr(pos + 2);
-				d_header.Host.pop_back();
+				d_header->Host = buffer.substr(pos + 2);
+				d_header->Host.pop_back();
 				// std::cout << d_header.Host	<< std::endl;
 			}
 			if (buffer.find("Transfer-Encoding:") != std::string::npos)
 			{
-				d_header.transfer_encoding = (buffer.substr(pos + 1));
+				d_header->transfer_encoding = (buffer.substr(pos + 1));
 			}
 			if (buffer.size() == 1 && buffer == "\r")
 			{
@@ -254,36 +254,36 @@ void request::parse(std::string &header)
 			header.erase(0, header.find("\r\n\r\n") + 4);
 		else
 		{
-			d_header.res_status = 431;
+			d_header->res_status = 431;
 			return ;
 		}
 	}
 
-	if (d_header.Content_type.empty() == true)
+	if (d_header->Content_type.empty() == true)
 	{
-		d_header.res_status = 415;
+		d_header->res_status = 415;
 		return ;
 	}
-	if (d_header.transfer_encoding.empty() == false)
+	if (d_header->transfer_encoding.empty() == false)
 	{
 		
-		if (d_header.transfer_encoding.find("chunked") == std::string::npos 
-		|| (d_header.boundary.empty() == false 
-		&& d_header.transfer_encoding.find("chunked") == std::string::npos))
+		if (d_header->transfer_encoding.find("chunked") == std::string::npos 
+		|| (d_header->boundary.empty() == false 
+		&& d_header->transfer_encoding.find("chunked") == std::string::npos))
 		{
-			d_header.res_status = 501;
+			d_header->res_status = 501;
 			return ;
 		}
 	}
 	
-	if (d_header.method == "POST") 
+	if (d_header->method == "POST") 
 	{
-		if (d_header.transfer_encoding.empty() == true && d_header.Content_Length ==  -2)
+		if (d_header->transfer_encoding.empty() == true && d_header->Content_Length ==  -2)
 		{
-			d_header.res_status = 400;
+			d_header->res_status = 400;
 			return;
 		}
-		else if (d_header.transfer_encoding.empty() == false)
+		else if (d_header->transfer_encoding.empty() == false)
 		{
 			save_chunk_improve(header);
 		}
@@ -292,9 +292,10 @@ void request::parse(std::string &header)
 			save_binary(header);
 		}
 	}
-	else if (d_header.method.find("GET") != std::string::npos)
+	else if (d_header->method.find("GET") != std::string::npos)
 	{
 		end_of_file = true;
 		return ;
 	}
 }
+

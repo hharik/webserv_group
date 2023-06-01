@@ -6,32 +6,33 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 14:51:32 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/05/29 13:58:49 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/05/31 23:48:11 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-#include "request.hpp"
-#include "response.hpp"
 #include "parsing.hpp"
+#include "message.hpp"
+
 
 class Client
 {
-	User_data		*user_data;
-	int				fd;
-	char	buffer[BUFFER_SIZE];	
-	struct	kevent	client_event[2];
-	struct	sockaddr client;
-	socklen_t	len;
-	int				nbytes;
-	std::string		request_buffer;
-	response		client_response;
-	request			client_request;
+	const data_serv		*server_data;
+	User_data			*user_data;
+	int					fd;
+	char				buffer[BUFFER_SIZE];
+	struct				kevent	client_event[2];
+	struct				sockaddr client;
+	socklen_t			len;
+	int					nbytes;
+	std::string			request_buffer;
+	Message				client_message;
 public:
-	Client();
+	Client( const data_serv* );
 	// bool			is_reading;
+	// void	set_server_data( data_serv* );
 	void	client_connection( int );
 	void	attach_client_socket( int );
 	void	read_from_socket();

@@ -6,19 +6,18 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 16:39:08 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/05/29 14:27:18 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/01 01:14:02 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "client.hpp"
+#include "parsing.hpp"
 #include "user_data.hpp"
-#include "request.hpp"
-#include "response.hpp"
 
-Client::Client()
+
+Client::Client( const data_serv *dptr ):server_data(dptr), client_message(dptr)
 {
 	user_data = new User_data();
-	// is_reading = false;
 }
 
 void	Client::client_connection( int server_socket )
@@ -59,19 +58,24 @@ void	Client::read_from_socket()
 	if ( nbytes > 0 )
 	{
 		request_buffer.append(buffer, nbytes);
-		client_request.parse(request_buffer);
+		client_message.Request_message(request_buffer);
+		std::cout << "=================" << std::endl;
+		std::cout << "buffer : " << buffer << std::endl;
+		std::cout << "================" << std::endl;
+		std::cout << request_buffer << std::endl;
 	}
 	else
 	{
 		perror("recv");
 		exit(EXIT_FAILURE);
 	}
-	if (client_request.end_of_file == true)
+	if (client_message.eof() == true || client_message.status_code())
 	{
 		std::cout << "finish..." <<std::endl;
-		std::cout << request_buffer << std::endl;
-		std::string se = "HTTP/1.1 200 Created\r\nContent-Type: text/html\r\n\r\n";
-		send(fd, se.c_str(), se.size(), 0);
+		client_message.Respons_message( fd );
+		// std::cout << request_buffer << std::endl;
+		// std::string se = "HTTP/1.1 200 Created\r\nContent-Type: text/html\r\n\r\n";
+		// send(fd, se.c_str(), se.size(), 0);
 		close(fd);
 	}
 }

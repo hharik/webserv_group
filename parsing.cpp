@@ -1,4 +1,5 @@
 #include "parsing.hpp"
+#include <iterator>
 
 int parsing::check_ints(std::string str) 
 {
@@ -194,7 +195,7 @@ void parsing::save_data(std::vector <std::string> server)
 					std::cout << "Can't specify error pages in location " << std::endl;
 					exit(1);
 				}
-				if (_key == "upload" &&  _value.find_last_of("/") != value.length() - 1)
+				if (_key == "upload" &&  _value.find_last_of("/") != _value.length() - 1)
 					_value.append("/");
 				if (_value.find_first_of("{}") == std::string::npos)
 				{

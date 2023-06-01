@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:06:59 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/05/29 14:23:16 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/01 00:28:07 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,8 @@ Server::Server(const std::string &config_file):parser(config_file), servers()
 		servers.push_back(new Socket());
 		// std::cout << "host : " << it->server_name << std::endl;
 		// std::cout << "port : " << it->port << std::endl;
-		servers[i]->Create_the_socket(it->server_name, it->port);
+		servers[i]->set_server_data(*it);
+		servers[i]->Create_the_socket();
 		servers[i]->attach_server_socket( kq );
 		events_size++;
 		// size of events
