@@ -23,6 +23,7 @@ public:
 	int		find_required_location(  );
 	void	create_header();
 	void	parse_the_uri();
+	std::string generateAutoIndex(std::string &directory);
 	int		update_the_uri();
 };
 

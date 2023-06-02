@@ -12,7 +12,9 @@
 
 #include "message.hpp"
 #include "parsing.hpp"
-
+#include <dirent.h>
+#include <sys/stat.h>
+#include <cstring>
 response::response( const data_serv *dptr, const data_header *hptr ):server_data(dptr), header_data(hptr)
 {
 	is_file = true;
@@ -84,6 +86,27 @@ int	response::find_required_location( )
 }
 
 
+std::string response::generateAutoIndex(std::string &directory)
+{
+	std::string autoIndexHtml = "<html><body><ul>";
+	DIR *dir;
+	struct dirent *ent;
+	if ((dir = opendir(directory.c_str())) != NULL)
+	{
+		while ((ent = readdir(dir)) != NULL)
+		{
+			std::string filename = ent->d_name;
+			if (filename == ".")
+				continue;
+			if (is_file_or_directory(std::string(directory + filename)) == 1)
+				filename.append("/");
+			autoIndexHtml += "<li> <a href=\"" + filename + "\">" + filename + "</a></li>";
+		}
+		closedir(dir);
+	}
+	autoIndexHtml += "</url></body></html>";
+	return autoIndexHtml;
+}
 // void	response::set_start_line( const std::string http_version, int status )
 // {
 // 	std::string ver = "http1.1";
