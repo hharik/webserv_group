@@ -1,5 +1,7 @@
 #include "parsing.hpp"
 #include <iterator>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 int parsing::check_ints(std::string str) 
 {
@@ -24,6 +26,17 @@ std::string parsing::trim(std::string line, std::string whitespaces)
 	std::size_t strRange = strend - strbegin + 1;
 	return line.substr(strbegin, strRange);
 }
+
+int parsing::is_file_or_directory(const char *str)
+{
+	struct stat statbuff;
+	if (stat(str, &statbuff) != 0)
+		return -1;
+	if (S_ISDIR(statbuff.st_mode) != 0)
+		return 1;
+	return 0;
+}
+
 
 std::string parsing::reduce(std::string buff, std::string whitespaces, std::string to_replace = " ")
 {
@@ -134,6 +147,10 @@ void parsing::save_data(std::vector <std::string> server)
 				std::cout << "error " << std::endl;
 				exit(EXIT_FAILURE);
 			}
+			if (is_file_or_directory(temp.root_dir.c_str()) == 1 && temp.root_dir.find_last_of("/") != temp.root_dir.length() - 1)
+			{
+				temp.root_dir.append("/");
+			}
 			// std::cout << temp.root_dir << std::endl;
 			// temp.default_data.insert(std::make_pair("root", _value));
 		}
@@ -202,8 +219,10 @@ void parsing::save_data(std::vector <std::string> server)
 						std::cout << "error" << std::endl;
 						exit(1);
 					}
-					if ( _value.find_last_of("/") != _value.length() - 1)
+					if (is_file_or_directory(_value.c_str()) == 1 &&  _value.find_last_of("/") != _value.length() - 1)
+					{
 						_value.append("/");
+					}
 				}
 				else if (_key == "cgi" || _key == "redirect" || _key == "allowed_methods")
 				{
