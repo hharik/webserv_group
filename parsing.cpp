@@ -249,7 +249,7 @@ void parsing::save_data(std::vector <std::string> server)
 				}
 				if (_value.find_first_of("{}") == std::string::npos)
 				{
-					if (_key == "cgi" || _key == "redirect")
+					if (_key == "cgi")
 					{
 						size_t po = _value.find(" ");
 						_key += " " + _value.substr(0, po);
