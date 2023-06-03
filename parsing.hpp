@@ -58,6 +58,8 @@ class parsing
 		std::ifstream file;
 	public:
 		static std::map<std::string, std::string> mime_type;
+		static std::map<std::string, std::string> mime_types_ay;
+
 		std::vector<data_serv> servers_data;
 	
 		parsing(std::string name);

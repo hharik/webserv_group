@@ -98,8 +98,8 @@ std::string response::generateAutoIndex(std::string &directory)
 			std::string filename = ent->d_name;
 			if (filename == ".")
 				continue;
-			if (is_file_or_directory(std::string(directory + filename)) == 1)
-				filename.append("/");
+			// if (is_file_or_directory(std::string(directory + filename)) == 1)
+			// 	filename.append("/");
 			autoIndexHtml += "<li> <a href=\"" + filename + "\">" + filename + "</a></li>";
 		}
 		closedir(dir);

@@ -92,6 +92,11 @@ void parsing::save_data(std::vector <std::string> server)
 			size_t point = 0;
 	
 			_value = it->substr(pos + 1);
+			if (_value.find(" ") != std::string::npos)
+			{
+				std::cout << "error" << std::endl;
+				exit(1);
+			}
 			if ((point = _value.find(":")) == std::string::npos)
 			{
 				std::cout << "Server_name not provided and doesnt have a specific port" << std::endl;
@@ -106,6 +111,12 @@ void parsing::save_data(std::vector <std::string> server)
 		else if ((it->find("max_body_size ")) != std::string::npos)
 		{
 			_value = it->substr(pos + 1);
+			if (_value.find(" ") != std::string::npos)
+			{
+				std::cout << "error " <<  std::endl;
+				exit(EXIT_FAILURE);
+			}
+
 			if (check_ints(_value) == -1)
 			{
 				std::cout << "Error : Max body size isnt int" << std::endl;
@@ -115,32 +126,39 @@ void parsing::save_data(std::vector <std::string> server)
 			// std::cout << temp.max_body_size << std::endl;
 			// temp.default_data.insert(std::make_pair("max_body_size", _value));
 		}
-		// else if ((it->find("listen ")) != std::string::npos)
-		// {
-		// 	_value = it->substr(pos + 1);
-		// 	if (check_ints(_value) == -1 || atoi(_value.c_str()) > 65535)
-		// 	{
-		// 		std::cout << "Error : listen" << std::endl;
-		// 		exit(1);
-		// 	}
-
-		// 	// temp.default_data.insert(std::make_pair("listen", _value));
-		// }
 		else if ((it->find("root ")) != std::string::npos)
 		{
 			temp.root_dir = it->substr(pos + 1);
+			if (temp.root_dir.find(" ") != std::string::npos)
+			{
+				std::cout << "error " << std::endl;
+				exit(EXIT_FAILURE);
+			}
+			// std::cout << temp.root_dir << std::endl;
 			// temp.default_data.insert(std::make_pair("root", _value));
 		}
 		else if ((it->find("auto_indexing ")) != std::string::npos)
 		{
-			temp.auto_index = it->substr(pos + 1);
-			// temp.default_data.insert(std::make_pair("auto_indexing", _value));
+			if ((temp.auto_index = it->substr(pos + 1)).find(" ") != std::string::npos){
+				std::cout << "error in auto_indexing " << std::endl;
+				exit(EXIT_FAILURE);
+			}
+			else if (temp.auto_index != "on" && temp.auto_index != "off")
+			{
+				std::cout << "error in auto_indexing " << std::endl;
+				exit(EXIT_FAILURE);
+			}
 		}
 		else if ((it->find("error ")) != std::string::npos)
 		{
 			_value = it->substr(pos + 1);
 			std::string status = _value.substr(0, _value.find(" "));
 			std::string path = _value.substr(_value.find(" ") + 1);
+			if (path.find(" ") != std::string::npos)
+			{
+				std::cout << "error "<< std::endl;
+				exit(EXIT_FAILURE);
+			}
 			if (check_ints(status) == -1) {
 				std::cout << "Error, please specify error status" << std::endl;
 				exit(1);
@@ -151,7 +169,12 @@ void parsing::save_data(std::vector <std::string> server)
 		else if (it->find("server {") != std::string::npos ) { }
 		else if (it->find("location ") != std::string::npos)
 		{
-			std::string directory = it->substr(it->find(" ") + 1);
+			std::string directory; 
+			if ((directory = it->substr(it->find(" ") + 1)).find(" ") != std::string::npos)
+			{
+				std::cout << "error space " << std::endl;
+				exit(EXIT_FAILURE);
+			}
 			if (directory.find_first_of("/") != 0)
 			{
 				std::cout << "error, please add a slash at the first of location name" << std::endl;
@@ -172,11 +195,18 @@ void parsing::save_data(std::vector <std::string> server)
 				std::stringstream  a(_value);
 				std::string buff;
 				int i = 0;
-				if (_key == "root" && _value.find_last_of("/") != _value.length() - 1)
-					_value.append("/");
+				if (_key == "root" || _key == "upload")
+				{
+					if (_value.find(" ") != std::string::npos)
+					{
+						std::cout << "error" << std::endl;
+						exit(1);
+					}
+					if ( _value.find_last_of("/") != _value.length() - 1)
+						_value.append("/");
+				}
 				else if (_key == "cgi" || _key == "redirect" || _key == "allowed_methods")
 				{
-					// std::cout << " /////////////////   " << _value << std::endl;
 					while(getline(a, buff, ' '))
 					{
 						if (_key == "redirect" && i == 0)
@@ -190,7 +220,7 @@ void parsing::save_data(std::vector <std::string> server)
 						}
 						i++;
 					}
-					if (i != 2 && (_key == "cgi" || _key == "redirect"))
+					if ( i != 2  && (_key == "cgi" || _key == "redirect"))
 					{
 						std::cout << "error in "  << _key << std::endl;
 						exit(1);
@@ -200,8 +230,23 @@ void parsing::save_data(std::vector <std::string> server)
 					std::cout << "Can't specify error pages in location " << std::endl;
 					exit(1);
 				}
-				if (_key == "upload" &&  _value.find_last_of("/") != _value.length() - 1)
-					_value.append("/");
+				else if ((_key == "index") && (_value.find(" ") != std::string::npos)) { 
+					std::cout << "error " << std::endl;
+					exit(EXIT_FAILURE);
+				}
+				else if ((_key == "auto_indexing"))
+				{
+					if ((_value.find(" ") != std::string::npos))
+					{
+						std::cout << "error " << std::endl;
+						exit(EXIT_FAILURE);
+					}
+					else if (_value != "on" && _value != "off")
+					{
+						std::cout << "error in auto_indexing" << std::endl;
+						exit(1);
+					}
+				}
 				if (_value.find_first_of("{}") == std::string::npos)
 				{
 					if (_key == "cgi" || _key == "redirect")
@@ -319,6 +364,7 @@ void parsing::mime()
 			std::string key = buff.substr(0, buff.find(" "));
 			std::string value_ = buff.substr(pos + 1);
 			mime_type.insert(std::make_pair(key, value_));
+			mime_types_ay.insert(std::make_pair(value_, key));
 		}
 	} else {
 		std::cout << "mime type is not found" << std::endl;
