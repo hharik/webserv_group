@@ -35,6 +35,7 @@ struct data_header {
 	std::string	redirect_path;
 	std::string	methods;
 	bool	is_redirect;
+	std::string file;
 	
 	int 	res_status;
 	/* the default value of res_status is updated if there is no problem  */

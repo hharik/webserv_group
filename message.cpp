@@ -32,12 +32,12 @@ void	Message::Respons_message( int fd, std::string &buffer )
 
 bool	Message::eoh()
 {
-	return client_request.end_of_header;
+	return client_request.end_of_file;
 }
 
 bool	Message::eof()
 {
-	return client_response.eof;
+	return client_request.end_of_file;
 }
 
 int	Message::status_code()

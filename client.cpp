@@ -54,7 +54,7 @@ void	Client::attach_client_socket( int kq )
 
 void	Client::send_the_response()
 {
-	if (client_message.eoh() == true || client_message.status_code() > 0)
+	if (client_message.status_code() > 0 || client_message.eof() == true)
 	{
 		// if (client_message.status_code() > 0)
 		// {

@@ -219,7 +219,7 @@ void parsing::save_data(std::vector <std::string> server)
 						std::cout << "error" << std::endl;
 						exit(1);
 					}
-					if (is_file_or_directory(_value.c_str()) == 1 &&  _value.find_last_of("/") != _value.length() - 1)
+					if (is_file_or_directory(_value.c_str()) == 1)
 					{
 						_value.append("/");
 					}

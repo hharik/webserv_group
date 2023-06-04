@@ -37,7 +37,7 @@ void	response::response_handler( int client_fd, std::string& body )
 		else if (!header_data->res_status && header_data->method == "DELETE")
 			Delete_method();
 		create_header();
-		send(client_fd, header.c_str(), header.size(), 0);
+		// send(client_fd, header.c_str(), header.size(), 0);
 		is_header = false;
 		is_body = true;
 		std::cout << "----------------* HEADER *----------------" << std::endl;
@@ -149,6 +149,7 @@ int		response::serve_the_file()
 		/* if location support cgi */
 		/* pass file to cgi*/
 		std::cout << "your requested resource is : " << requested_resource << std::endl;
+		
 		if (search_inside_location("cgi " + get_extension(requested_resource)) == 1)
 		{
 			std::cout << "location support the cgi" << std::endl;

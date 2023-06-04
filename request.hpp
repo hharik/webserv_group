@@ -8,13 +8,13 @@ class request {
 	const data_serv		*server_data;
 	data_header 		*d_header;
 	std::string file;
+	std::string dir_to_upload;
 	long rsize;
 	int chunked_size;
 	int size;
 
 	public:
-	// bool end_of_file;
-	bool end_of_header;
+	bool end_of_file;
 	std::fstream file_obj;
 
 	request( const data_serv *, data_header* );
@@ -26,7 +26,7 @@ class request {
 	/* HERE IS THE EMMDDD */
 	// void save_chunked(std::string &body);
 	void save_binary(std::string &header);
-
+	void read_body(std::string &body);
 	void parse(std::string &header);
 
 	/* this will be added in this header 
@@ -40,6 +40,8 @@ class request {
 	/* if this method is allowed in this location */
 	int		allowed_methods();
 
+	/* check if location has upload enabled or not*/
+	int check_for_upload();
 
 };
 #endif

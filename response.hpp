@@ -32,6 +32,8 @@ class response {
 	bool				is_read;
 
 	std::string			header;
+
+	/*  */
 	
 
 public:
