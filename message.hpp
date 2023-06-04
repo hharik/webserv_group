@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/30 14:45:56 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/01 13:38:33 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/04 00:02:54 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,10 @@
 #include "request.hpp"
 #include "response.hpp"
 
+
 struct data_header {
+	/* add this iterator for a map loaction*/
+	std::map<std::string, std::map<std::string, std::string> >::const_iterator it;
 	std::string Content_type;
 	std::string Host;
 	int			Content_Length;
@@ -26,8 +29,16 @@ struct data_header {
 	std::string uri;
 	std::string http_version;
 	std::string boundary;
-	int res_status;
-	data_header() : Content_Length(-2), res_status(-2) {std::cout << "data_header ... created " << std::endl;}
+	/* add this two attribute to data_header */
+	std::string	new_uri;
+	std::string	query;
+	std::string	redirect_path;
+	std::string	methods;
+	bool	is_redirect;
+	
+	int 	res_status;
+	/* the default value of res_status is updated if there is no problem  */
+	data_header() : Content_Length(-2), res_status(0), is_redirect(false) { }
 	void print() {
 		std::cout << " h" << Content_type <<  " " << Host << " " << Content_Length << " " << transfer_encoding << " " << method << "res : " << res_status << std::endl;
 	}
@@ -50,6 +61,7 @@ public:
 	void	Respons_message( int, std::string& );
 	int		status_code();
 	bool	eoh();
+	bool	eof();
 };
 
 #endif /* MESSAGE_HPP */

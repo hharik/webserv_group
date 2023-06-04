@@ -6,13 +6,14 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 16:39:08 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/01 14:20:53 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/03 23:29:53 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "client.hpp"
 #include "parsing.hpp"
 #include "user_data.hpp"
+#include <unistd.h>
 
 
 Client::Client( const data_serv *dptr ):server_data(dptr), client_message(dptr)
@@ -24,9 +25,9 @@ void	Client::client_connection( int server_socket )
 {
 	memset(&client, 0, sizeof(client));
 	len = sizeof(client);
-	std::cout << "server_socket ... " << server_socket <<  std::endl;
+	// std::cout << "server_socket ... " << server_socket <<  std::endl;
 	fd = accept(server_socket, &client, &len);
-	std::cout << "fd : " << fd << std::endl;
+	// std::cout << "fd : " << fd << std::endl;
 	if (fd < 0)
 	{
 		perror("client:accept");
@@ -51,6 +52,29 @@ void	Client::attach_client_socket( int kq )
 	}
 }
 
+void	Client::send_the_response()
+{
+	if (client_message.eoh() == true || client_message.status_code() > 0)
+	{
+		// if (client_message.status_code() > 0)
+		// {
+		// 	std::cout << "status code : " << client_message.status_code() << std::endl;
+		// 	// exit(0);
+		// 	// return ;
+		// }
+		client_message.Respons_message( fd , request_buffer);
+		// std::cout << request_buffer << std::endl;
+		// std::string se = "HTTP/1.1 200 Created\r\nContent-Type: text/html\r\n\r\n";
+		// send(fd, se.c_str(), se.size(), 0);
+		if (client_message.eof() == true)
+		{
+			std::cout << "sending file with success ... " << std::endl;
+			close(fd);
+		}
+		// close(fd);
+	}
+}
+
 void	Client::read_from_socket()
 {
 	memset(buffer, 0, BUFFER_SIZE);
@@ -64,12 +88,14 @@ void	Client::read_from_socket()
 	}
 	if (client_message.eoh() == false)
 		client_message.Request_message(request_buffer);
-	if (client_message.eoh() == true || client_message.status_code() > 0)
-	{
-		client_message.Respons_message( fd , request_buffer);
-		// std::cout << request_buffer << std::endl;
-		// std::string se = "HTTP/1.1 200 Created\r\nContent-Type: text/html\r\n\r\n";
-		// send(fd, se.c_str(), se.size(), 0);
-		close(fd);
-	}
+}
+
+bool	Client::eof()
+{
+	return client_message.eof();
+}
+
+int	Client::get_fd()
+{
+	return fd;
 }

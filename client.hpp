@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 14:51:32 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/05/31 23:48:11 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/02 20:24:42 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 #include "parsing.hpp"
 #include "message.hpp"
+#include <sys/_types/_intptr_t.h>
 
 
 class Client
@@ -36,7 +37,10 @@ public:
 	void	client_connection( int );
 	void	attach_client_socket( int );
 	void	read_from_socket();
+	void	send_the_response();
 
+	bool eof();
+	int	get_fd();
 };
 
 #endif /* CLIENT_HPP */

@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:06:59 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/01 00:28:07 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/02 21:02:14 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,8 @@
 #include "user_data.hpp"
 #include "server.hpp"
 #include "socket.hpp"
+#include <sys/event.h>
+#include <unistd.h>
 
 Server::Server(const std::string &config_file):parser(config_file), servers()
 {
@@ -62,6 +64,16 @@ void	Server::Create_http_servers()
 			else if (events[i].filter == EVFILT_READ)
 			{
 				user_data->get_client()->read_from_socket();
+			}
+			else if (events[i].filter == EVFILT_WRITE)
+			{
+				user_data->get_client()->send_the_response();
+				// if (user_data->get_client()->eof() == true)
+				// {
+				// 	events_size--;
+				// 	close(user_data->get_client()->get_fd());
+				// }
+				// std::cout << "need to write something ... " << std::endl;
 			}
 		}
 	}

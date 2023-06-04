@@ -29,6 +29,19 @@ class request {
 
 	void parse(std::string &header);
 
+	/* this will be added in this header 
+	(mzhmini lhih o jbthom lhna hada makan) */
+	/*check if requested resorce in such location */
+	void	parse_the_uri();
+	int		update_the_uri();
+	int		find_required_location( );
+	/* check if this location have a redirection */
+	int		check_for_redirection();
+	/* if this method is allowed in this location */
+	int		allowed_methods();
+
+
 };
 #endif
+		
 		

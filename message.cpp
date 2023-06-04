@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/30 14:48:59 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/01 13:38:46 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/02 20:22:06 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,12 +26,18 @@ void	Message::Request_message( std::string &buffer )
 
 void	Message::Respons_message( int fd, std::string &buffer )
 {
-	client_response.find_required_location();
+	client_response.response_handler(fd, buffer);
+
 }
 
 bool	Message::eoh()
 {
 	return client_request.end_of_header;
+}
+
+bool	Message::eof()
+{
+	return client_response.eof;
 }
 
 int	Message::status_code()

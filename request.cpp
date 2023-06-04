@@ -1,10 +1,11 @@
 
 #include "message.hpp"
 #include "request.hpp"
+#include <sstream>
+#include <string>
 
 request::request( const data_serv *dptr, data_header *hptr ) : server_data(dptr), d_header(hptr), rsize(0) , size(0), chunked_size(-2)
 {
-	// d_header->print();
 	end_of_header = false;
 }
 
@@ -12,169 +13,6 @@ request::~request()
 {
 	
 }
-
-// std::string request::time_date()
-// {
-// 		time_t curr_time;
-// 		tm * curr_tm;
-// 		char date_string[100];
-// 		char time_string[100];
-
-// 		time(&curr_time);
-// 		curr_tm = localtime(&curr_time);
-
-// 		strftime(date_string, 50, "%B-%d-%Y-%T", curr_tm);
-// 		return std::string(date_string);
-	
-// }
-
-// std::string request::copy_until(std::string::iterator first, std::string::iterator last, std::string to_find = "\r\n")
-// {
-// 	std::string temp;
-// 	while (first < last)
-// 	{
-// 		if (*first == '\r' && *(first + 1) && *(first + 1) == '\n')
-// 		{
-// 			break ;
-// 		}
-// 		temp += *first;
-// 		first++;
-// 	}
-// 	return temp;
-// }
-
-
-// void	request::save_chunk_improve(std::string &body) 
-// {
-	
-// 	// std::cout << body <<   " \n THE END  " << std::endl; 
-// 	std::string::iterator first = body.begin();
-// 	std::string::iterator last;
-// 	std::string to_delete = "\r\n";
-// 	if (file_obj.is_open() == false)
-// 	{
-// 		if (file.empty() == true)
-// 		{
-// 			body.insert(0, "\r\n");
-// 			std::string name = time_date();
-// 			file = name + "." + parsing::mime_type.find(d_header->Content_type)->second;
-// 			// std::cout <<  file << std::endl;
-// 		}
-// 		// body.erase(0, body.find(to_delete));
-// 		file_obj.open(file, std::fstream::out | std::fstream::app | std::fstream::binary);
-// 	}
-// 	std::stringstream to_hex;
-// 	while (chunked_size != 0)
-// 	{
-// 		if (chunked_size == -2) // kata3ni badya dyal lbody fih chunked
-// 		{
-// 			first = std::search(body.begin(), body.end(), to_delete.begin(), to_delete.end());
-
-// 			std::string::iterator te_end =  std::search(first + 1, body.end(), to_delete.begin(), to_delete.end());
-
-
-// 			std::string test(first + 2, te_end);
-// 			if (test == "0")
-// 			{
-// 				end_of_file = true;
-// 				d_header->res_status = 200;
-// 			}
-// 			to_hex << test;
-// 			to_hex >> std::hex >> chunked_size;
-// 			body.erase(0, test.length() + 4);
-// 		}
-// 		if (chunked_size >= body.size())
-// 		{
-// 			file_obj << body;
-// 			chunked_size -= body.size();
-// 			body.clear();
-// 			if (chunked_size == 0) chunked_size = -2;
-// 			break ;
-// 		}
-// 		else
-// 		{
-// 			file_obj << body.substr(0, chunked_size);
-// 			body.erase(0, chunked_size);
-// 			chunked_size = -2;
-// 			if (body.size() <= 2 || body.find("\r\n", 2) == std::string::npos)
-// 			{
-// 				break ;
-// 			}
-// 		}
-// 	}
-// 	if (end_of_file == true)
-// 		file_obj.close();
-// }
-
-/* HERE IS THE EMMDDD */
-// void request::save_chunked(std::string &body)
-// {
-// 	std::string::iterator first = body.begin();
-// 	std::string::iterator last;
-// 	std::string to_delete = "\r\n";
-// 	if (file_obj.is_open() == false)
-// 	{
-// 		if (file.empty() == true)
-// 		{
-// 			body.insert(0, "\r\n");
-// 			std::string name = time_date();
-// 			file = name + "." + parsing::mime_type.find(d_header->Content_type)->second;
-// 		}
-// 		file_obj.open(file, std::fstream::out | std::fstream::app | std::fstream::binary);
-// 	}
-	
-// 	rsize += body.length(); 
-// 	long index = 0;
-// 	std::string temp;
-// 	std::stringstream stream;
-// 	while (rsize > chunked_size && end_of_file == false)
-// 	{
-// 		index  = chunked_size + body.length() - rsize;
-// 		if (index < 0)
-// 		{
-// 			return ;
-// 		}
-// 		temp = copy_until(body.begin() + index + 2, body.end());
-// 		if (temp == "0")
-// 			end_of_file = true;
-// 		stream << temp;
-// 		stream >> std::hex >> chunked_size;
-// 		chunked_size += temp.size() + 4;
-// 		body.erase(index, index + temp.size() + 4);
-// 	}
-// 	file_obj << body;
-// 	file_obj.close();
-// 	if (index == 0 && end_of_file == true)
-// 		d_header->res_status = 200;
-// }
-
-// void request::save_binary(std::string &header)
-// {
-// 	if (file.empty() == true)
-// 	{
-// 		std::string name = time_date();
-// 		std::cout <<  "  / * * / */ -" << d_header->Content_type << std::endl;
-// 		file = name + "." + parsing::mime_type.find(d_header->Content_type)->second;
-// 	}
-// 	if (file_obj.is_open() == false)
-// 		file_obj.open(file, std::fstream::out | std::fstream::binary | std::fstream::app);
-// 	if (file_obj.is_open())
-// 	{
-// 		size += header.size();
-// 		file_obj << header;
-// 		header.clear();
-// 	}
-// 	// file_obj.close();
-// 	if (size == d_header->Content_Length)
-// 	{
-// 		file.clear();
-// 		header.clear();
-// 		end_of_file = true;
-// 		d_header->res_status = 200;
-// 		size = 0;
-// 		file_obj.close();
-// 	}
-// }
 
 void request::parse(std::string &header) 
 {
@@ -259,6 +97,18 @@ void request::parse(std::string &header)
 			return ;
 		}
 	}
+	/* check if the requested uri exist in locations block */
+	
+	if (find_required_location() < 0)
+		return ;
+	/* requested uri is exist */
+	
+	/* if this location have a redirection */
+	else if (check_for_redirection() < 0)
+		return ;
+	/* if this method is allowed in this location */
+	else if (allowed_methods() < 0)
+		return ;
 	end_of_header = true;
 	std::cout << "status : " << std::endl;
 	return ;
@@ -302,3 +152,98 @@ void request::parse(std::string &header)
 	// }
 }
 
+void	request::parse_the_uri()
+{
+	int			find;
+
+	d_header->new_uri = d_header->uri;
+	find = d_header->new_uri.find_last_of('?');
+	if (std::string::npos != find)
+	{
+		d_header->query = d_header->uri;
+		d_header->new_uri.resize(find);
+		d_header->query.erase(0, find + 1);
+	}
+}
+
+int	request::update_the_uri()
+{
+	int			find;
+
+	find = d_header->new_uri.find_last_of('/');
+	if (find && std::string::npos != find)
+	{
+		d_header->new_uri.resize(find);
+		return (1);
+	}
+	return (0);
+}
+
+int	request::find_required_location( )
+{
+	int result;
+	int	found;
+	
+	parse_the_uri();
+	d_header->it = server_data->location.find(d_header->new_uri);
+	result = 1;
+	while (result)
+	{
+		std::cout << "new_uri : " << d_header->new_uri << std::endl;
+		if (d_header->it != server_data->location.cend())
+		{
+			std::cout << "found the matching location for the request uri." << std::endl;
+			// std::cout << "your location is ... : " << it->first << std::endl;
+			return (0);
+		}
+		result = update_the_uri();
+		d_header->it = server_data->location.find(d_header->new_uri);
+	}
+	d_header->res_status = 404;
+	return (-1);
+}
+
+int	request::check_for_redirection()
+{
+	std::map<std::string, std::string>::const_iterator iter;
+	std::stringstream	mystream;
+	std::string			result;
+	
+	iter = d_header->it->second.find("redirect");
+	if (iter != d_header->it->second.cend())
+	{
+		mystream << iter->second;
+		mystream >> result;
+		d_header->is_redirect = true;
+		d_header->res_status  = std::atoi(result.c_str());
+		mystream >> result;
+		d_header->redirect_path = result;
+		return (-1);
+	}
+	return (0);
+}
+
+
+int 	request::allowed_methods()
+{
+	std::map<std::string, std::string>::const_iterator iter;
+	std::stringstream	my_stream;
+	std::string			method;
+
+	iter = d_header->it->second.find("allowed_methods");
+	if (iter != d_header->it->second.cend())
+	{
+		my_stream << iter->second;
+		d_header->methods = iter->second;
+		while ( my_stream >> method	)
+		{
+			if (method == d_header->method)
+			{
+				std::cout << "this location support the " << method << " method" << std::endl;
+				return (0);
+			}
+		}
+	}
+	d_header->res_status = 405;
+	return (-1);
+}
