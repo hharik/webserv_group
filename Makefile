@@ -6,7 +6,7 @@
 #    By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/05/27 13:30:26 by ajemraou          #+#    #+#              #
-#    Updated: 2023/05/30 14:58:27 by ajemraou         ###   ########.fr        #
+#    Updated: 2023/06/05 18:57:16 by ajemraou         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -20,7 +20,6 @@ SRC =	main.cpp \
 		server.cpp \
 		socket.cpp \
 		client.cpp \
-		message.cpp \
 		request.cpp \
 		response.cpp \
 		user_data.cpp

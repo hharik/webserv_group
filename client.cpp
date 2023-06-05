@@ -6,17 +6,17 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 16:39:08 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/03 23:29:53 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/05 19:04:49 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "client.hpp"
 #include "parsing.hpp"
 #include "user_data.hpp"
-#include <unistd.h>
 
 
-Client::Client( const data_serv *dptr ):server_data(dptr), client_message(dptr)
+
+Client::Client( const data_serv *dptr ):server_data(dptr), header_data(new data_header), client_request(dptr, header_data), client_response(dptr, header_data)
 {
 	user_data = new User_data();
 }
@@ -54,25 +54,10 @@ void	Client::attach_client_socket( int kq )
 
 void	Client::send_the_response()
 {
-	if (client_message.status_code() > 0 || client_message.eof() == true)
-	{
-		// if (client_message.status_code() > 0)
-		// {
-		// 	std::cout << "status code : " << client_message.status_code() << std::endl;
-		// 	// exit(0);
-		// 	// return ;
-		// }
-		client_message.Respons_message( fd , request_buffer);
-		// std::cout << request_buffer << std::endl;
-		// std::string se = "HTTP/1.1 200 Created\r\nContent-Type: text/html\r\n\r\n";
-		// send(fd, se.c_str(), se.size(), 0);
-		if (client_message.eof() == true)
+		if (header_data->res_status > 0 || client_request.end_of_file == true)
 		{
-			std::cout << "sending file with success ... " << std::endl;
-			close(fd);
+			client_response.response_handler(fd);
 		}
-		// close(fd);
-	}
 }
 
 void	Client::read_from_socket()
@@ -86,13 +71,13 @@ void	Client::read_from_socket()
 		perror("recv");
 		exit(EXIT_FAILURE);
 	}
-	if (client_message.eoh() == false)
-		client_message.Request_message(request_buffer);
+	if (client_request.end_of_file == false)
+		client_request.parse(request_buffer);
 }
 
 bool	Client::eof()
 {
-	return client_message.eof();
+	return client_response.Is_End_Of_File();
 }
 
 int	Client::get_fd()

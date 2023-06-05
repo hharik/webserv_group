@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/26 18:03:44 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/01 00:32:41 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/05 19:12:28 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,7 +98,6 @@ void	Socket::Accept_new_connection( int kq )
 {
 	// accept new connction
 	clients.push_back(new Client(server_data));
-	std::cout << "Accept_new_connection_client index : " << clients_ind << std::endl;
 	clients[clients_ind]->client_connection(sockfd);
 	clients[clients_ind]->attach_client_socket(kq);
 	clients_ind++;

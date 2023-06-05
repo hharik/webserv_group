@@ -11,6 +11,7 @@
 class response {
 	// std::map<std::string, std::map<std::string, std::string> >::const_iterator it;
 	std::map<std::string, std::string>::const_iterator iter;
+	std::map<int, std::string>::const_iterator er_it;
 
 	const data_serv 	*server_data;
 	data_header			*header_data;
@@ -25,22 +26,20 @@ class response {
 	// std::string			methods;
 
 	// std::string			redirect_path;
-	int					status_code;
-	bool				is_header;
-	bool				is_body;
+	// int					status_code;
+	// bool				is_header;
+	// bool				is_body;
 	// bool				is_redirect;
-	bool				is_read;
+	bool				is_open;
 
 	std::string			header;
-
-	/*  */
 	
 
 public:
 	bool	eof;
 	response( const data_serv *,  data_header* );
 
-	void	response_handler( int, std::string& );
+	void	response_handler( int );
 	/* check for location and redirections and allowed methods */
 	void	check_location_block();
 	
@@ -56,14 +55,14 @@ public:
 	/* create response header */
 	void	create_header();
 
-	void	Error_pages();
+	void	Pages();
 
+	void	Send_the_Body( int );
+	void	Send_the_Header( int );
+	void	get_requested_resource();
+	int		delete_dir( const char * );
+	int		delete_the_file();
 
-
-	void	GET_handler( int );
-
-
-	
 	int 	upload_file();
 	int		requested_resource_is_dir();
 
@@ -79,6 +78,7 @@ public:
 	int		search_inside_location( const std::string );
 	// int		path_is_exist( const char * );
 	int		is_file_or_directory( const char* );
+	bool	Is_End_Of_File();
 
 	/* GET method */
 	void	Get_method();

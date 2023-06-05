@@ -15,6 +15,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <vector>
+#include <dirent.h>
 /* hamid's includes */
 # include <map>
 # include <stack>
@@ -37,7 +38,7 @@ struct data_header;
 
 #define BACKLOG 10
 #define BUFFER_SIZE 2000
-
+#define CMP(path)(strcmp(path, ".") && strcmp(path, ".."))
 
 struct data_serv {
 	std::map<std::string, std::map<std::string, std::string> > location;

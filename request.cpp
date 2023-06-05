@@ -1,8 +1,7 @@
 
-#include "message.hpp"
-#include "request.hpp"
-#include <sstream>
-#include <string>
+
+#include "client.hpp"
+
 
 request::request( const data_serv *dptr, data_header *hptr ) : server_data(dptr), d_header(hptr), rsize(0) , size(0), chunked_size(-2), end_of_file(false)
 {
@@ -336,11 +335,10 @@ int	request::find_required_location( )
 	result = 1;
 	while (result)
 	{
-		std::cout << "new_uri : " << d_header->new_uri << std::endl;
 		if (d_header->it != server_data->location.cend())
 		{
-			std::cout << "found the matching location for the request uri." << std::endl;
-			// std::cout << "your location is ... : " << it->first << std::endl;
+			// std::cout << "found the matching location for the request uri." << std::endl;
+			// std::cout << "your location is ... : " << d_header->it->first << std::endl;
 			return (0);
 		}
 		result = update_the_uri();

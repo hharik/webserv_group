@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:06:59 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/02 21:02:14 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/05 19:06:39 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,12 +68,11 @@ void	Server::Create_http_servers()
 			else if (events[i].filter == EVFILT_WRITE)
 			{
 				user_data->get_client()->send_the_response();
-				// if (user_data->get_client()->eof() == true)
-				// {
-				// 	events_size--;
-				// 	close(user_data->get_client()->get_fd());
-				// }
-				// std::cout << "need to write something ... " << std::endl;
+				if (user_data->get_client()->eof() == true)
+				{
+					close(user_data->get_client()->get_fd());
+					events_size--;
+				}
 			}
 		}
 	}
