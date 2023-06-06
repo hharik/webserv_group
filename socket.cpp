@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/26 18:03:44 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/05 19:12:28 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/06 10:16:25 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,11 +96,19 @@ void	Socket::attach_server_socket( int kq )
 
 void	Socket::Accept_new_connection( int kq )
 {
+	clients.push_back(new Client(server_data, this));
 	// accept new connction
-	clients.push_back(new Client(server_data));
 	clients[clients_ind]->client_connection(sockfd);
 	clients[clients_ind]->attach_client_socket(kq);
+	clients[clients_ind]->Set_client_inedex(clients_ind);
 	clients_ind++;
+}
+
+void		Socket::Destruct_client( int index )
+{
+	delete clients[index];
+	clients.erase(clients.begin() + index);
+	clients_ind--;	
 }
 
 void		Socket::set_server_data(data_serv &data)

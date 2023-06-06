@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 16:39:08 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/05 19:04:49 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/06 10:14:55 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,16 +16,22 @@
 
 
 
-Client::Client( const data_serv *dptr ):server_data(dptr), header_data(new data_header), client_request(dptr, header_data), client_response(dptr, header_data)
+Client::Client( const data_serv *dptr, Socket *Pbase ):server_data(dptr), Base(Pbase), header_data(new data_header), client_request(dptr, header_data), client_response(dptr, header_data)
 {
 	user_data = new User_data();
+}
+
+Client::~Client()
+{
+	delete user_data;
+	std::cout << "Client Destructed ... !" << std::endl;
 }
 
 void	Client::client_connection( int server_socket )
 {
 	memset(&client, 0, sizeof(client));
 	len = sizeof(client);
-	// std::cout << "server_socket ... " << server_socket <<  std::endl;
+	// std::cout << "server_socket ... " << server_socket <<  std::endl;]
 	fd = accept(server_socket, &client, &len);
 	// std::cout << "fd : " << fd << std::endl;
 	if (fd < 0)
@@ -43,6 +49,7 @@ void	Client::attach_client_socket( int kq )
 {
 	user_data->set_status(false);
 	user_data->set_client(this);
+	user_data->set_socket(Base);
 	EV_SET(&client_event[0], fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, user_data);
 	EV_SET(&client_event[1], fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, user_data);
 	if (kevent(kq, client_event, 2, NULL, 0, NULL) < 0)
@@ -73,6 +80,16 @@ void	Client::read_from_socket()
 	}
 	if (client_request.end_of_file == false)
 		client_request.parse(request_buffer);
+}
+
+void	Client::Set_client_inedex( int index )
+{
+	client_index = index;
+}
+
+int		Client::Get_client_inedex()
+{
+	return client_index;
 }
 
 bool	Client::eof()

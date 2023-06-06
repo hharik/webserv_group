@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 14:51:32 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/05 18:58:22 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/06 09:50:01 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include "parsing.hpp"
 #include "request.hpp"
 #include "response.hpp"
+#include <sys/_types/_intptr_t.h>
 
 struct data_header {
 	/* add this iterator for a map loaction*/
@@ -52,26 +53,30 @@ struct data_header {
 class Client
 {
 	const data_serv		*server_data;
+	Socket		*Base;
 	User_data			*user_data;
-	int					fd;
 	char				buffer[BUFFER_SIZE];
+	int					fd;
 	struct				kevent	client_event[2];
 	struct				sockaddr client;
 	socklen_t			len;
 	int					nbytes;
+	int					client_index;
 	std::string			request_buffer;
 	data_header			*header_data;
 	request				client_request;
 	response			client_response;
 public:
-	Client( const data_serv* );
-	// bool			is_reading;
-	// void	set_server_data( data_serv* );
+	Client( const data_serv*,  Socket* );
+	~Client( );
+
 
 	void	client_connection( int );
 	void	attach_client_socket( int );
 	void	read_from_socket();
 	void	send_the_response();
+	void	Set_client_inedex( int );
+	int		Get_client_inedex();
 
 	bool eof();
 	int	get_fd();

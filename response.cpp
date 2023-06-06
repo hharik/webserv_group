@@ -6,17 +6,20 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/30 12:25:24 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/05 21:08:22 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/06 09:19:58 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 
 #include "client.hpp"
+#include "response.hpp"
+#include <string>
 
 response::response( const data_serv *dptr,  data_header *hptr ):server_data(dptr), header_data(hptr)
 {
 	eof = false;
 	is_open = false;
+	default_response = false;
 	/*---------------*/
 }
 
@@ -47,22 +50,10 @@ void	response::Send_the_Header( int client_fd )
 {
 	in_file.open(requested_resource.c_str());
 	is_open = true;
-	if (in_file.is_open())
+	if (send(client_fd, header.c_str(), header.size(), 0) < 0)
 	{
-		// memset(buffer, 0, BUFFER_SIZE);
-		// in_file.read(buffer, BUFFER_SIZE);
-		// std::streamsize size = in_file.gcount();
-		if (send(client_fd, header.c_str(), header.size(), 0) < 0)
-		{
-			perror("send");
-			exit(EXIT_FAILURE);
-		}
-		else if (in_file.eof())
-			eof = true;
-	}
-	else
-	{
-		eof = true;
+		perror("send");
+		exit(EXIT_FAILURE);
 	}
 }
 
@@ -83,6 +74,13 @@ void	response::Send_the_Body( int client_fd )
 	}
 	else
 	{
+		// Default = Default_Response( std::to_string(header_data->res_status), response_content);
+		std::cout << "response size  : "  << response_content.size() << std::endl;
+		if (send(client_fd, response_content.c_str(), response_content.size(), 0) < 0)
+		{
+			perror("send");
+			exit(EXIT_FAILURE);
+		}
 		eof = true;
 	}
 }
@@ -309,7 +307,7 @@ int	response::delete_dir( const char *directory )
 	DIR 			*dir;
 	std::string 	str;
 	int				status;
-	std::cout << "remove this dir : " << directory << std::endl;
+
 	if ((dir = opendir (directory)) == NULL)
 	{
 		header_data->res_status = 403;
@@ -339,7 +337,6 @@ int	response::delete_dir( const char *directory )
 		else if (status == 1 && CMP(dp->d_name)) 
 		{
 			delete_dir(str.c_str());
-			// closedir(dir);
 			if (remove(str.c_str()) != 0)
 			{
 				header_data->res_status = 403;
@@ -393,41 +390,53 @@ void	response::Delete_method()
 	
 }
 
+std::string	response::Default_Response(const std::string &status_code, const std::string &Meaning)
+{
+	std::string	html_resp = "<!DOCTYPE html>\r\n<html>\r\n<head>\r\n<title>";
+	html_resp += status_code;
+	html_resp += Meaning;
+	std::string	rest = "</title>\r\n</head>\r\n</html>\r\n";
+	return (html_resp);
+}
+
 std::string	response::get_start_line()
 {
 	/* HTTP/1.1 code phrase               */
 	std::string	start = HTTP_V;
 	start += std::to_string(header_data->res_status);
 	if (header_data->res_status == 200)
-		start += " OK\r\n";
+		response_content += S200;
 	else if (header_data->res_status == 201)
-		start += " Created\r\n";
+		response_content += S201;
 	else if (header_data->res_status == 204)
-		start += " No Content\r\n";
+		response_content += S204;
 	else if (header_data->res_status == 301)
-		start += " Moved Permanently\r\n";
+		response_content += S301;
 	else if (header_data->res_status == 302)
-		start += " Found\r\n";
+		response_content += S302;
 	else if (header_data->res_status == 400)
-		start += " Bad Request\r\n";
+		response_content += S400;
 	else if (header_data->res_status == 403)
-		start += " Forbidden\r\n";
+		response_content += S403;
 	else if (header_data->res_status == 404)
-		start += " Not Found\r\n";
+		response_content += S404;
 	else if (header_data->res_status == 405)
-		start += " Method Not Allowed\r\n";
+		response_content += S405;
 	else if (header_data->res_status == 409)
-		start += " Conflict\r\n";
+		response_content += S409;
 	else if (header_data->res_status == 414)
-		start += " URI Too Long\r\n";
+		response_content += S414;
 	else if (header_data->res_status == 415)
-		start += " Unsupported Media Type\r\n";
+		response_content += S415;
 	else if (header_data->res_status == 431)
-		start += " Request Header Fields Too Large\r\n";
+		response_content += S431;
 	else if (header_data->res_status == 501)
-		start += " Not Implemented\r\n";
+		response_content += S501;
+	start += response_content;
+	start += "\r\n";
 	return (start);
 }
+
 
 std::string	response::Get_Content_Type()
 {
@@ -436,21 +445,26 @@ std::string	response::Get_Content_Type()
 	std::string	Content_Type = "Content-Type: ";
 	std::string	result;
 	int	find;
-
-	result = requested_resource;
-	find = result.find_last_of('.');
-	if (find != std::string::npos)
+	
+	if (default_response == false)
 	{
-		result.erase(0, find + 1);
-		iterator = parsing::mime_types_ay.find(result);
-		if (iterator != parsing::mime_types_ay.end())
+		result = requested_resource;
+		find = result.find_last_of('.');
+		if (find != std::string::npos)
 		{
-			Content_Type += iterator->second;
-			Content_Type += "\r\n";
-			return (Content_Type);
+			result.erase(0, find + 1);
+			iterator = parsing::mime_types_ay.find(result);
+			if (iterator != parsing::mime_types_ay.end())
+			{
+				Content_Type += iterator->second;
+				Content_Type += "\r\n";
+				return (Content_Type);
+			}
 		}
+		Content_Type += DEFAULT_MIME_TYPE;
 	}
-	Content_Type += DEFAULT_MIME_TYPE;
+	else
+		Content_Type += "text/html";
 	Content_Type += "\r\n";
 	return (Content_Type);
 }
@@ -474,16 +488,21 @@ std::string response::time_date()
 std::string	response::Get_Content_Length()
 {
 /* Content-Length: 1234\r\n\r\n             */
-	std::string Content_Length = "Content-Length: ";	
+	std::string Content_Length = "Content-Length: ";
+	std::string	Default_Length;
 	struct stat s;
 	
-    if (stat(requested_resource.c_str(), &s) == 0)
+	if (default_response == false)
 	{
-		Content_Length += std::to_string(s.st_size);
-        Content_Length += "\r\n\r\n";
-		return Content_Length;
-    }
-	return (Content_Length + "0 \r\n\r\n");
+    	if (stat(requested_resource.c_str(), &s) == 0)
+		{
+			Content_Length += std::to_string(s.st_size);
+    	    Content_Length += "\r\n\r\n";
+			return Content_Length;
+    	}
+	}
+	Default_Length = std::to_string(header_data->res_status);
+	return (Content_Length + Default_Length + "\r\n\r\n");
 }
 
 void	response::Pages()
@@ -492,21 +511,13 @@ void	response::Pages()
 	{
 		er_it = server_data->errors.find(header_data->res_status);
 		requested_resource = er_it->second;
-		if (access(er_it->second.c_str(), F_OK) < 0)
-		{
-			std::cout << "Erro : " << std::endl;
-			/* Default Error_pages */
-			// access();
-		}
+		if (access(er_it->second.c_str(), F_OK) == 0)
+			return ;
 	}
-	else if (header_data->method != "GET")
+	if (header_data->method != "GET")
 	{
-		if (header_data->res_status == 200)
-			requested_resource = "/Users/ajemraou/Desktop/webserv/Success/200.jpeg";
-		else if (header_data->res_status == 201)
-			requested_resource = "/Users/ajemraou/Desktop/webserv/Success/201.jpeg";
-		else if (header_data->res_status == 204)
-			requested_resource = "/Users/ajemraou/Desktop/webserv/Success/204.jpeg";
+		response_content = Default_Response( std::to_string(header_data->res_status) , response_content );
+		default_response = true;
 	}
 }
 

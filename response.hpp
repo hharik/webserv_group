@@ -3,10 +3,25 @@
 
 #include "parsing.hpp"
 #include "request.hpp"
+#include <string>
 
 #define DEFAULT_MIME_TYPE "application/octet-stream"
 #define HTTP_V "HTTP/1.1 "
 #define SERVER "Server: Sarii/v1.0\r\n"
+#define S200 " OK"
+#define S201 " Created"
+#define S204 " No Content"
+#define S301 " Moved Permanently"
+#define S302 " Found"
+#define S400 " Bad Request"
+#define S403 " Forbidden"
+#define S404 " Not Found"
+#define S405 " Method Not Allowed"
+#define S409 " Conflict"
+#define S414 " URI Too Long"
+#define S415 " Unsupported Media Type"
+#define S431 " Request Header Fields Too Large"
+#define S501 " Not Implemented"
 
 class response {
 	// std::map<std::string, std::map<std::string, std::string> >::const_iterator it;
@@ -23,6 +38,7 @@ class response {
 	// std::string			query;
 	std::string			target;
 	std::string			requested_resource;
+	std::string			response_content;
 	// std::string			methods;
 
 	// std::string			redirect_path;
@@ -31,6 +47,7 @@ class response {
 	// bool				is_body;
 	// bool				is_redirect;
 	bool				is_open;
+	bool				default_response;
 
 	std::string			header;
 	
@@ -73,7 +90,7 @@ public:
 	std::string	Get_Content_Length();
 	std::string time_date();
 	std::string	get_start_line();
-
+	std::string	Default_Response( const std::string&, const std::string& );
 	/* some helpful functions */
 	int		search_inside_location( const std::string );
 	// int		path_is_exist( const char * );

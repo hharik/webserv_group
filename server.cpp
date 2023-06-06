@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:06:59 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/05 19:06:39 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/06 09:59:54 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,8 +32,6 @@ Server::Server(const std::string &config_file):parser(config_file), servers()
 	for (int i = 0;it != end;it++ , i++)
 	{
 		servers.push_back(new Socket());
-		// std::cout << "host : " << it->server_name << std::endl;
-		// std::cout << "port : " << it->port << std::endl;
 		servers[i]->set_server_data(*it);
 		servers[i]->Create_the_socket();
 		servers[i]->attach_server_socket( kq );
@@ -56,22 +54,25 @@ void	Server::Create_http_servers()
 			/* new client need to establish the connection with this server through this socket */
 			if (events[i].filter == EVFILT_READ && user_data->get_status() == true)
 			{
+				std::cout << "NeW ClIent ......... " << std::endl;
+				user_data->get_socket()->Accept_new_connection( kq );
 				events_size++;
 				new_event = true;
-				user_data->get_socket()->Accept_new_connection( kq );
 			}
 			/* client request */
 			else if (events[i].filter == EVFILT_READ)
 			{
 				user_data->get_client()->read_from_socket();
 			}
-			else if (events[i].filter == EVFILT_WRITE)
+			if (events[i].filter == EVFILT_WRITE)
 			{
 				user_data->get_client()->send_the_response();
 				if (user_data->get_client()->eof() == true)
 				{
 					close(user_data->get_client()->get_fd());
+					user_data->get_socket()->Destruct_client(user_data->get_client()->Get_client_inedex());
 					events_size--;
+					new_event = true;
 				}
 			}
 		}
@@ -93,6 +94,7 @@ void	Server::Wait_for_incoming_events()
 {
 	if (new_event == true)
 	{
+		std::cout << "events_size : " << events_size << std::endl;
 		delete [] events;
 		events = new struct kevent [events_size];
 		new_event = false;

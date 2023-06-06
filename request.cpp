@@ -142,7 +142,6 @@ void request::parse(std::string &header)
 	std::string tes;
 	if (d_header->Host.empty() == true)
 	{
-		// std::cout << header << std::endl; 
 		std::string first_line, buffer, token;
 		std::stringstream ss(header);
 		getline(ss, first_line, '\n');
