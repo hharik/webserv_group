@@ -33,7 +33,7 @@ class request {
 	(mzhmini lhih o jbthom lhna hada makan) */
 	/*check if requested resorce in such location */
 	void	parse_the_uri();
-	int		update_the_uri();
+	int		update_the_uri( std::string& );
 	int		find_required_location( );
 	/* check if this location have a redirection */
 	int		check_for_redirection();

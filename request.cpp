@@ -1,6 +1,7 @@
 
 
 #include "client.hpp"
+#include <string>
 
 
 request::request( const data_serv *dptr, data_header *hptr ) : server_data(dptr), d_header(hptr), rsize(0) , size(0), chunked_size(-2), end_of_file(false)
@@ -311,14 +312,14 @@ void	request::parse_the_uri()
 	}
 }
 
-int	request::update_the_uri()
+int	request::update_the_uri( std::string &uri )
 {
 	int			find;
 
-	find = d_header->new_uri.find_last_of('/');
+	find = uri.find_last_of('/');
 	if (find && std::string::npos != find)
 	{
-		d_header->new_uri.resize(find);
+		uri.resize(find);
 		return (1);
 	}
 	return (0);
@@ -326,22 +327,23 @@ int	request::update_the_uri()
 
 int	request::find_required_location( )
 {
+	std::string	updated_uri;
 	int result;
-	int	found;
 	
 	parse_the_uri();
 	d_header->it = server_data->location.find(d_header->new_uri);
 	result = 1;
+	updated_uri = d_header->new_uri;
 	while (result)
 	{
 		if (d_header->it != server_data->location.cend())
 		{
 			// std::cout << "found the matching location for the request uri." << std::endl;
-			// std::cout << "your location is ... : " << d_header->it->first << std::endl;
+			std::cout << "your location is ... : " << d_header->it->first << std::endl;
 			return (0);
 		}
-		result = update_the_uri();
-		d_header->it = server_data->location.find(d_header->new_uri);
+		result = update_the_uri(updated_uri);
+		d_header->it = server_data->location.find(updated_uri + "/");
 	}
 	d_header->res_status = 404;
 	return (-1);
@@ -382,10 +384,7 @@ int 	request::allowed_methods()
 		while ( my_stream >> method	)
 		{
 			if (method == d_header->method)
-			{
-				std::cout << "this location support the " << method << " method" << std::endl;
 				return (0);
-			}
 		}
 	}
 	d_header->res_status = 405;

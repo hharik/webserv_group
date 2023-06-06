@@ -6,13 +6,14 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/30 12:25:24 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/06 10:29:35 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/06 11:21:28 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 
 #include "client.hpp"
 #include "response.hpp"
+#include <cstdint>
 #include <string>
 
 response::response( const data_serv *dptr,  data_header *hptr ):server_data(dptr), header_data(hptr)
@@ -25,7 +26,7 @@ response::response( const data_serv *dptr,  data_header *hptr ):server_data(dptr
 
 void	response::response_handler( int client_fd )
 {
-	if (header_data->res_status == 200 || header_data->res_status == 201)
+	if (header_data->res_status == 200 || header_data->res_status == 201 || header_data->res_status == 0)
 	{
 		if (header_data->method == "GET")
 			Get_method();
@@ -182,7 +183,6 @@ void	response::get_requested_resource()
 {
 	std::string rest;
 
-	// std::cout << "GET Method ... " << std::endl;
 
 	/* get_requested_resource */
 	search_inside_location("root");
@@ -209,9 +209,8 @@ void	response::Get_method()
 
 	/* get_requested_resource */
 	search_inside_location("root");
-	std::cout << "iter :  " << iter->second << std::endl;
-	rest = header_data->uri;
-	rest.erase(0, header_data->new_uri.size() + 1);
+	rest = header_data->new_uri;
+	rest.erase(0, header_data->it->first.size());
 	target = iter->second + rest;
 	/* check if the path exist */
 	if (access(target.c_str(), F_OK) < 0)

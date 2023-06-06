@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:06:59 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/06 09:59:54 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/06 10:57:02 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,6 @@ void	Server::Create_http_servers()
 			/* new client need to establish the connection with this server through this socket */
 			if (events[i].filter == EVFILT_READ && user_data->get_status() == true)
 			{
-				std::cout << "NeW ClIent ......... " << std::endl;
 				user_data->get_socket()->Accept_new_connection( kq );
 				events_size++;
 				new_event = true;
