@@ -80,7 +80,6 @@ public:
 	int		delete_dir( const char * );
 	int		delete_the_file();
 
-	int 	upload_file();
 	int		requested_resource_is_dir();
 
 	// void	send_response();

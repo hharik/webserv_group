@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/30 12:25:24 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/06 09:19:58 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/06 10:29:35 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,42 +85,6 @@ void	response::Send_the_Body( int client_fd )
 	}
 }
 
-int response::upload_file()
-{
-	if (header_data->transfer_encoding.empty() == false)
-	{
-		
-		if (header_data->transfer_encoding.find("chunked") == std::string::npos 
-		|| (header_data->boundary.empty() == false 
-		&& header_data->transfer_encoding.find("chunked") == std::string::npos))
-		{
-			header_data->res_status = 501;
-			return 0;
-		}
-	}
-	if (header_data->method == "POST") 
-	{
-		if (header_data->Content_type.empty() == true)
-		{
-			header_data->res_status = 415;
-			return  0;
-		}
-		if (header_data->transfer_encoding.empty() == true && header_data->Content_Length ==  -2)
-		{
-			header_data->res_status = 400;
-			return 0;
-		}
-		// else if (header_data->transfer_encoding.empty() == false)
-		// {
-		// 		save_chunk_improve(header);
-		// }
-		// else // needs to check for cgi  
-		// {
-		// 		save_binary(header);
-		// }
-	}
-	return 0;
-}
 
 int	response::is_file_or_directory( const char *path )
 {
@@ -160,6 +124,7 @@ int		response::serve_the_file()
 		
 		if (search_inside_location("cgi " + get_extension(requested_resource)) == 1)
 		{
+			std::cout << "query : " << header_data->query << std::endl;
 			std::cout << "location support the cgi" << std::endl;
 		}
 		/* if loaction does not has a cgi */
@@ -244,10 +209,10 @@ void	response::Get_method()
 
 	/* get_requested_resource */
 	search_inside_location("root");
+	std::cout << "iter :  " << iter->second << std::endl;
 	rest = header_data->uri;
 	rest.erase(0, header_data->new_uri.size() + 1);
 	target = iter->second + rest;
-	std::cout << "iter :  " << iter->second << std::endl;
 	/* check if the path exist */
 	if (access(target.c_str(), F_OK) < 0)
 	{

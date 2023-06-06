@@ -147,7 +147,7 @@ void parsing::save_data(std::vector <std::string> server)
 				std::cout << "error " << std::endl;
 				exit(EXIT_FAILURE);
 			}
-			if (is_file_or_directory(temp.root_dir.c_str()) == 1 && temp.root_dir.find_last_of("/") != temp.root_dir.length() - 1)
+			if (is_file_or_directory(temp.root_dir.c_str()) != 1 && temp.root_dir.find_last_of("/") != temp.root_dir.length() - 1)
 			{
 				temp.root_dir.append("/");
 			}
@@ -219,7 +219,7 @@ void parsing::save_data(std::vector <std::string> server)
 						std::cout << "error" << std::endl;
 						exit(1);
 					}
-					if (is_file_or_directory(_value.c_str()) == 1)
+					if (is_file_or_directory(_value.c_str()) != 1)
 					{
 						_value.append("/");
 					}
