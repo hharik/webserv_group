@@ -38,8 +38,9 @@ struct data_header {
 	std::string file;
 	
 	int 	res_status;
+	bool		upload_flag;
 	/* the default value of res_status is updated if there is no problem  */
-	data_header() : Content_Length(-2), res_status(0), is_redirect(false) { }
+	data_header() : Content_Length(-2), res_status(0), is_redirect(false), upload_flag(false) { }
 	void print() {
 		std::cout << " h" << Content_type <<  " " << Host << " " << Content_Length << " " << transfer_encoding << " " << method << "res : " << res_status << std::endl;
 	}

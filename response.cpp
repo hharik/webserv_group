@@ -16,6 +16,35 @@
 #include <cstdint>
 #include <string>
 
+
+
+/**/
+
+std::string response::generateAutoIndex(std::string &directory)
+{
+	std::string autoIndexHtml = "<html><body><ul>";
+	DIR *dir;
+	struct dirent *ent;
+	if ((dir = opendir(directory.c_str())) != NULL)
+	{
+		while ((ent = readdir(dir)) != NULL)
+		{
+			std::string filename = ent->d_name;
+			if (filename == ".")
+				continue;
+			// if (is_file_or_directory(std::string(directory + filename)) == 1)
+			// 	filename.append("/");
+			autoIndexHtml += "<li> <a href=\"" + filename + "\">" + filename + "</a></li>";
+		}
+		closedir(dir);
+	}
+	autoIndexHtml += "</url></body></html>";
+	return autoIndexHtml;
+}
+
+
+
+
 response::response( const data_serv *dptr,  data_header *hptr ):server_data(dptr), header_data(hptr)
 {
 	eof = false;
@@ -26,6 +55,7 @@ response::response( const data_serv *dptr,  data_header *hptr ):server_data(dptr
 
 void	response::response_handler( int client_fd )
 {
+	std::cout << "\n\nparent \n\n" << std::endl;
 	if (header_data->res_status == 200 || header_data->res_status == 201 || header_data->res_status == 0)
 	{
 		if (header_data->method == "GET")
@@ -70,7 +100,7 @@ void	response::Send_the_Body( int client_fd )
 			perror("send");
 			exit(EXIT_FAILURE);
 		}
-		else if (in_file.eof())
+		else if (in_file.eof()) 
 			eof = true;
 	}
 	else
@@ -84,6 +114,90 @@ void	response::Send_the_Body( int client_fd )
 		}
 		eof = true;
 	}
+}
+
+
+void	response::handle_cgi(std::string &request_file) {
+
+
+
+	/* for POST REQUEST'S WE READ FROM THE FILE THAT WAS UPLOADED TO US 
+	AND GIVE IT AS AN INPUT TO THE EXECVE */
+
+
+	/*file to store*/
+	file_tmp = "/tmp/" + time_date();
+	cgifd[1] = open(file_tmp.c_str(), O_CREAT | O_RDWR, 0644);
+
+	/* env to store	*/
+	std::string tem;
+	tem = "SCRIPT_FILENAME=" +  request_file;
+	Env.push_back(tem);
+	Env.push_back("REQUEST_METHOD=" + header_data->method);
+	Env.push_back("REDIRECT_STATUS=200");
+	if (header_data->query.empty() == false)
+	{
+		Env.push_back("QUERY_STRING=" + header_data->query);
+		std::cout <<  "*  *" <<  header_data->query << std::endl;
+	}
+
+	if (header_data->Content_Length != -2)
+ 	{
+		std::stringstream len;
+		len << header_data->Content_Length;
+		std::string content_len;
+		len >> content_len;
+		Env.push_back("CONTENT_LENGTH=" + content_len);
+	}
+
+	char **env;
+	/* data to execute*/
+	agv[0] = (char *)iter->second.c_str();  //executable
+	agv[1] = (char *)request_file.c_str(); //requested script
+	agv[2] = NULL;
+	env = new char *[Env.size()];
+	for (size_t i = 0; i < Env.size(); i++)
+		env[i] = (char *) Env[i].c_str();
+	int  child = fork();
+	if(child == -1)
+		perror("fork");
+	else if (child == 0)
+	{
+		//child process 
+		// dup2(cgifd[0], 0);
+		// std::cout << "________________" << std::endl;
+		// std::cout << agv[0] << std::endl;
+		// std::cout << agv[1] << std::endl;
+		// std::cout << "____________________" << std::endl;
+		dup2(cgifd[1], 1);
+		close(cgifd[1]);
+		// if (header_data->method == "POST")
+		// {
+		// 	cgifd[0] = open(header_data->file.c_str(), O_RDONLY);
+		// 	dup2(cgifd[0], 0);
+		// 	close(cgifd[0]);
+		// }
+		execve(agv[0], agv, env);
+		exit(EXIT_SUCCESS);
+	}
+	else{
+		int status;
+		wait(NULL);
+		sleep(2);
+	}
+	std::ifstream file(file_tmp);
+	std::stringstream str;
+	std::string buffer;
+	str << file.rdbuf();
+	buffer = str.str();
+	std::cout << " ////////////////////////////" << std::endl;
+	std::cout<<buffer<<std::endl;
+	std::cout << " ////////////////////////////" << std::endl;
+	// std::cout<<str<<std::ednl;
+
+	// Env.clear();
+	// header_data->file.clear();
+	// exit(1);
 }
 
 
@@ -127,6 +241,7 @@ int		response::serve_the_file()
 		{
 			std::cout << "query : " << header_data->query << std::endl;
 			std::cout << "location support the cgi" << std::endl;
+			handle_cgi(requested_resource);
 		}
 		/* if loaction does not has a cgi */
 		/* send the requested file with 200 status code */
@@ -158,6 +273,8 @@ int		response::requested_resource_is_dir()
 	{
 		index = iter->second;
 		requested_resource = target + index;
+		std::cout << "this is funct 2  " << std::endl;
+
 		serve_the_file();
 	}
 	else if (search_inside_location("auto_indexing") == 1)
@@ -223,6 +340,7 @@ void	response::Get_method()
 	{
 		std::cout << "target is a file ... " << std::endl;
 		requested_resource = target;
+		std::cout << "this is funct 1  " << std::endl;
 		serve_the_file();
 		// requested_resource_is_file();
 	}

@@ -29,12 +29,16 @@ std::string parsing::trim(std::string line, std::string whitespaces)
 
 int parsing::is_file_or_directory(const char *str)
 {
-	struct stat statbuff;
-	if (stat(str, &statbuff) != 0)
-		return -1;
-	if (S_ISDIR(statbuff.st_mode) != 0)
-		return 1;
-	return 0;
+	struct	stat	spath;
+
+	if (stat(str, &spath) == 0)
+	{
+		if (S_ISREG(spath.st_mode))
+			return (0);
+		else if (S_ISDIR(spath.st_mode))
+			return (1);
+	}
+	return (-1);
 }
 
 
@@ -147,7 +151,7 @@ void parsing::save_data(std::vector <std::string> server)
 				std::cout << "error " << std::endl;
 				exit(EXIT_FAILURE);
 			}
-			if (is_file_or_directory(temp.root_dir.c_str()) != 1 && temp.root_dir.find_last_of("/") != temp.root_dir.length() - 1)
+			if (is_file_or_directory(temp.root_dir.c_str()) == 1 && temp.root_dir.find_last_of("/") != temp.root_dir.length() - 1)
 			{
 				temp.root_dir.append("/");
 			}
@@ -209,6 +213,9 @@ void parsing::save_data(std::vector <std::string> server)
 				size_t pos = it->find(" ");
 				std::string _key = it->substr(0, pos);
 				std::string _value = it->substr(pos + 1);
+				// std::cout <<  "*" << _key << "*" << std::endl;
+				// std::cout << "*" << _value  << "*"  << std::endl;
+				// exit(1);
 				std::stringstream  a(_value);
 				std::string buff;
 				int i = 0;
@@ -219,7 +226,7 @@ void parsing::save_data(std::vector <std::string> server)
 						std::cout << "error" << std::endl;
 						exit(1);
 					}
-					if (is_file_or_directory(_value.c_str()) != 1)
+					if (is_file_or_directory(_value.c_str()) == 1 && _value.find_last_of("/") != _value.length() - 1)
 					{
 						_value.append("/");
 					}
@@ -272,7 +279,7 @@ void parsing::save_data(std::vector <std::string> server)
 					{
 						size_t po = _value.find(" ");
 						_key += " " + _value.substr(0, po);
-						_value.erase(0,  _value.find(" "));
+						_value.erase(0,  _value.find(" ") + 1);
 					}
 					tem.insert(std::make_pair(_key, _value));
 				}
@@ -283,6 +290,7 @@ void parsing::save_data(std::vector <std::string> server)
 				}
 				it++;
 			}
+			// exit(1);
 			// for(std::map<std::string,std::string>::iterator it = tem.begin(); it != tem.end(); it++)
 			// {
 			// 	std::cout << it->first << "* *" << it->second  << "* "<< std::endl;

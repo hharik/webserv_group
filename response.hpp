@@ -104,6 +104,15 @@ public:
 
 	/* Delete method */
 	void	Delete_method();
+
+	/* auto index*/
+	std::string generateAutoIndex(std::string &directory);
+	/* CGI exec */
+	void handle_cgi(std::string &request_file);
+	int cgifd[2];
+	char *agv[3];
+	std::string file_tmp;
+	std::vector<std::string> Env;
 };
 
 #endif
