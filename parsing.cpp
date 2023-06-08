@@ -212,7 +212,14 @@ void parsing::save_data(std::vector <std::string> server)
 			{
 				size_t pos = it->find(" ");
 				std::string _key = it->substr(0, pos);
+				if (pos == std::string::npos && _key != "{")
+				{
+					std::cout << _key << std::endl;
+					std::cout << "Error with one of the locations " << std::endl;
+					exit(1);
+				}
 				std::string _value = it->substr(pos + 1);
+				// std::cout << "opo > " <<  pos << std::endl;
 				// std::cout <<  "*" << _key << "*" << std::endl;
 				// std::cout << "*" << _value  << "*"  << std::endl;
 				// exit(1);
@@ -290,7 +297,6 @@ void parsing::save_data(std::vector <std::string> server)
 				}
 				it++;
 			}
-			// exit(1);
 			// for(std::map<std::string,std::string>::iterator it = tem.begin(); it != tem.end(); it++)
 			// {
 			// 	std::cout << it->first << "* *" << it->second  << "* "<< std::endl;
