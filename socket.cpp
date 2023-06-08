@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/26 18:03:44 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/06 10:16:25 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/07 22:20:24 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #include "client.hpp"
 #include "parsing.hpp"
 #include "user_data.hpp"
+#include <vector>
 
 Socket::Socket()
 {
@@ -30,6 +31,12 @@ Socket::Socket()
 	hints.ai_protocol = IPPROTO_TCP;// TCP protocol
 }
 
+Socket::~Socket()
+{
+	delete user_data;
+	delete server_data;
+}
+
 int	Socket::Create_the_socket( )
 {
 	status = getaddrinfo(server_data->server_name.c_str(), server_data->port.c_str() , &hints, &result); //get addr info based on the hint struct
@@ -37,8 +44,7 @@ int	Socket::Create_the_socket( )
 	if (status)
 	{
 		std::cerr << gai_strerror(status) << std::endl;
-		// perror("getaddrinfo");
-		exit(EXIT_FAILURE);
+		return -1;
 	}
  	// Create the Server socket
 	sockfd = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
@@ -98,20 +104,30 @@ void	Socket::Accept_new_connection( int kq )
 {
 	clients.push_back(new Client(server_data, this));
 	// accept new connction
+	clients_ind = clients.size() - 1;
 	clients[clients_ind]->client_connection(sockfd);
 	clients[clients_ind]->attach_client_socket(kq);
-	clients[clients_ind]->Set_client_inedex(clients_ind);
-	clients_ind++;
+	// clients_ind++;
 }
 
-void		Socket::Destruct_client( int index )
+void	Socket::Destruct_client(  )
 {
-	delete clients[index];
-	clients.erase(clients.begin() + index);
-	clients_ind--;	
+	int	index;
+
+	index = 0;
+	while (index < clients.size())
+	{
+		if (clients[index]->eof() == true)
+		{
+			delete clients[index];
+			clients.erase(clients.begin() + index);
+		}
+		else
+			index++;
+	}
 }
 
-void		Socket::set_server_data(data_serv &data)
+void	Socket::set_server_data(data_serv &data)
 {
 	*server_data = data;
 }

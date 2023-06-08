@@ -52,11 +52,11 @@ void	request::save_chunk_improve(std::string &body)
 	std::string to_delete = "\r\n";
 	if (file_obj.is_open() == false)
 	{
-		if (d_header->file.empty() == true)
+		if (file.empty() == true)
 		{
 			body.insert(0, "\r\n");
 			std::string name = time_date();
-			d_header->file = dir_to_upload +  name + "." + parsing::mime_type.find(d_header->Content_type)->second;
+			file = dir_to_upload +  name + "." + parsing::mime_type.find(d_header->Content_type)->second;
 			// std::cout <<  file << std::endl;
 		}
 		// body.erase(0, body.find(to_delete));
@@ -76,8 +76,6 @@ void	request::save_chunk_improve(std::string &body)
 			if (test == "0")
 			{
 				end_of_file = true;
-				if (dir_to_upload == "/tmp/")
-					d_header->upload_flag = true;
 				d_header->res_status = 201;
 			}
 			to_hex << test;
@@ -115,6 +113,7 @@ void request::save_binary(std::string &header)
 	{
 		std::string name = time_date();
 		std::cout <<  "  / * * / */ -" << d_header->Content_type << std::endl;
+		// exit(1);
 		d_header->file = dir_to_upload + name + "." + parsing::mime_type.find(d_header->Content_type)->second;
 	}
 	if (file_obj.is_open() == false)
@@ -135,8 +134,6 @@ void request::save_binary(std::string &header)
 		end_of_file = true;
 		d_header->res_status = 201;
 		size = 0;
-		if (dir_to_upload == "/tmp/")
-			d_header->upload_flag = true;
 		file_obj.close();
 	}
 }
@@ -253,9 +250,7 @@ void request::parse(std::string &header)
 		{
 			if (check_for_upload() == -1)
 			{
-				/* means u cant upload */
-				dir_to_upload.clear();
-				dir_to_upload = "/tmp/";
+				end_of_file = true;
 				return ;
 			}
 		}
@@ -336,19 +331,17 @@ int	request::find_required_location( )
 	int result;
 	
 	parse_the_uri();
-	d_header->it = server_data->location.find(d_header->new_uri);
 	result = 1;
 	updated_uri = d_header->new_uri;
 	while (result)
 	{
+		d_header->it = server_data->location.find(updated_uri);
 		if (d_header->it != server_data->location.cend())
-		{
-			// std::cout << "found the matching location for the request uri." << std::endl;
-			std::cout << "your location is ... : " << d_header->it->first << std::endl;
 			return (0);
-		}
-		result = update_the_uri(updated_uri);
 		d_header->it = server_data->location.find(updated_uri + "/");
+		if (d_header->it != server_data->location.cend())
+			return (0);
+		result = update_the_uri(updated_uri);
 	}
 	d_header->res_status = 404;
 	return (-1);

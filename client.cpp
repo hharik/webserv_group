@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 16:39:08 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/06 10:14:55 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/07 21:45:14 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,12 +19,15 @@
 Client::Client( const data_serv *dptr, Socket *Pbase ):server_data(dptr), Base(Pbase), header_data(new data_header), client_request(dptr, header_data), client_response(dptr, header_data)
 {
 	user_data = new User_data();
+	// is_finish = false;
 }
 
 Client::~Client()
 {
-	delete user_data;
-	std::cout << "Client Destructed ... !" << std::endl;
+	// delete user_data;
+	delete header_data;
+	// std::cout << "Destructed .... " << std::endl;
+	// std::cout << "Client Destructed ... !" << std::endl;
 }
 
 void	Client::client_connection( int server_socket )
@@ -40,8 +43,10 @@ void	Client::client_connection( int server_socket )
 	}
 	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0)
 	{
+		client_response.set_eof(true);
 		perror("client:fcntl");
-		exit(EXIT_FAILURE);
+		return ;
+		// exit(EXIT_FAILURE);
 	}
 }
 
@@ -75,22 +80,24 @@ void	Client::read_from_socket()
 		request_buffer.append(buffer, nbytes);
 	else
 	{
-		perror("recv");
-		exit(EXIT_FAILURE);
+		perror("recv_client : ");
+		client_response.set_eof(true);
+		return ;
+		// exit(EXIT_FAILURE);
 	}
 	if (client_request.end_of_file == false)
 		client_request.parse(request_buffer);
 }
 
-void	Client::Set_client_inedex( int index )
-{
-	client_index = index;
-}
+// void	Client::Set_is_finish( bool status )
+// {
+// 	is_finish = status;
+// }
 
-int		Client::Get_client_inedex()
-{
-	return client_index;
-}
+// bool		Client::Get_is_finish()
+// {
+// 	return is_finish;
+// }
 
 bool	Client::eof()
 {

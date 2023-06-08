@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 14:51:32 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/06 09:50:01 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/07 18:38:24 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ struct data_header {
 	int 	res_status;
 	bool		upload_flag;
 	/* the default value of res_status is updated if there is no problem  */
-	data_header() : Content_Length(-2), res_status(0), is_redirect(false), upload_flag(false) { }
+	data_header() : Content_Length(-2), res_status(0), is_redirect(false) { }
 	void print() {
 		std::cout << " h" << Content_type <<  " " << Host << " " << Content_Length << " " << transfer_encoding << " " << method << "res : " << res_status << std::endl;
 	}
@@ -62,7 +62,6 @@ class Client
 	struct				sockaddr client;
 	socklen_t			len;
 	int					nbytes;
-	int					client_index;
 	std::string			request_buffer;
 	data_header			*header_data;
 	request				client_request;
@@ -76,8 +75,7 @@ public:
 	void	attach_client_socket( int );
 	void	read_from_socket();
 	void	send_the_response();
-	void	Set_client_inedex( int );
-	int		Get_client_inedex();
+
 
 	bool eof();
 	int	get_fd();

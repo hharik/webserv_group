@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:06:59 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/06 10:57:02 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/07 21:41:46 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,18 +60,17 @@ void	Server::Create_http_servers()
 			}
 			/* client request */
 			else if (events[i].filter == EVFILT_READ)
-			{
 				user_data->get_client()->read_from_socket();
-			}
 			if (events[i].filter == EVFILT_WRITE)
 			{
 				user_data->get_client()->send_the_response();
 				if (user_data->get_client()->eof() == true)
 				{
 					close(user_data->get_client()->get_fd());
-					user_data->get_socket()->Destruct_client(user_data->get_client()->Get_client_inedex());
+					user_data->get_socket()->Destruct_client();
 					events_size--;
 					new_event = true;
+					delete user_data;
 				}
 			}
 		}
@@ -93,7 +92,6 @@ void	Server::Wait_for_incoming_events()
 {
 	if (new_event == true)
 	{
-		std::cout << "events_size : " << events_size << std::endl;
 		delete [] events;
 		events = new struct kevent [events_size];
 		new_event = false;

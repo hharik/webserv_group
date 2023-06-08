@@ -1,7 +1,4 @@
 #include "parsing.hpp"
-#include <iterator>
-#include <sys/types.h>
-#include <sys/stat.h>
 
 int parsing::check_ints(std::string str) 
 {

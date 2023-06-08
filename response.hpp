@@ -3,14 +3,17 @@
 
 #include "parsing.hpp"
 #include "request.hpp"
+#include <_types/_intmax_t.h>
 #include <string>
 
 #define DEFAULT_MIME_TYPE "application/octet-stream"
+#define HTML "text/html"
 #define HTTP_V "HTTP/1.1 "
 #define SERVER "Server: Sarii/v1.0\r\n"
 #define S200 " OK"
 #define S201 " Created"
 #define S204 " No Content"
+#define S207 " Multi-Status"
 #define S301 " Moved Permanently"
 #define S302 " Found"
 #define S400 " Bad Request"
@@ -21,6 +24,7 @@
 #define S414 " URI Too Long"
 #define S415 " Unsupported Media Type"
 #define S431 " Request Header Fields Too Large"
+#define S500 " Internal Server Error"
 #define S501 " Not Implemented"
 
 class response {
@@ -48,6 +52,16 @@ class response {
 	// bool				is_redirect;
 	bool				is_open;
 	bool				default_response;
+	int					s204;
+	int					s403;
+
+
+	/*####################################*/
+	int		cgifd[2];
+	char	*agv[3];
+	std::string file_tmp;
+	std::vector<std::string> Env;
+	/*####################################*/
 
 	std::string			header;
 	
@@ -72,13 +86,14 @@ public:
 	/* create response header */
 	void	create_header();
 
-	void	Pages();
-
+	void			Pages();
+	void	treat_target_resource( const char * );
 	void	Send_the_Body( int );
 	void	Send_the_Header( int );
-	void	get_requested_resource();
+	// void	get_requested_resource();
 	int		delete_dir( const char * );
 	int		delete_the_file();
+	int		file_status();
 
 	int		requested_resource_is_dir();
 
@@ -87,8 +102,9 @@ public:
 	const std::string	get_extension( const std::string& );
 	std::string	Get_Content_Type();
 	std::string	Get_Content_Length();
-	std::string time_date();
+	std::string Get_Date();
 	std::string	get_start_line();
+	std::string	get_Location();
 	std::string	Default_Response( const std::string&, const std::string& );
 	/* some helpful functions */
 	int		search_inside_location( const std::string );
@@ -96,6 +112,12 @@ public:
 	int		is_file_or_directory( const char* );
 	bool	Is_End_Of_File();
 
+	/*#############################################*/
+	std::string generateAutoIndex(std::string &directory);
+	void	handle_cgi(std::string &request_file);
+	/*#############################################*/
+
+	void	set_eof( bool );
 	/* GET method */
 	void	Get_method();
 
@@ -104,15 +126,6 @@ public:
 
 	/* Delete method */
 	void	Delete_method();
-
-	/* auto index*/
-	std::string generateAutoIndex(std::string &directory);
-	/* CGI exec */
-	void handle_cgi(std::string &request_file);
-	int cgifd[2];
-	char *agv[3];
-	std::string file_tmp;
-	std::vector<std::string> Env;
 };
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 14:50:54 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/06 09:44:35 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/07 21:43:18 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@ class Socket
 	// static	int 		kq;
 public:
 	Socket();
+	~Socket();
 	Socket(const std::string&, const std::string&);
 	
 	// static member functions
@@ -53,7 +54,7 @@ public:
 	void		Accept_new_connection( int );
 	void		Wait_for_incoming_events( int );
 	void		set_server_data(data_serv&);
-	void		Destruct_client( int );
+	void		Destruct_client(  );
 };
 
 #endif /* SOCKET_HPP */
