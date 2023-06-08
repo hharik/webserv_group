@@ -310,11 +310,11 @@ std::string response::generateAutoIndex(std::string &directory)
 				continue;
 			if (is_file_or_directory(std::string(directory + filename).c_str()) == 1)
 				filename.append("/");
-			autoIndexHtml += "<a href=\"" + filename + "\">" + filename + "</a><hr>";
+			autoIndexHtml += "<li> <a href=\"" + filename + "\">" + filename + "</a> </li>";
 		}
 		closedir(dir);
 	}
-	autoIndexHtml += " </url> </body> </html>";
+	autoIndexHtml += "<hr> </url> </body> </html>";
 	return autoIndexHtml;
 }
 
