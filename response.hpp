@@ -5,6 +5,7 @@
 #include "request.hpp"
 #include <_types/_intmax_t.h>
 #include <string>
+#include <sys/_types/_pid_t.h>
 
 #define DEFAULT_MIME_TYPE "application/octet-stream"
 #define HTML "text/html"
@@ -54,6 +55,8 @@ class response {
 	bool				default_response;
 	int					s204;
 	int					s403;
+	bool				auto_index;
+	std::string			auto_index_content;
 
 
 	/*####################################*/
@@ -61,6 +64,8 @@ class response {
 	char	*agv[3];
 	std::string file_tmp;
 	std::vector<std::string> Env;
+	pid_t		pid;
+	bool		is_alive;
 	/*####################################*/
 
 	std::string			header;
@@ -69,7 +74,7 @@ class response {
 public:
 	bool	eof;
 	response( const data_serv *,  data_header* );
-
+	~response( );
 	void	response_handler( int );
 	/* check for location and redirections and allowed methods */
 	void	check_location_block();

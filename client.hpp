@@ -6,9 +6,10 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 14:51:32 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/07 18:38:24 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/08 13:33:45 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
@@ -64,8 +65,8 @@ class Client
 	int					nbytes;
 	std::string			request_buffer;
 	data_header			*header_data;
-	request				client_request;
-	response			client_response;
+	request				*client_request;
+	response			*client_response;
 public:
 	Client( const data_serv*,  Socket* );
 	~Client( );

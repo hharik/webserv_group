@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <vector>
 #include <dirent.h>
+#include <signal.h>
 /* hamid's includes */
 # include <map>
 # include <stack>

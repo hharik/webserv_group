@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/30 12:25:24 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/08 11:19:51 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/08 13:39:29 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #include "client.hpp"
 #include "response.hpp"
 #include <string>
+#include <sys/stat.h>
 
 response::response( const data_serv *dptr,  data_header *hptr ):server_data(dptr), header_data(hptr)
 {
@@ -22,7 +23,16 @@ response::response( const data_serv *dptr,  data_header *hptr ):server_data(dptr
 	default_response = false;
 	s204 = 0;
 	s403 = 0;
+	is_alive = false;
+	auto_index = false;
 	/*---------------*/
+}
+
+response::~response( )
+{
+	if (is_alive == true)
+		kill(pid, 0);
+	std::cout << " Destruct Response : " << std::endl;
 }
 
 void	response::response_handler( int client_fd )
@@ -41,9 +51,9 @@ void	response::response_handler( int client_fd )
 	{
 		create_header();
 		Send_the_Header(client_fd);
-		// std::cout << "----------------* HEADER *----------------" << std::endl;
-		// std::cout << header << std::endl;
-		// std::cout << "----------------* HEADER *----------------" << std::endl;
+		std::cout << "----------------* HEADER *----------------" << std::endl;
+		std::cout << header << std::endl;
+		std::cout << "----------------* HEADER *----------------" << std::endl;
 	}
 	else
 		Send_the_Body( client_fd );
@@ -64,7 +74,7 @@ void	response::Send_the_Header( int client_fd )
 
 void	response::Send_the_Body( int client_fd )
 {
-	if (in_file.is_open() == true)
+	if (in_file.is_open() == true && default_response == false && auto_index == false)
 	{
 		memset(buffer, 0, BUFFER_SIZE);
 		in_file.read(buffer, BUFFER_SIZE);
@@ -79,10 +89,19 @@ void	response::Send_the_Body( int client_fd )
 		else if (in_file.eof())
 			eof = true;
 	}
-	else
+	else if (default_response == true)
 	{
 		std::cout << response_content << std::endl;
 		if (send(client_fd, response_content.c_str(), response_content.size(), 0) < 0)
+		{
+			perror("send");
+			exit(EXIT_FAILURE);
+		}
+		eof = true;
+	}
+	else if (auto_index == true)
+	{
+		if (send(client_fd, auto_index_content.c_str(), auto_index_content.size(), 0) < 0)
 		{
 			perror("send");
 			exit(EXIT_FAILURE);
@@ -196,31 +215,25 @@ void	response::handle_cgi(std::string &request_file)
 	env = new char *[Env.size()];
 	for (size_t i = 0; i < Env.size(); i++)
 		env[i] = (char *) Env[i].c_str();
-	int  child = fork();
-	if(child == -1)
+	// env = NULL;
+	env[Env.size()] = NULL;
+	pid = fork();
+	if(pid == -1)
 		perror("fork");
-	else if (child == 0)
+	else if (pid == 0)
 	{
 		//child process 
-		// dup2(cgifd[0], 0);
-		std::cout << "________________" << std::endl;
-		std::cout << agv[0] << std::endl;
-		std::cout << agv[1] << std::endl;
-		std::cout << "____________________" << std::endl;
 		dup2(cgifd[1], 1);
 		close(cgifd[1]);
-		// if (header_data->method == "POST")
-		// {
-		// 	cgifd[0] = open(header_data->file.c_str(), O_RDONLY);
-		// 	dup2(cgifd[0], 0);
-		// 	close(cgifd[0]);
-		// }
+		if (header_data->method == "POST")
+		{
+			cgifd[0] = open(header_data->file.c_str(), O_RDONLY);
+			dup2(cgifd[0], 0);
+			close(cgifd[0]);
+		}
 		execve(agv[0], agv, env);
+		perror("execve : ");
 		exit(EXIT_SUCCESS);
-	}
-	else{
-		int status;
-		wait(NULL);
 	}
 	std::ifstream file(file_tmp);
 	std::stringstream str;
@@ -230,11 +243,6 @@ void	response::handle_cgi(std::string &request_file)
 	std::cout << " ////////////////////////////" << std::endl;
 	std::cout<<buffer<<std::endl;
 	std::cout << " ////////////////////////////" << std::endl;
-	// std::cout<<str<<std::ednl;
-
-	// Env.clear();
-	// header_data->file.clear();
-	// exit(1);
 }
 
 
@@ -253,7 +261,12 @@ int		response::serve_the_file()
 			std::cout << "query : " << header_data->query << std::endl;
 			std::cout << "location support the cgi" << std::endl;
 			std::cout << "requested_tr   ; " << requested_resource << std::endl;
+			is_alive = true;
 			handle_cgi(requested_resource);
+			is_alive = false;
+			std::cout << "file_tmp   :" << file_tmp << std::endl;
+			requested_resource = file_tmp;
+			header_data->res_status = 200;
 		}
 		else
 			header_data->res_status = 200;
@@ -338,23 +351,20 @@ int		response::requested_resource_is_dir()
 		else if (iter->second == "on")
 		{
 			// call auto_index();
-			generateAutoIndex(requested_resource);
+			std::cout << "Target : " <<  target << std::endl;
+			std::cout << "Requested res : " <<  requested_resource << std::endl;
+			requested_resource = target;
+			auto_index_content = generateAutoIndex(requested_resource);
+			std::cout << "auto index : " << auto_index_content.size() << std::endl;
+			auto_index = true;
+			header_data->res_status = 200;
+			return (0);
 		}
 	}
+	header_data->res_status = 404;
 	return (0);
 }
 
-// void	response::get_requested_resource()
-// {
-// 	std::string rest;
-
-
-// 	/* get_requested_resource */
-// 	search_inside_location("root");
-// 	rest = header_data->uri;
-// 	rest.erase(0, header_data->new_uri.size() + 1);
-// 	target = iter->second + rest;
-// }
 
 int	response::search_inside_location( const std::string to_find )
 {
@@ -631,7 +641,7 @@ std::string	response::Get_Content_Type()
 	std::string	result;
 
 	int	find;
-	if (default_response == false)
+	if (default_response == false && auto_index == false)
 	{
 		result = requested_resource;
 		find = result.find_last_of('.');
@@ -677,9 +687,10 @@ std::string	response::Get_Content_Length()
 {
 /* Content-Length: 1234\r\n\r\n             */
 	std::string Content_Length = "Content-Length: ";
+	std::string	size;
 	struct stat s;
 	
-	if (default_response == false)
+	if (default_response == false && auto_index == false)
 	{
     	if (stat(requested_resource.c_str(), &s) == 0)
 		{
@@ -688,13 +699,23 @@ std::string	response::Get_Content_Length()
 			return Content_Length;
     	}
 	}
-	return (Content_Length + std::to_string(response_content.size()) + "\r\n\r\n");
+	if (default_response == true)
+	{
+		std::cout << "default content .... " << std::endl;
+		size = std::to_string(response_content.size());
+	}
+	else if (auto_index == true)
+		size = std::to_string(auto_index_content.size());
+	return (Content_Length + size + "\r\n\r\n");
 }
 
 void	response::Pages()
 {
 	if (header_data->method == "GET" && header_data->res_status == 200)
+	{
+		std::cout << "not Default_conetent : ....." << std::endl;
 		return ;
+	}
 	if (header_data->res_status >= 400)
 	{
 		er_it = server_data->errors.find(header_data->res_status);
@@ -760,4 +781,4 @@ bool	response::Is_End_Of_File()
 void	response::set_eof( bool end_f )
 {
 	eof = end_f;	
-}	
+}

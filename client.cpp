@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 16:39:08 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/07 21:45:14 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/08 13:36:55 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,16 +16,21 @@
 
 
 
-Client::Client( const data_serv *dptr, Socket *Pbase ):server_data(dptr), Base(Pbase), header_data(new data_header), client_request(dptr, header_data), client_response(dptr, header_data)
+Client::Client( const data_serv *dptr, Socket *Pbase ):server_data(dptr), Base(Pbase), header_data(new data_header)
 {
 	user_data = new User_data();
+	client_response = new response(dptr, header_data);
+	client_request = new request(dptr, header_data);
 	// is_finish = false;
 }
 
 Client::~Client()
 {
 	// delete user_data;
+	delete client_request;
+	delete client_response;
 	delete header_data;
+	std::cout << "Destructed .... " << std::endl;
 	// std::cout << "Destructed .... " << std::endl;
 	// std::cout << "Client Destructed ... !" << std::endl;
 }
@@ -43,7 +48,7 @@ void	Client::client_connection( int server_socket )
 	}
 	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0)
 	{
-		client_response.set_eof(true);
+		client_response->set_eof(true);
 		perror("client:fcntl");
 		return ;
 		// exit(EXIT_FAILURE);
@@ -66,9 +71,9 @@ void	Client::attach_client_socket( int kq )
 
 void	Client::send_the_response()
 {
-		if (header_data->res_status > 0 || client_request.end_of_file == true)
+		if (header_data->res_status > 0 || client_request->end_of_file == true)
 		{
-			client_response.response_handler(fd);
+			client_response->response_handler(fd);
 		}
 }
 
@@ -81,12 +86,12 @@ void	Client::read_from_socket()
 	else
 	{
 		perror("recv_client : ");
-		client_response.set_eof(true);
+		client_response->set_eof(true);
 		return ;
 		// exit(EXIT_FAILURE);
 	}
-	if (client_request.end_of_file == false)
-		client_request.parse(request_buffer);
+	if (client_request->end_of_file == false)
+		client_request->parse(request_buffer);
 }
 
 // void	Client::Set_is_finish( bool status )
@@ -101,7 +106,7 @@ void	Client::read_from_socket()
 
 bool	Client::eof()
 {
-	return client_response.Is_End_Of_File();
+	return client_response->Is_End_Of_File();
 }
 
 int	Client::get_fd()
