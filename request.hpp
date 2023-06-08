@@ -39,9 +39,15 @@ class request {
 	int		check_for_redirection();
 	/* if this method is allowed in this location */
 	int		allowed_methods();
-
+	int		get_requested_resource();
+	int		treat_target_resource( std::string  );
+	const std::string	get_extension( const std::string& target );
 	/* check if location has upload enabled or not*/
 	int check_for_upload();
+
+
+	int	generate_name();
+
 
 };
 #endif

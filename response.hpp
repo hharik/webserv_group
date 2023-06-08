@@ -42,7 +42,7 @@ class response {
 	// std::string			new_uri;
 	// std::string			query;
 	std::string			target;
-	std::string			requested_resource;
+	// std::string			requested_resource;
 	std::string			response_content;
 	// std::string			methods;
 
@@ -114,14 +114,13 @@ public:
 	/* some helpful functions */
 	int		search_inside_location( const std::string );
 	// int		path_is_exist( const char * );
-	int		is_file_or_directory( const char* );
 	bool	Is_End_Of_File();
 
 	/*#############################################*/
 	std::string generateAutoIndex(std::string &directory);
 	void	handle_cgi(std::string &request_file);
 	/*#############################################*/
-
+	
 	void	set_eof( bool );
 	/* GET method */
 	void	Get_method();

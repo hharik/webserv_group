@@ -73,7 +73,7 @@ class parsing
 		std::string reduce(std::string buff, std::string whitespaces, std::string to_replace);
 		void		readAndParse();
 		static void 		mime();
-		int is_file_or_directory(const char *str);
+		static int is_file_or_directory(const char *str);
 
 
 		~parsing();

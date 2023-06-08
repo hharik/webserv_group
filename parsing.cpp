@@ -148,7 +148,7 @@ void parsing::save_data(std::vector <std::string> server)
 				std::cout << "error " << std::endl;
 				exit(EXIT_FAILURE);
 			}
-			if (is_file_or_directory(temp.root_dir.c_str()) == 1 && temp.root_dir.find_last_of("/") != temp.root_dir.length() - 1)
+			if (temp.root_dir.find_last_of("/") != temp.root_dir.length() - 1)
 			{
 				temp.root_dir.append("/");
 			}
@@ -182,6 +182,7 @@ void parsing::save_data(std::vector <std::string> server)
 				exit(1);
 			}
 			temp.errors.insert(std::make_pair(std::atoi(status.c_str()), path));
+			// // temp.default_data.insert(std::make_pair("error", _value));
 		}
 		else if (it->find("server {") != std::string::npos ) { }
 		else if (it->find("location ") != std::string::npos)
@@ -215,6 +216,10 @@ void parsing::save_data(std::vector <std::string> server)
 					exit(1);
 				}
 				std::string _value = it->substr(pos + 1);
+				// std::cout << "opo > " <<  pos << std::endl;
+				// std::cout <<  "*" << _key << "*" << std::endl;
+				// std::cout << "*" << _value  << "*"  << std::endl;
+				// exit(1);
 				std::stringstream  a(_value);
 				std::string buff;
 				int i = 0;
@@ -225,7 +230,7 @@ void parsing::save_data(std::vector <std::string> server)
 						std::cout << "error" << std::endl;
 						exit(1);
 					}
-					if (is_file_or_directory(_value.c_str()) == 1 && _value.find_last_of("/") != _value.length() - 1)
+					if (_value.find_last_of("/") != _value.length() - 1)
 					{
 						_value.append("/");
 					}
@@ -289,8 +294,15 @@ void parsing::save_data(std::vector <std::string> server)
 				}
 				it++;
 			}
+			// for(std::map<std::string,std::string>::iterator it = tem.begin(); it != tem.end(); it++)
+			// {
+			// 	std::cout << it->first << "* *" << it->second  << "* "<< std::endl;
+			// }
+			// std::cout << "THEE END " << std::endl;
+			// exit(1);
 			locations.insert(std::make_pair(directory, tem));
 			tem.clear();
+			// std::cout << directory << std::endl;
 		}
 		else {
 			std::cout << *it << std::endl;
@@ -321,8 +333,10 @@ void parsing::readAndParse()
 		{
 			//first reduce spaces
 			buff = reduce(buff, " \t\n\r\v\f");
+			// std::cout << "*" << buff << "*" << std::endl;
 			tess += buff;
 			before_file.push_back(buff);
+			// std::cout << buff << std::endl;
 		}
 		if ((before_file.end() - 1)->find("};") == std::string::npos || brackets.size() > 0 || end_brackets.size() > 0)
 		{
@@ -331,6 +345,7 @@ void parsing::readAndParse()
 		}
 		int i = 0;
 		std::vector<std::string> temp;
+		size_t pos = 0;
 		for (std::vector <std::string>::iterator it = before_file.begin(); it != before_file.end(); it++)
 		{
 			if (it->find("server {") != std::string::npos)
@@ -338,11 +353,15 @@ void parsing::readAndParse()
 			if (it->find("};") != std::string::npos )
 			{
 				i = OUTSERV;
+				// std::cout << "helloo world "<< std::endl;
 				save_data(temp);
+				// std::cout << "\n\n\n\n\nhello world !!!!" << std::endl;
 				temp.clear();
 			}
 			if (i == INSERV)
+			{
 				temp.push_back(*it);
+			}
 		}
 		std::map<std::string, bool> encounted;
 		for (std::vector<data_serv>::iterator it = servers_data.begin(); it != servers_data.end(); it++)

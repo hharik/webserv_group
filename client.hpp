@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 14:51:32 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/08 13:33:45 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/08 17:28:12 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,9 +37,10 @@ struct data_header {
 	std::string	methods;
 	bool	is_redirect;
 	std::string file;
-	
+	std::string	requested_resource;
 	int 	res_status;
 	bool		upload_flag;
+	bool		_is_cgi;
 	/* the default value of res_status is updated if there is no problem  */
 	data_header() : Content_Length(-2), res_status(0), is_redirect(false) { }
 	void print() {

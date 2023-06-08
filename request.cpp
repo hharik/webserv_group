@@ -1,11 +1,13 @@
 
 
 #include "client.hpp"
-#include <string>
+#include "parsing.hpp"
+#include <algorithm>
 
 
 request::request( const data_serv *dptr, data_header *hptr ) : server_data(dptr), d_header(hptr), rsize(0) , size(0), chunked_size(-2), end_of_file(false)
 {
+	d_header->_is_cgi = false;
 }
 
 request::~request()
@@ -13,6 +15,104 @@ request::~request()
 	
 }
 
+const std::string	request::get_extension( const std::string& target )
+{
+	std::string	result(target);
+	int	ind;
+
+	ind = target.find_last_of('.');
+	result.erase(0, ind);
+	return (result);
+}
+
+
+int	request::treat_target_resource(  std::string path )
+{
+	std::map<std::string, std::string>::const_iterator	iter;
+	std::string	rest(d_header->new_uri);
+	size_t		size;
+
+	iter = d_header->it->second.find(path);
+	if (iter != d_header->it->second.cend())
+	{
+		size = d_header->it->first.size();
+		if (d_header->it->first[size - 1] != '/')
+			size++;
+		rest.erase(0, size);
+		d_header->requested_resource = iter->second + rest;
+		return (1);
+	}
+	return (0);
+}
+
+int	request::generate_name()
+{
+	int status;
+	int	size;
+	std::cout << "REq                  :            " << d_header->new_uri << std::endl;
+	size = d_header->new_uri.size();
+	status = parsing::is_file_or_directory(d_header->requested_resource.c_str());
+	if  (status == 1)
+	{
+		if (d_header->new_uri[size - 1] != '/')
+		{
+			std::cout << "======================" << std::endl;
+			d_header->res_status = 301;
+			return (0);
+		}
+		d_header->requested_resource += time_date() +  "." +  parsing::mime_type.find(d_header->Content_type)->second;
+	}
+	else if (d_header->_is_cgi == true)
+	{
+		d_header->requested_resource = "/tmp/";
+		d_header->requested_resource += time_date() +  "." +  parsing::mime_type.find(d_header->Content_type)->second;
+	}
+	return (1);
+}
+
+int	request::get_requested_resource()
+{
+	int		status_code;
+	int		ind;
+
+	if (d_header->method == "GET" || d_header->method == "DELETE")
+		status_code = treat_target_resource("root");
+	else if (d_header->method == "POST")
+		status_code = treat_target_resource("upload");
+	if (status_code)
+	{
+		ind = d_header->requested_resource.size() - 1;
+		if (access(d_header->requested_resource.c_str(), F_OK))
+		{
+			if (d_header->requested_resource[ind] == '/')
+				d_header->requested_resource.resize(ind);
+			if (access(d_header->requested_resource.c_str(), F_OK))
+			{
+				d_header->res_status = 404;
+				return (0);
+			}
+		}
+ 		if (access(d_header->requested_resource.c_str(), W_OK))
+		{
+			d_header->res_status = 403;
+			return (0);
+		}
+		return (1);
+	}
+	if (d_header->method == "POST")
+		status_code = treat_target_resource("cgi " + get_extension(d_header->new_uri));
+	if (!status_code)
+	{
+		d_header->res_status = 403;
+		return (0);
+	}
+	else if (status_code && d_header->method == "POST")
+	{
+		d_header->_is_cgi = true;
+		return (1);
+	}
+	return (1);
+}
 
 void request::read_body(std::string &body) { 
 	size += body.size();
@@ -52,15 +152,8 @@ void	request::save_chunk_improve(std::string &body)
 	std::string to_delete = "\r\n";
 	if (file_obj.is_open() == false)
 	{
-		if (file.empty() == true)
-		{
-			body.insert(0, "\r\n");
-			std::string name = time_date();
-			file = dir_to_upload +  name + "." + parsing::mime_type.find(d_header->Content_type)->second;
-			// std::cout <<  file << std::endl;
-		}
 		// body.erase(0, body.find(to_delete));
-		file_obj.open(file, std::fstream::out | std::fstream::app | std::fstream::binary);
+		file_obj.open(d_header->requested_resource, std::fstream::out | std::fstream::trunc | std::fstream::binary);
 	}
 	std::stringstream to_hex;
 	while (chunked_size != 0)
@@ -108,17 +201,9 @@ void	request::save_chunk_improve(std::string &body)
 
 void request::save_binary(std::string &header)
 {
-
-	if (d_header->file.empty() == true)
-	{
-		std::string name = time_date();
-		std::cout <<  "  / * * / */ -" << d_header->Content_type << std::endl;
-		// exit(1);
-		d_header->file = dir_to_upload + name + "." + parsing::mime_type.find(d_header->Content_type)->second;
-	}
 	if (file_obj.is_open() == false)
 	{
-		file_obj.open(d_header->file, std::fstream::out | std::fstream::binary | std::fstream::app);
+		file_obj.open(d_header->requested_resource, std::fstream::out | std::fstream::binary | std::fstream::trunc);
 	}
 	if (file_obj.is_open())
 	{
@@ -129,7 +214,6 @@ void request::save_binary(std::string &header)
 	// file_obj.close();
 	if (size == d_header->Content_Length)
 	{
-		file.clear();
 		header.clear();
 		end_of_file = true;
 		d_header->res_status = 201;
@@ -230,6 +314,15 @@ void request::parse(std::string &header)
 		/* if this method is allowed in this location */
 		else if (allowed_methods() < 0)
 			return ;
+		else if (get_requested_resource() == 0)
+			return ;
+		/* generate the name of the file if hte method is POST */
+		if (d_header->method == "POST" && generate_name() == 0)
+		{
+			std::cout << "DSASADASDASDASDASDASDAD" << std::endl;
+			return ;
+			// generate_name();
+		}
 		if (d_header->transfer_encoding.empty() == false)
 		{
 			
@@ -242,18 +335,8 @@ void request::parse(std::string &header)
 			}
 		}
 	}
-	if (header.empty() == false && (d_header->method == "GET" || d_header->method == "DELETE"))
-		read_body(header);
-	else if (d_header->method == "POST") 
+	if (d_header->method == "POST") 
 	{
-		if (dir_to_upload.empty() == true)
-		{
-			if (check_for_upload() == -1)
-			{
-				end_of_file = true;
-				return ;
-			}
-		}
 		if (d_header->Content_type.empty() == true)
 		{
 			d_header->res_status = 415;
@@ -317,9 +400,15 @@ int	request::update_the_uri( std::string &uri )
 	int			find;
 
 	find = uri.find_last_of('/');
-	if (find && std::string::npos != find)
+	if (std::string::npos != find && !find && uri.size() > 1)
+	{
+		uri = "/";
+		return (1);
+	}
+	if (std::string::npos != find)
 	{
 		uri.resize(find);
+		std::cout << "return :: " << uri << std::endl;
 		return (1);
 	}
 	return (0);
