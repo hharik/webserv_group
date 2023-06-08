@@ -269,7 +269,10 @@ int		response::serve_the_file()
 			header_data->res_status = 200;
 		}
 		else
+		{
+			std::cout << " ok : " << std::endl;
 			header_data->res_status = 200;
+		}
 		// std::cout << "Serve this file any way ... " << std::endl;
 		// std::cout << "file : " << requested_resource << std::endl;
 		/* if loaction does not has a cgi */
@@ -294,7 +297,8 @@ int		response::serve_the_file()
 
 std::string response::generateAutoIndex(std::string &directory)
 {
-	std::string autoIndexHtml = "<html><body><ul>";
+	std::string autoIndexHtml = "<html><body> <title> Auto Index!! </title> <h1> Index of ";
+	autoIndexHtml += header_data->new_uri + " </h1>  <hr> ";
 	DIR *dir;
 	struct dirent *ent;
 	if ((dir = opendir(directory.c_str())) != NULL)
@@ -304,13 +308,13 @@ std::string response::generateAutoIndex(std::string &directory)
 			std::string filename = ent->d_name;
 			if (filename == ".")
 				continue;
-			// if (is_file_or_directory(std::string(directory + filename)) == 1)
-			// 	filename.append("/");
-			autoIndexHtml += "<li> <a href=\"" + filename + "\">" + filename + "</a></li>";
+			if (is_file_or_directory(std::string(directory + filename).c_str()) == 1)
+				filename.append("/");
+			autoIndexHtml += "<a href=\"" + filename + "\">" + filename + "</a><hr>";
 		}
 		closedir(dir);
 	}
-	autoIndexHtml += "</url></body></html>";
+	autoIndexHtml += " </url> </body> </html>";
 	return autoIndexHtml;
 }
 
@@ -336,7 +340,9 @@ int		response::requested_resource_is_dir()
 		std::cout << "has an index file.... " << std::endl;
 		index = iter->second;
 		requested_resource = target + index;
+		std::cout << "has requested " << requested_resource << std::endl;
 		serve_the_file();
+		return (0);
 	}
 	else if (search_inside_location("auto_indexing") == 1)
 	{
