@@ -62,6 +62,8 @@ int	request::generate_name()
 	}
 	else if (d_header->_is_cgi == true)
 	{
+		treat_target_resource("root");
+		d_header->cgi_script = d_header->requested_resource;
 		d_header->requested_resource = "/tmp/";
 		d_header->requested_resource += time_date() +  "." +  parsing::mime_type.find(d_header->Content_type)->second;
 	}

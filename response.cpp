@@ -180,12 +180,14 @@ void	response::handle_cgi(std::string &request_file)
 	char **env;
 	/* data to execute*/
 	std::cout << "HEKEI 0" << std::endl;
-	agv[0] = (char *)iter->second.c_str();  //executable
-	agv[1] = (char *)request_file.c_str(); //requested script
+	agv[0] = (char *)header_data->cgi_path.c_str();  //executable
+	agv[1] = (char *)header_data->cgi_script.c_str(); //requested script
 	agv[2] = NULL;
-	std::cout << agv[0] << std::endl;
-	std::cout << agv[1] << std::endl;
-
+	std::cout << "****************" <<std::endl;
+	std::cout << "THIS IS EXECUTABLE: " << agv[0] << std::endl;
+	std::cout << "THIS IS SCRIPT TO EXEC : " <<agv[1] << std::endl;
+	std::cout << "THIS IS BODY "<< request_file << std::endl;
+	std::cout << "****************" << std::endl;
 	env = new char *[Env.size()];
 	for (size_t i = 0; i < Env.size(); i++)
 	{
@@ -247,9 +249,15 @@ int		response::serve_the_file()
 	return (0);
 }
 
-std::string response::generateAutoIndex(std::string &directory)
+void response::generateAutoIndex(std::string &directory)
 {
-	std::string autoIndexHtml = "<html><body><ul>";
+	std::string filena = "/tmp/AutoIndex_" + time_date() + ".html";
+	std::cout << filena << std::endl;
+	std::fstream file;
+	file.open(filena, std::ofstream::out );
+
+	std::string autoIndexHtml = "<html><body> <title> Auto Index!! </title> <h1> Index of ";
+	autoIndexHtml += header_data->new_uri + " </h1>  <hr> ";
 	DIR *dir;
 	struct dirent *ent;
 	if ((dir = opendir(directory.c_str())) != NULL)
@@ -259,14 +267,16 @@ std::string response::generateAutoIndex(std::string &directory)
 			std::string filename = ent->d_name;
 			if (filename == ".")
 				continue;
-			// if (is_file_or_directory(std::string(directory + filename)) == 1)
-			// 	filename.append("/");
-			autoIndexHtml += "<li> <a href=\"" + filename + "\">" + filename + "</a></li>";
+			if (parsing::is_file_or_directory(std::string(directory + filename).c_str()) == 1)
+				filename.append("/");
+			autoIndexHtml += "<li> <a href=\"" + filename + "\">" + filename + "</a> </li>";
 		}
 		closedir(dir);
 	}
-	autoIndexHtml += "</url></body></html>";
-	return autoIndexHtml;
+	autoIndexHtml += "<hr> </url> </body> </html>";
+	file << autoIndexHtml;
+	file.close();
+	header_data->requested_resource = filena;
 }
 
 int		response::requested_resource_is_dir()
@@ -296,7 +306,7 @@ int		response::requested_resource_is_dir()
 		/* if auto index on */
 		else if (iter->second == "on")
 		{
-			auto_index_content = generateAutoIndex(header_data->requested_resource);
+			generateAutoIndex(header_data->requested_resource);
 			auto_index = true;
 			header_data->res_status = 200;
 		}

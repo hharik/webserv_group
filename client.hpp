@@ -40,6 +40,7 @@ struct data_header {
 	std::string file;
 	std::string	requested_resource;
 	std::string	cgi_path;
+	std::string	cgi_script;
 	int 	res_status;
 	bool		upload_flag;
 	bool		_is_cgi;

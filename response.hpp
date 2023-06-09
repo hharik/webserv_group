@@ -105,7 +105,7 @@ public:
 	bool	Is_End_Of_File();
 
 	/*#############################################*/
-	std::string generateAutoIndex(std::string &directory);
+	void generateAutoIndex(std::string &directory);
 	void	handle_cgi(std::string &request_file);
 	/*#############################################*/
 	
