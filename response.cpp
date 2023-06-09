@@ -6,15 +6,13 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/30 12:25:24 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/08 19:53:47 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/09 10:34:41 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 
 #include "client.hpp"
 #include "response.hpp"
-#include <string>
-#include <sys/stat.h>
 
 response::response( const data_serv *dptr,  data_header *hptr ):server_data(dptr), header_data(hptr)
 {
@@ -39,7 +37,6 @@ void	response::response_handler( int client_fd )
 {
 	if (is_open == false && header_data->res_status < 400 && header_data->is_redirect == false)
 	{
-		// std::cout << "status : " << header_data->res_status << std::endl;
 		if (header_data->method == "GET")
 			Get_method();
 		else if (header_data->method == "POST")
@@ -107,33 +104,22 @@ void	response::Send_the_Body( int client_fd )
 }
 
 
-
-const std::string	response::get_extension( const std::string& target )
-{
-	std::string	result(target);
-	int	ind;
-
-	ind = target.find_last_of('.');
-	result.erase(0, ind);
-	return (result);
-}
-
 int	response::file_status()
 {
 	int	ind;
 
-	ind = target.size() - 1;
-	if (access(target.c_str(), F_OK))
+	ind = header_data->requested_resource.size() - 1;
+	if (access(header_data->requested_resource.c_str(), F_OK))
 	{
-		if (target[ind] == '/')
-			target.resize(ind);
-		if (access(target.c_str(), F_OK))
+		if (header_data->requested_resource[ind] == '/')
+			header_data->requested_resource.resize(ind);
+		if (access(header_data->requested_resource.c_str(), F_OK))
 		{
 			header_data->res_status = 404;
 			return (-1);
 		}
 	}
- 	if (access(target.c_str(), R_OK))
+ 	if (access(header_data->requested_resource.c_str(), R_OK))
 	{
 		header_data->res_status = 403;
 		return (-1);
@@ -160,11 +146,11 @@ void	response::handle_cgi(std::string &request_file)
 {
 
 
-
+	/* cgi path ----> header_data->cgi_path .....*/
 	/* for POST REQUEST'S WE READ FROM THE FILE THAT WAS UPLOADED TO US 
 	AND GIVE IT AS AN INPUT TO THE EXECVE */
 
-	search_inside_location("cgi " + get_extension(request_file));
+	// search_inside_location("cgi " + get_extension(request_file));
 	/*file to store*/
 	std::cout << "HELLO " << std::endl;
 	file_tmp = "/tmp/" + time_date();
@@ -226,6 +212,8 @@ void	response::handle_cgi(std::string &request_file)
 		perror("execve");
 		exit(EXIT_SUCCESS);
 	}
+	/* ===================== */
+
 	std::ifstream file(file_tmp);
 	std::stringstream str;
 	std::string buffer;
@@ -239,46 +227,22 @@ void	response::handle_cgi(std::string &request_file)
 
 int		response::serve_the_file()
 {
+	if (file_status() == 0)
 	{
-		// std::cout << "Target : " << target << std::endl;
-		target = header_data->requested_resource;
-		if (file_status() == 0)
-		{
 		/* if location support cgi */
 		/* pass file to cgi*/
-		// std::cout << "your requested resource is : " << header_data->requested_resource << std::endl;
-		if (search_inside_location("cgi " + get_extension(header_data->requested_resource)) == 1)
+		if (header_data->_is_cgi == true)
 		{
-			std::cout << "query : " << header_data->query << std::endl;
-			std::cout << "location support the cgi" << std::endl;
-			std::cout << "requested_tr   ; " << header_data->requested_resource << std::endl;
 			is_alive = true;
 			handle_cgi(header_data->requested_resource);
 			is_alive = false;
-			std::cout << "file_tmp   :" << file_tmp << std::endl;
 			header_data->requested_resource = file_tmp;
 			header_data->res_status = 200;
-		}
-		else
-			header_data->res_status = 200;
-		// std::cout << "Serve this file any way ... " << std::endl;
-		// std::cout << "file : " << header_data->requested_resource << std::endl;
-		/* if loaction does not has a cgi */
-		/* send the requested file with 200 status code */
-		// else 
-		// {
-			// std::cout << 
-		// 	std::cout << "send the requested file with 200 status code " << std::endl;
-		// }
 		/*	return depend on the cgi */
 		}
+		/* send the requested file with 200 status code */
 		else
-		{
-			std::cout << "wn  :::  " << std::endl;
-			std::cout << "file : " << header_data->requested_resource << std::endl;
-			header_data->res_status = 404;
-			// header_data->res_status = 404;
-		}
+			header_data->res_status = 200;
 	}
 	return (0);
 }
@@ -307,7 +271,6 @@ std::string response::generateAutoIndex(std::string &directory)
 
 int		response::requested_resource_is_dir()
 {
-	std::string	index;
 	int			ind;
 
 	ind = header_data->new_uri.size() - 1;
@@ -322,32 +285,22 @@ int		response::requested_resource_is_dir()
 	search_inside_location("index");
 	if (iter != header_data->it->second.cend())
 	{
-		std::cout << "has an index file " << std::endl;
-		index = iter->second;
-		header_data->requested_resource = target + index;
+		header_data->requested_resource += iter->second;
 		serve_the_file();
 	}
 	else if (search_inside_location("auto_indexing") == 1)
 	{
-		if (iter->second == "off")
 		/* if auto index off */
-		{
+		if (iter->second == "off")
 			header_data->res_status = 403;
-			return (0);
-		}
 		/* if auto index on */
 		else if (iter->second == "on")
 		{
-			std::cout << "has an auto indexing " << std::endl;
-			header_data->requested_resource = target;
 			auto_index_content = generateAutoIndex(header_data->requested_resource);
-			// std::cout << "auto index : " << auto_index_content.size() << std::endl;
 			auto_index = true;
 			header_data->res_status = 200;
-			return (0);
 		}
 	}
-	header_data->res_status = 404;
 	return (0);
 }
 
@@ -365,30 +318,12 @@ void	response::Get_method()
 {
 	int			status;
 
-	/* get_header_data->requested_resource */
-	// treat_target_resource("root");
-	/* check if the path exist */
-	// if (file_status())
-	// 	return ;
-	std::cout << "Requested_resource : " <<  header_data->requested_resource << std::endl;
-	target = header_data->requested_resource;
 	status = parsing::is_file_or_directory(header_data->requested_resource.c_str());
 	if (status == 0)
-	{
-		header_data->requested_resource = target;
 		serve_the_file();
-	}
 	else if (status == 1)
 		requested_resource_is_dir();
-	else
-		std::cout << "no_such_file_or_directory ... " << std::endl;
 }
-
-void	upload_in_dir()
-{
-	
-}
-
 
 /* POST method */
 void	response::Post_method()
@@ -397,60 +332,47 @@ void	response::Post_method()
 	std::cout << "POST method ... " << std::endl;
 	if (header_data->res_status == 301)
 	{
-		// std::cout << 
 		header_data->new_uri += "/";
 		return ;
 	}
-	handle_cgi(header_data->requested_resource);
-	std::cout << "Requested_resource : " << header_data->requested_resource << std::endl;
-	/* ---------------- */
-	
-
-	// treat_target_resource("upload");
-	// // std::cout << "Target   : " << target << std::endl;
-	// /* check if the path exist */
-	// if (file_status())
-	// 	return ;
-	// status = parsing::is_file_or_directory(target.c_str());
-	// if (status == 0)
-	// {
-	// 	std::cout << "target is a file ... " << std::endl;
-	// 	header_data->requested_resource = target;
-	// 	// requested_resource_is_file();
-	// }
-	// else if (status == 1)
-	// {
-	// 	upload_in_dir();
-	// 	std::cout << "targer is a directory ... " << std::endl;
-	// 	// requested_resource_is_dir();
-	// }
-	// else 
-	// {
-	// 	std::cout << "no_such_file_or_directory ... " << std::endl;
-	// 	header_data->res_status = 404;
-	// }	
-	// search_inside_location("cgi");
+	if (header_data->_is_cgi == true)
+		handle_cgi(header_data->requested_resource);
 }
 
 int	response::delete_the_file()
 {
-	/* remove the file if the return 0 that mean it successed .. */
-	
-	/* first let's check if this file has the permission */
+	/* first let's check if this file is exist */
+	if (access(header_data->requested_resource.c_str(), F_OK) < 0) 
+	{
+		header_data->res_status = 404;
+		return (404);
+	}
+	/* than let's check if this file has the permission */
 	if (access(header_data->requested_resource.c_str(), W_OK) < 0) 
 	{
 		header_data->res_status = 403;
-		return (0);
-	}
-	/* remove this file */
-	if (std::remove("file ") == 0)
+		return (403);
+	}	
+	/* remove the file if the return 0 that mean it successed .. */
+	if (std::remove(header_data->requested_resource.c_str()) == 0)
 	{
 		header_data->res_status = 204;
-		return(0);
+		return(204);
 	}
-	std::cout << "can't remove this file ... premission denied!" << std::endl;
+	/* can't remove this file ... premission denied! */
 	header_data->res_status = 403;
-	return (0);
+	return (403);
+}
+
+void	response::delete_path( const char *path)
+{
+	if (access(path, W_OK) == 0)
+	{
+		if (remove(path) == 0)
+			s204++;
+	}
+	else
+		s403++;
 }
 
 int	response::delete_dir( const char *directory )
@@ -475,80 +397,42 @@ int	response::delete_dir( const char *directory )
 		}
 		/* first remove all files */
 		if (status == 0 && CMP(dp->d_name))
-		{
-			if (access(str.c_str(), W_OK) == 0)
-			{
-				if (remove(str.c_str()) == 0)
-					s204++;
-			}
-			else
-				s403++;
+		{	
+			delete_path(str.c_str());
 		}
 		/* than remove all subdirectories recessively */
 		else if (status == 1 && CMP(dp->d_name)) 
 		{
 			delete_dir(str.c_str());
-			if (access(str.c_str(), W_OK) == 0)
-			{
-				if (remove(str.c_str()) == 0)
-					s204++;
-			}
-			else
-				s403++;
+			delete_path(str.c_str());
 		}
 	}
 	closedir(dir);
 	return 0;
 }
 
-void	response::treat_target_resource( const char *path )
-{
-	std::string	rest(header_data->new_uri);
-	size_t		size;
 
-	search_inside_location(path);
-	size = header_data->it->first.size();
-	if (header_data->it->first[size - 1] != '/')
-		size++;
-	rest.erase(0, size);
-	target = iter->second + rest;
-}
 
 /* Delete method */
 void	response:: Delete_method()
 {
 	int			status;
+	int			size;
 
-	std::cout << "DELETE method ... " << std::endl;
-	// treat_target_resource("root");
-	std::cout << "Target   : " << target << std::endl;
-	/* check if the path exist */
-	// if (access(target.c_str(), F_OK) < 0)
-	// {
-	// 	header_data->res_status = 404;
-	// 	return ;
-	// }
-	status = parsing::is_file_or_directory(target.c_str());
+	size = header_data->requested_resource.size();
+	status = parsing::is_file_or_directory(header_data->requested_resource.c_str());
 	if (status == 0)
-	{
-		std::cout << "target is a file ... " << std::endl;
-		header_data->requested_resource = target;
 		delete_the_file();
-		// requested_resource_is_file();
-	}
 	else if (status == 1)
 	{
-		std::cout << "targer is a directory ... " << std::endl;
 		if (header_data->uri[header_data->uri.size() - 1] != '/')
 		{
 			std::cout << "409 Conflict" << std::endl;
 			header_data->res_status = 409;
 			return ;
 		}
-		std::cout << "Delete starting with this dir : " << target << std::endl;
-		target.resize(target.size() - 1);
-		delete_dir(target.c_str());
-
+		header_data->requested_resource.resize(size - 1);
+		delete_dir(header_data->requested_resource.c_str());
 		if (s204 && !s403)
 			header_data->res_status = 204;
 		else if (s204 >= s403)
@@ -694,10 +578,7 @@ std::string	response::Get_Content_Length()
 void	response::Pages()
 {
 	if (header_data->method == "GET" && header_data->res_status == 200)
-	{
-		std::cout << "not Default_conetent : ....." << std::endl;
 		return ;
-	}
 	if (header_data->res_status >= 400)
 	{
 		er_it = server_data->errors.find(header_data->res_status);
@@ -730,25 +611,23 @@ std::string	response::get_Location()
 	return (Location);
 }
 
-void response::create_header()
-{
 	/* HTTP/1.1 200 OK\r\n                      */
 	/* Date: Wed, 11 May 2023 12:00:00 GMT\r\n  */
 	/* Server: Apache/2.4.38 (Unix)\r\n         */
 	/* Content-Type: text/html\r\n              */
 	/* Content-Length: 1234\r\n\r\n             */
-
+void response::create_header()
+{
 	header = get_start_line();
 	header += Get_Date();
 	header += SERVER;
 	
 	if (header_data->res_status == 301 || header_data->is_redirect == true)
 		header += get_Location();
-	/* Location: http://example.com/dir/dir2/dir3/  */
 	else if (header_data->res_status == 405)
 	{
-			header += "Allow: ";
-			header += header_data->methods + "\r\n";
+		header += "Allow: ";
+		header += header_data->methods + "\r\n";
 	}
 	Pages();
 	header += Get_Content_Type();

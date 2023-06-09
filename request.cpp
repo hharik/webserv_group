@@ -28,18 +28,17 @@ const std::string	request::get_extension( const std::string& target )
 
 int	request::treat_target_resource(  std::string path )
 {
-	std::map<std::string, std::string>::const_iterator	iter;
 	std::string	rest(d_header->new_uri);
 	size_t		size;
 
-	iter = d_header->it->second.find(path);
-	if (iter != d_header->it->second.cend())
+	d_header->iter = d_header->it->second.find(path);
+	if (d_header->iter != d_header->it->second.cend())
 	{
 		size = d_header->it->first.size();
 		if (d_header->it->first[size - 1] != '/')
 			size++;
 		rest.erase(0, size);
-		d_header->requested_resource = iter->second + rest;
+		d_header->requested_resource = d_header->iter->second + rest;
 		return (1);
 	}
 	return (0);
@@ -49,14 +48,13 @@ int	request::generate_name()
 {
 	int status;
 	int	size;
-	std::cout << "REq                  :            " << d_header->new_uri << std::endl;
+
 	size = d_header->new_uri.size();
 	status = parsing::is_file_or_directory(d_header->requested_resource.c_str());
 	if  (status == 1)
 	{
 		if (d_header->new_uri[size - 1] != '/')
 		{
-			std::cout << "======================" << std::endl;
 			d_header->res_status = 301;
 			return (0);
 		}
@@ -70,10 +68,34 @@ int	request::generate_name()
 	return (1);
 }
 
+int		request::path_is_exist()
+{
+	int		ind;
+
+	ind = d_header->requested_resource.size() - 1;
+	if (access(d_header->requested_resource.c_str(), F_OK))
+	{
+		if (d_header->requested_resource[ind] == '/')
+			d_header->requested_resource.resize(ind);
+		if (access(d_header->requested_resource.c_str(), F_OK))
+		{
+			d_header->res_status = 404;
+			return (0);
+		}
+	}
+	if (access(d_header->requested_resource.c_str(), W_OK))
+	{
+		d_header->res_status = 403;
+		return (0);
+	}
+	return (1);
+}
+
+
 int	request::get_requested_resource()
 {
 	int		status_code;
-	int		ind;
+
 
 	if (d_header->method == "GET" || d_header->method == "DELETE")
 		status_code = treat_target_resource("root");
@@ -81,23 +103,8 @@ int	request::get_requested_resource()
 		status_code = treat_target_resource("upload");
 	if (status_code)
 	{
-		ind = d_header->requested_resource.size() - 1;
-		if (access(d_header->requested_resource.c_str(), F_OK))
-		{
-			if (d_header->requested_resource[ind] == '/')
-				d_header->requested_resource.resize(ind);
-			if (access(d_header->requested_resource.c_str(), F_OK))
-			{
-				d_header->res_status = 404;
-				return (0);
-			}
-		}
- 		if (access(d_header->requested_resource.c_str(), W_OK))
-		{
-			d_header->res_status = 403;
-			return (0);
-		}
-		return (1);
+		status_code = path_is_exist();
+		return (status_code);
 	}
 	if (d_header->method == "POST")
 		status_code = treat_target_resource("cgi " + get_extension(d_header->new_uri));
@@ -108,6 +115,7 @@ int	request::get_requested_resource()
 	}
 	else if (status_code && d_header->method == "POST")
 	{
+		d_header->cgi_path = d_header->iter->second;
 		d_header->_is_cgi = true;
 		return (1);
 	}
@@ -408,7 +416,6 @@ int	request::update_the_uri( std::string &uri )
 	if (std::string::npos != find)
 	{
 		uri.resize(find);
-		std::cout << "return :: " << uri << std::endl;
 		return (1);
 	}
 	return (0);

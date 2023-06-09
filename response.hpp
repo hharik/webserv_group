@@ -29,7 +29,6 @@
 #define S501 " Not Implemented"
 
 class response {
-	// std::map<std::string, std::map<std::string, std::string> >::const_iterator it;
 	std::map<std::string, std::string>::const_iterator iter;
 	std::map<int, std::string>::const_iterator er_it;
 
@@ -37,20 +36,8 @@ class response {
 	data_header			*header_data;
 	char				buffer[BUFFER_SIZE];
 
-	// Content				response_content;
 	std::ifstream		in_file;
-	// std::string			new_uri;
-	// std::string			query;
-	std::string			target;
-	// std::string			requested_resource;
 	std::string			response_content;
-	// std::string			methods;
-
-	// std::string			redirect_path;
-	// int					status_code;
-	// bool				is_header;
-	// bool				is_body;
-	// bool				is_redirect;
 	bool				is_open;
 	bool				default_response;
 	int					s204;
@@ -76,17 +63,17 @@ public:
 	response( const data_serv *,  data_header* );
 	~response( );
 	void	response_handler( int );
-	/* check for location and redirections and allowed methods */
-	void	check_location_block();
+	// /* check for location and redirections and allowed methods */
+	// void	check_location_block();
 	
-	/*check if requested resorce in such location */
-	int		find_required_location(  );
-	void	parse_the_uri();
-	int		update_the_uri();
-	/* check if there is any redirection */
-	int		redirection();
-	/* check for allowed methods */
-	int 	allowed_methods();
+	// /*check if requested resorce in such location */
+	// int		find_required_location(  );
+	// void	parse_the_uri();
+	// int		update_the_uri();
+	// /* check if there is any redirection */
+	// int		redirection();
+	// /* check for allowed methods */
+	// int 	allowed_methods();
 	
 	/* create response header */
 	void	create_header();
@@ -99,6 +86,7 @@ public:
 	int		delete_dir( const char * );
 	int		delete_the_file();
 	int		file_status();
+	void	delete_path( const char *path);
 
 	int		requested_resource_is_dir();
 

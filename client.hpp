@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 14:51:32 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/08 17:28:12 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/09 10:27:48 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,11 +17,12 @@
 #include "parsing.hpp"
 #include "request.hpp"
 #include "response.hpp"
-#include <sys/_types/_intptr_t.h>
 
 struct data_header {
 	/* add this iterator for a map loaction*/
 	std::map<std::string, std::map<std::string, std::string> >::const_iterator it;
+	std::map<std::string, std::string>::const_iterator	iter;
+
 	std::string Content_type;
 	std::string Host;
 	int			Content_Length;
@@ -38,6 +39,7 @@ struct data_header {
 	bool	is_redirect;
 	std::string file;
 	std::string	requested_resource;
+	std::string	cgi_path;
 	int 	res_status;
 	bool		upload_flag;
 	bool		_is_cgi;
