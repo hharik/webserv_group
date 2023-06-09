@@ -181,7 +181,10 @@ void	response::handle_cgi(std::string &request_file)
 	/* data to execute*/
 	std::cout << "HEKEI 0" << std::endl;
 	agv[0] = (char *)header_data->cgi_path.c_str();  //executable
-	agv[1] = (char *)header_data->cgi_script.c_str(); //requested script
+	if (header_data->method == "POST")
+		agv[1] = (char *)header_data->cgi_script.c_str(); //requested script
+	else
+		agv[1] = (char *)request_file.c_str();
 	agv[2] = NULL;
 	std::cout << "****************" <<std::endl;
 	std::cout << "THIS IS EXECUTABLE: " << agv[0] << std::endl;
@@ -194,7 +197,6 @@ void	response::handle_cgi(std::string &request_file)
 		env[i] = (char *) Env[i].c_str();
 		std::cout <<" (" << env[i] << ")" << std::endl;
 	}
-	// env = NULL;
 	env[Env.size()] = NULL;
 	pid = fork();
 	if(pid == -1)

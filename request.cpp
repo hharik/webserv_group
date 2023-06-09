@@ -97,8 +97,7 @@ int		request::path_is_exist()
 int	request::get_requested_resource()
 {
 	int		status_code;
-
-
+	std::string		string;
 	if (d_header->method == "GET" || d_header->method == "DELETE")
 		status_code = treat_target_resource("root");
 	else if (d_header->method == "POST")
@@ -106,6 +105,19 @@ int	request::get_requested_resource()
 	if (status_code)
 	{
 		status_code = path_is_exist();
+		if (d_header->method == "GET")
+		{
+			string = d_header->requested_resource;
+			if (treat_target_resource("cgi " + get_extension(d_header->new_uri)))
+			{
+				d_header->_is_cgi = true;
+				d_header->cgi_path = d_header->iter->second; //executable
+				d_header->cgi_script = d_header->requested_resource;
+			std::cout << "RESOURCE   : " << d_header->requested_resource <<  std::endl;
+				std::cout << "CGI ON " << std::endl;
+			}
+			d_header->requested_resource = string;
+		}
 		return (status_code);
 	}
 	if (d_header->method == "POST")

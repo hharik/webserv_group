@@ -248,6 +248,14 @@ void parsing::save_data(std::vector <std::string> server)
 								exit(1);
 							}
 						}
+						if (_key == "cgi" && i == 0)
+						{
+							if (buff.find(".") != 0)
+							{
+								std::cout << "Error add . in the cgi extension!" << std::endl;
+								exit(1);
+							}
+						}
 						i++;
 					}
 					if ( i != 2  && (_key == "cgi" || _key == "redirect"))
@@ -294,15 +302,8 @@ void parsing::save_data(std::vector <std::string> server)
 				}
 				it++;
 			}
-			// for(std::map<std::string,std::string>::iterator it = tem.begin(); it != tem.end(); it++)
-			// {
-			// 	std::cout << it->first << "* *" << it->second  << "* "<< std::endl;
-			// }
-			// std::cout << "THEE END " << std::endl;
-			// exit(1);
 			locations.insert(std::make_pair(directory, tem));
 			tem.clear();
-			// std::cout << directory << std::endl;
 		}
 		else {
 			std::cout << *it << std::endl;
