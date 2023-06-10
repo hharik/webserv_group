@@ -19,12 +19,9 @@ class request {
 
 	request( const data_serv *, data_header* );
 	~request();
-	// data_header getData_header() const {return d_header;}
 	std::string time_date();
-	// std::string copy_until(std::string::iterator first, std::string::iterator last, std::string to_find);
-	void	save_chunk_improve(std::string &body);
 	/* HERE IS THE EMMDDD */
-	// void save_chunked(std::string &body);
+	void	save_chunk_improve(std::string &body);
 	void save_binary(std::string &header);
 	void read_body(std::string &body);
 	void parse(std::string &header);
@@ -44,8 +41,6 @@ class request {
 	int		path_is_exist();
 	const std::string	get_extension( const std::string& target );
 	/* check if location has upload enabled or not*/
-	int check_for_upload();
-
 
 	int	generate_name();
 

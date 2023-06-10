@@ -175,50 +175,53 @@ void	request::save_chunk_improve(std::string &body)
 	if (file_obj.is_open() == false)
 	{
 		// body.erase(0, body.find(to_delete));
+		std::cout << d_header->requested_resource << std::endl;
 		file_obj.open(d_header->requested_resource, std::fstream::out | std::fstream::trunc | std::fstream::binary);
 	}
 	std::stringstream to_hex;
+
 	while (chunked_size != 0)
 	{
-		if (chunked_size == -2) // kata3ni badya dyal lbody fih chunked
+		if (chunked_size == -2)
 		{
+			/*parce hexa */ 
 			first = std::search(body.begin(), body.end(), to_delete.begin(), to_delete.end());
 
-			std::string::iterator te_end =  std::search(first + 1, body.end(), to_delete.begin(), to_delete.end());
-
-
-			std::string test(first + 2, te_end);
-			if (test == "0")
+			std::string::iterator last = std::search(first + 1, body.end(), to_delete.begin(), to_delete.end());
+			std::string test(first, last);
+			// std::cout << "*" << test <<  "* "<<  std::endl;
+			if (test == "\r\n0")
 			{
 				end_of_file = true;
 				d_header->res_status = 201;
 			}
 			to_hex << test;
 			to_hex >> std::hex >> chunked_size;
-			body.erase(0, test.length() + 4);
+			body.erase(0, test.length() + 2);
 		}
 		if (chunked_size >= body.size())
 		{
 			file_obj << body;
+			size += body.size();
 			chunked_size -= body.size();
 			body.clear();
-			if (chunked_size == 0) chunked_size = -2;
+			if (chunked_size == 0)
+				chunked_size = -2;
 			break ;
 		}
-		else
-		{
+		else {
 			file_obj << body.substr(0, chunked_size);
+			size += chunked_size;
 			body.erase(0, chunked_size);
 			chunked_size = -2;
 			if (body.size() <= 2 || body.find("\r\n", 2) == std::string::npos)
-			{
-				break ;
-			}
+				break;
 		}
-		file_obj.flush();
 	}
 	if (end_of_file == true)
+	{
 		file_obj.close();
+	}
 }
 
 void request::save_binary(std::string &header)
@@ -286,15 +289,19 @@ void request::parse(std::string &header)
 			size_t pos = buffer.find(":");
 			if (buffer.find("Content-Length:") != std::string::npos)
 			{
+				std::cout << buffer  << std::endl;
 				d_header->Content_Length = atoi((buffer.substr(pos + 2)).c_str());
-				// d_header.Content_Length.pop_back();
-				// std::cout << d_header.Content_Length << std::endl;
+				if (d_header->method == "POST" && server_data->max_body_size < d_header->Content_Length)
+				{
+					d_header->res_status = 413;
+					return ;
+				}
+
 			}
 			if (buffer.find("Content-Type:") != std::string::npos)
 			{
 				d_header->Content_type = buffer.substr(pos + 2);
 				d_header->Content_type.pop_back();
-				// std::cout << " \n\n\n" <<  buffer <<  " just tryiubg /*/*/" << std::endl;
 				if (d_header->Content_type.find("multipart/form-data") != std::string::npos)
 				{
 					d_header->boundary = buffer.substr(buffer.find_last_of("boundary=") + 1);
@@ -319,7 +326,7 @@ void request::parse(std::string &header)
 			}
 		}
 		if (header.find("\r\n\r\n") != std::string::npos)
-			header.erase(0, header.find("\r\n\r\n") + 4);
+			header.erase(0, header.find("\r\n\r\n") + 2);
 		else
 		{
 			d_header->res_status = 431;
@@ -372,6 +379,11 @@ void request::parse(std::string &header)
 		if (d_header->transfer_encoding.empty() == false)
 		{
 			save_chunk_improve(header);
+			if (size > server_data->max_body_size)
+			{
+				d_header->res_status = 413;
+				return ;
+			}
 		}
 		else // needs to check for cgi  
 		{
@@ -384,24 +396,6 @@ void request::parse(std::string &header)
 		return ;
 	}
 }
-
-int		request::check_for_upload() {
-	std::map<std::string, std::string>::const_iterator iter;
-
-	iter =  d_header->it->second.find("upload");
-	if (iter != d_header->it->second.cend())
-	{
-		dir_to_upload = iter->second;
-		//error still handling it 
-		// if (access(dir_to_upload.c_str(), W_OK) != -1){
-		// 	d_header->res_status = 403;
-		// 	return -1;
-		// }
-		return 1;
-	}
-	return -1;
-}
-
 
 void	request::parse_the_uri()
 {

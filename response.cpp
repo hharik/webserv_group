@@ -185,7 +185,9 @@ void	response::handle_cgi(std::string &request_file)
 		agv[1] = (char *)header_data->cgi_script.c_str(); //requested script
 	else
 		agv[1] = (char *)request_file.c_str();
+	Env.push_back("PATH_INFO=" + std::string(agv[1]));
 	agv[2] = NULL;
+
 	std::cout << "****************" <<std::endl;
 	std::cout << "THIS IS EXECUTABLE: " << agv[0] << std::endl;
 	std::cout << "THIS IS SCRIPT TO EXEC : " <<agv[1] << std::endl;
