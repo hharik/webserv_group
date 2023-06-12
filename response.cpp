@@ -193,7 +193,7 @@ void	response::handle_cgi(std::string &request_file)
 	std::cout << "THIS IS SCRIPT TO EXEC : " <<agv[1] << std::endl;
 	std::cout << "THIS IS BODY "<< request_file << std::endl;
 	std::cout << "****************" << std::endl;
-	env = new char *[Env.size()];
+	env = new char *[Env.size() * sizeof(char *)];
 	for (size_t i = 0; i < Env.size(); i++)
 	{
 		env[i] = (char *) Env[i].c_str();

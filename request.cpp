@@ -228,16 +228,23 @@ void request::save_binary(std::string &header)
 {
 	if (file_obj.is_open() == false)
 	{
+		std::cout << "PATH : "  << d_header->requested_resource << std::endl;
 		file_obj.open(d_header->requested_resource, std::fstream::out | std::fstream::binary | std::fstream::trunc);
+		header.erase(0, 2);
 	}
 	if (file_obj.is_open())
 	{
+		std::cout << header << std::endl;
 		size += header.size();
+		std::cout  << "1 *******"<< std::endl;
+		std::cout << header << std::endl;
+		std::cout << "2 *****" <<  std::endl;
 		file_obj << header;
 		header.clear();
 	}
+	std::cout << "size  " << size << " " <<  d_header->Content_Length << std::endl;
 	// file_obj.close();
-	if (size == d_header->Content_Length)
+	if ((size) == d_header->Content_Length)
 	{
 		header.clear();
 		end_of_file = true;

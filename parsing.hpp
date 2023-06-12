@@ -45,7 +45,7 @@ struct data_serv {
 	std::map<std::string, std::map<std::string, std::string> > location;
 	std::string server_name;
 	std::string port;
-	std::string auto_index;
+	std::string index;
 	std::string root_dir;
 	long long	max_body_size;
 	std::map<int, std::string> errors;

@@ -118,9 +118,6 @@ void parsing::save_data(std::vector <std::string> server)
 			}
 			temp.port = it->substr(it->find(":") + 1);
 			temp.server_name = it->substr(pos + 1, point);
-			// std::cout << temp.server_name << " EHEE " << temp.port << std::endl;
-			// std::cout << " //-/ -/  " <<  it->substr(pos + 1) << std::endl;
-			// temp.default_data.insert(std::make_pair("server_name", _value));
 		}
 		else if ((it->find("max_body_size ")) != std::string::npos)
 		{
@@ -140,6 +137,15 @@ void parsing::save_data(std::vector <std::string> server)
 			// std::cout << temp.max_body_size << std::endl;
 			// temp.default_data.insert(std::make_pair("max_body_size", _value));
 		}
+		else if ((it->find("index ")) != std::string::npos)
+		{
+			temp.index = it->substr(pos +  1);
+			if (temp.index.find(" ") != std::string::npos)
+			{
+				std::cout << "Error in default index " << std::endl;
+				exit(1);
+			}
+		}
 		else if ((it->find("root ")) != std::string::npos)
 		{
 			temp.root_dir = it->substr(pos + 1);
@@ -154,18 +160,6 @@ void parsing::save_data(std::vector <std::string> server)
 			}
 			// std::cout << temp.root_dir << std::endl;
 			// temp.default_data.insert(std::make_pair("root", _value));
-		}
-		else if ((it->find("auto_indexing ")) != std::string::npos)
-		{
-			if ((temp.auto_index = it->substr(pos + 1)).find(" ") != std::string::npos){
-				std::cout << "error in auto_indexing " << std::endl;
-				exit(EXIT_FAILURE);
-			}
-			else if (temp.auto_index != "on" && temp.auto_index != "off")
-			{
-				std::cout << "error in auto_indexing " << std::endl;
-				exit(EXIT_FAILURE);
-			}
 		}
 		else if ((it->find("error ")) != std::string::npos)
 		{
@@ -264,8 +258,8 @@ void parsing::save_data(std::vector <std::string> server)
 						exit(1);
 					}
 				}
-				else if (_key == "error") {
-					std::cout << "Can't specify error pages in location " << std::endl;
+				else if (_key == "error" || _key == "max_body_size" || _key == "listen") {
+					std::cout << "Can't specify variable "  << _key << " pages in location " << std::endl;
 					exit(1);
 				}
 				else if ((_key == "index") && (_value.find(" ") != std::string::npos)) { 
@@ -311,6 +305,10 @@ void parsing::save_data(std::vector <std::string> server)
 			exit(1);
 		}
 		it++;
+	}
+	if (temp.root_dir.empty() == true || temp.index.empty() == true) {
+		std::cout << "please, provide default index or root directory" << std::endl;
+		exit(1);
 	}
 	if (locations.size() == 0)
 	{
