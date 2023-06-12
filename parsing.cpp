@@ -145,6 +145,10 @@ void parsing::save_data(std::vector <std::string> server)
 				std::cout << "Error in default index " << std::endl;
 				exit(1);
 			}
+			if (temp.index.find("/") == 0)
+			{
+				temp.index.erase(0, 1);
+			}
 		}
 		else if ((it->find("root ")) != std::string::npos)
 		{
@@ -262,9 +266,17 @@ void parsing::save_data(std::vector <std::string> server)
 					std::cout << "Can't specify variable "  << _key << " pages in location " << std::endl;
 					exit(1);
 				}
-				else if ((_key == "index") && (_value.find(" ") != std::string::npos)) { 
-					std::cout << "error " << std::endl;
-					exit(EXIT_FAILURE);
+				else if ((_key == "index")) 
+				{
+					if (_value.find(" ") != std::string::npos) 
+					{
+						std::cout << "error " << std::endl;
+						exit(EXIT_FAILURE);
+					}
+					if (_value.find("/") == 0)
+					{
+						_value.erase(0, 1);
+					}
 				}
 				else if ((_key == "auto_indexing"))
 				{
