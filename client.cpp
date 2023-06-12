@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 16:39:08 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/08 13:36:55 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/12 11:30:48 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,9 +30,6 @@ Client::~Client()
 	delete client_request;
 	delete client_response;
 	delete header_data;
-	std::cout << "Destructed .... " << std::endl;
-	// std::cout << "Destructed .... " << std::endl;
-	// std::cout << "Client Destructed ... !" << std::endl;
 }
 
 void	Client::client_connection( int server_socket )
@@ -51,7 +48,6 @@ void	Client::client_connection( int server_socket )
 		client_response->set_eof(true);
 		perror("client:fcntl");
 		return ;
-		// exit(EXIT_FAILURE);
 	}
 }
 
@@ -93,16 +89,6 @@ void	Client::read_from_socket()
 	if (client_request->end_of_file == false)
 		client_request->parse(request_buffer);
 }
-
-// void	Client::Set_is_finish( bool status )
-// {
-// 	is_finish = status;
-// }
-
-// bool		Client::Get_is_finish()
-// {
-// 	return is_finish;
-// }
 
 bool	Client::eof()
 {

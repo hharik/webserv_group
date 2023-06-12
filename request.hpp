@@ -37,8 +37,12 @@ class request {
 	/* if this method is allowed in this location */
 	int		allowed_methods();
 	int		get_requested_resource();
-	int		treat_target_resource( std::string  );
-	int		path_is_exist();
+	int		treat_target_resource( std::string, std::string, std::string& );
+	int		path_is_exist( std::string& );
+	int 	handle_GetAndDelete();
+	int 	handle_PostMethod();
+	void	default_root();
+
 	const std::string	get_extension( const std::string& target );
 	/* check if location has upload enabled or not*/
 

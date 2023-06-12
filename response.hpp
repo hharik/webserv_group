@@ -4,6 +4,7 @@
 #include "parsing.hpp"
 #include "request.hpp"
 #include <_types/_intmax_t.h>
+#include <fstream>
 #include <string>
 #include <sys/_types/_pid_t.h>
 
@@ -31,12 +32,13 @@
 class response {
 	std::map<std::string, std::string>::const_iterator iter;
 	std::map<int, std::string>::const_iterator er_it;
+	std::map<std::string, std::string> cgi_header;
 
 	const data_serv 	*server_data;
 	data_header			*header_data;
 	char				buffer[BUFFER_SIZE];
 
-	std::ifstream		in_file;
+	std::ifstream		requested_file;
 	std::string			response_content;
 	bool				is_open;
 	bool				default_response;
@@ -44,15 +46,17 @@ class response {
 	int					s403;
 	bool				auto_index;
 	std::string			auto_index_content;
-
+	std::streampos		cgi_body_pos;
+	std::string			cgi_start_line;
 
 	/*####################################*/
 	int		cgifd[2];
 	char	*agv[3];
-	std::string file_tmp;
+	std::string cgi_output;
 	std::vector<std::string> Env;
 	pid_t		pid;
 	bool		is_alive;
+	// std::ifstream cgi_outputfile;
 	/*####################################*/
 
 	std::string			header;
@@ -106,9 +110,14 @@ public:
 
 	/*#############################################*/
 	void generateAutoIndex(std::string &directory);
-	void	handle_cgi(std::string &request_file);
+	void	handle_cgi();
 	/*#############################################*/
-	
+	void	handle_cgi_header();
+	void	Parse_cgi_header( std::string cgi_header );
+	void	Parse_Line( std::string );
+	void	get_res_status( std::string  );
+	void	check_for_cookies( std::string& );
+	// void	Send_the_Body_WithCgi( int );
 	void	set_eof( bool );
 	/* GET method */
 	void	Get_method();
