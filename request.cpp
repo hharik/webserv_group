@@ -32,7 +32,6 @@ const std::string	request::get_extension( const std::string& target )
 int	request::treat_target_resource( std::string path, std::string to_append ,std::string &result )
 {
 	std::string	rest(to_append);
-	std::cout<< "to append : " << to_append << std::endl;
 	size_t		size;
 
 	d_header->iter = d_header->it->second.find(path);
@@ -43,7 +42,6 @@ int	request::treat_target_resource( std::string path, std::string to_append ,std
 			size++;
 		rest.erase(0, size);
 		result = d_header->iter->second + rest;
-		std::cout << "Result : " << result << std::endl;
 		return (1);
 	}
 	return (0);
@@ -55,14 +53,12 @@ int	request::generate_name()
 	only gives directory in requested_resource */ 
 	int status;
 	int	size;
-	std::cout << "GENE : " << std::endl;
 	size = d_header->new_uri.size();
 	if (d_header->_is_cgi == false)
 	{
 		status = parsing::is_file_or_directory(d_header->requested_resource.c_str());
 		if  (status == 1)
 		{
-			std::cout << "is Dire : " << std::endl;
 			if (d_header->new_uri[size - 1] != '/')
 			{
 				d_header->res_status = 301;
@@ -73,14 +69,19 @@ int	request::generate_name()
 	}
 	else if (d_header->_is_cgi == true)
 		d_header->requested_resource += "/tmp/" + time_date() +  get_extension(d_header->new_uri);
+
+
 	std::cout << "=============================" << std::endl;
-	std::cout << "Method               : " << d_header->method << std::endl;
-	std::cout << "uri                  : " << d_header->uri << std::endl;
-	std::cout << "cgi                  : " << d_header->_is_cgi << std::endl;
-	std::cout << "script_path          : " << d_header->cgi_path << std::endl;
-	std::cout << "cgi_script           : " << d_header->cgi_script << std::endl;
-	std::cout << "requested_resource   : " << d_header->requested_resource << std::endl;
-	std::cout << "status_Code          : " << d_header->res_status << std::endl;
+	std::cout << "NEW URI                     : [" << d_header->new_uri << "]" << std::endl;
+	std::cout << "METHOD                  : [" << d_header->method << "]" << std::endl;
+	std::cout << "STATUS CODE             : [" << d_header->res_status << "]" <<  std::endl;
+	std::cout << "Requested Resource      : [" << d_header->requested_resource << "]" << std::endl;
+	std::cout << "cgi_script              : [" << d_header->cgi_script << "]" << std::endl;
+	std::cout << "cgi_path                : [" << d_header->cgi_path << "]" << std::endl;
+	if (d_header->_is_cgi == true)
+		std::cout << "CGI                 : ON" << std::endl;
+	else
+	 	std::cout << "CGI                 : OFF" << std::endl;
 	std::cout << "=============================" << std::endl;
 	return (1);
 }
@@ -185,15 +186,19 @@ int request::handle_PostMethod()
 	{
 		if (access(d_header->requested_resource.c_str(), F_OK))
 			ProvideToUpload(d_header->requested_resource);
+		status_code = parsing::is_file_or_directory(d_header->requested_resource.c_str());
+		if (status_code == 1 && access(d_header->requested_resource.c_str(), X_OK))
+		{
+			d_header->res_status = 403;
+			return (0);
+		}
 		else if (access(d_header->requested_resource.c_str(), W_OK))
 		{
 			d_header->res_status = 403;
 			return (0);
 		}
-		std::cout << "qqqq :::  " << d_header->requested_resource << std::endl;
 		return (1);
 	}
-	std::cout << " FORBIDEN : : TEST " << std::endl;
 	/* Check if the location supports the CGI  */
 	status_code = treat_target_resource("cgi " + get_extension(d_header->new_uri), "", d_header->cgi_path);
 	if (status_code == 1)
@@ -202,7 +207,7 @@ int request::handle_PostMethod()
 		if (status_code == 0)
 			default_root(d_header->cgi_script, d_header->new_uri);
 		status_code = path_is_exist(d_header->cgi_script);
-		if (status_code && status_code != -2)
+		if (status_code && status_code != -3)
 			d_header->_is_cgi = true;
 		else
 		{
@@ -221,15 +226,6 @@ int	request::get_requested_resource()
 		status_code = handle_GetAndDelete();
 	else if (d_header->method == "POST")
 		status_code = handle_PostMethod();
-	std::cout << "METHOD : [" << d_header->method << "]" << std::endl;
-	std::cout << "STATUS CODE : [" << d_header->res_status << "]" <<  std::endl;
-	std::cout << "Requested Resource : [" << d_header->requested_resource << "]" << std::endl;
-	std::cout << "cgi_script : [" << d_header->cgi_script << "]" << std::endl;
-	std::cout << "cgi_path   : [" << d_header->cgi_path << "]" << std::endl;
-	if (d_header->_is_cgi == true)
-		std::cout << "CGI ON" << std::endl;
-	else
-	 	std::cout << "CGI OFF" << std::endl;
 	return (status_code);
 }
 
