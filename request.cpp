@@ -72,11 +72,9 @@ int	request::generate_name()
 		{
 			size = d_header->requested_resource.find_last_of(".");
 			if (size != std::string::npos)
-				name.resize(size + 1);
-			new_name = name + parsing::mime_type.find(d_header->Content_type)->second;
-			std::cout << "NEW NAME : " << new_name << std::endl;
+				name.resize(size);
+			new_name = name + "." + parsing::mime_type.find(d_header->Content_type)->second;
 			status = rename(d_header->requested_resource.c_str(), new_name.c_str());
-			std::cout << "stautus : " << status << std::endl;
 			d_header->requested_resource = new_name;
 		}
 	}
@@ -204,15 +202,23 @@ int request::handle_PostMethod()
 		status_code = parsing::is_file_or_directory(d_header->requested_resource.c_str());
 		if (status_code == 1 && access(d_header->requested_resource.c_str(), X_OK))
 		{
+			std::cout << "dir : " << d_header->res_status << std::endl;
 			d_header->res_status = 403;
 			return (0);
 		}
-		else if (access(d_header->requested_resource.c_str(), W_OK))
+		else if (access(d_header->requested_resource.c_str(), F_OK) == 0 && access(d_header->requested_resource.c_str(), W_OK))
 		{
+			std::cout << "file : " << d_header->res_status << std::endl;
 			d_header->res_status = 403;
+			return (0);
+		}
+		else if (access(d_header->requested_resource.c_str(), F_OK))
+		{
+			d_header->res_status = 404;
 			return (0);
 		}
 		return (1);
+		std::cout << "res_status : " << d_header->res_status;
 	}
 	/* Check if the location supports the CGI  */
 	status_code = treat_target_resource("cgi " + get_extension(d_header->new_uri), "", d_header->cgi_path);
