@@ -39,7 +39,7 @@ struct data_header;
 // macros
 
 #define BACKLOG 10
-#define BUFFER_SIZE 2000
+#define BUFFER_SIZE 5000
 #define CMP(path)(strcmp(path, ".") && strcmp(path, ".."))
 #define VALID_STATUS(x) x >= 100 && x < 600 ? true : false
 #define FAILED(x) x >= 400 ? true : false

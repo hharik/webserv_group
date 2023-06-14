@@ -49,6 +49,8 @@ int	request::treat_target_resource( std::string path, std::string to_append ,std
 
 int	request::generate_name()
 {
+	/*error u dont generate names when uploading to me files 
+	only gives directory in requested_resource */ 
 	int status;
 	int	size;
 
@@ -64,6 +66,7 @@ int	request::generate_name()
 				return (0);
 			}
 		}
+		d_header->requested_resource += time_date() +  "." + parsing::mime_type.find(d_header->Content_type)->second;
 	}
 	else if (d_header->_is_cgi == true)
 		d_header->requested_resource += "/tmp/" + time_date() +  get_extension(d_header->new_uri);
@@ -215,7 +218,7 @@ std::string request::time_date()
 	time(&curr_time);
 	curr_tm = localtime(&curr_time);
 
-	strftime(date_string, 50, "%B-%d-%Y-%T", curr_tm);
+	strftime(date_string, 50, "%B-%d-%Y-%H-%M-%S", curr_tm);
 	return std::string(date_string);
 }
 
@@ -230,7 +233,7 @@ void	request::save_chunk_improve(std::string &body)
 	if (file_obj.is_open() == false)
 	{
 		// body.erase(0, body.find(to_delete));
-		std::cout << d_header->requested_resource << std::endl;
+		std::cout <<  "here is the file to out " <<  d_header->requested_resource << std::endl;
 		file_obj.open(d_header->requested_resource, std::fstream::out | std::fstream::trunc | std::fstream::binary);
 	}
 	std::stringstream to_hex;
