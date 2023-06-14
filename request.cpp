@@ -53,6 +53,8 @@ int	request::generate_name()
 	only gives directory in requested_resource */ 
 	int status;
 	int	size;
+	std::string new_name;
+	std::string name(d_header->requested_resource);
 	size = d_header->new_uri.size();
 	if (d_header->_is_cgi == false)
 	{
@@ -65,6 +67,17 @@ int	request::generate_name()
 				return (0);
 			}
 			d_header->requested_resource += time_date() +  "." + parsing::mime_type.find(d_header->Content_type)->second;
+		}
+		else
+		{
+			size = d_header->requested_resource.find_last_of(".");
+			if (size != std::string::npos)
+				name.resize(size + 1);
+			new_name = name + parsing::mime_type.find(d_header->Content_type)->second;
+			std::cout << "NEW NAME : " << new_name << std::endl;
+			status = rename(d_header->requested_resource.c_str(), new_name.c_str());
+			std::cout << "stautus : " << status << std::endl;
+			d_header->requested_resource = new_name;
 		}
 	}
 	else if (d_header->_is_cgi == true)
@@ -159,6 +172,7 @@ void	request::ProvideToUpload( std::string path)
 {
 	int status;
 
+	std::cout << "Uploading " << path << std::endl;
 	if (access(path.c_str(), F_OK))
 	{
 		update_the_uri(path);
@@ -168,6 +182,7 @@ void	request::ProvideToUpload( std::string path)
 			status = mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 			if (status == -1)
 			{
+				std::cout << "FOUND : " << path << std::endl;
 				d_header->res_status = 403;
 				return ;
 			}
@@ -399,8 +414,11 @@ void request::parse(std::string &header)
 					d_header->boundary = buffer.substr(buffer.find_last_of("boundary=") + 1);
 					d_header->boundary.pop_back();
 				}
-				// std::cout << d_header.boundary << std::endl;
-				// std::cout << d_header.Content_type	<< 	std::endl;
+				if (d_header->method == "POST" && d_header->Content_type.empty() == true)
+				{
+					d_header->res_status = 415;
+					return ;
+				}
 			}
 			if (buffer.find("Host:") != std::string::npos)
 			{
@@ -472,11 +490,7 @@ void request::parse(std::string &header)
 	}
 	if (d_header->method == "POST") 
 	{
-		if (d_header->Content_type.empty() == true)
-		{
-			d_header->res_status = 415;
-			return ;
-		}
+	
 		if (d_header->transfer_encoding.empty() == true && d_header->Content_Length ==  -2)
 		{
 			d_header->res_status = 400;
