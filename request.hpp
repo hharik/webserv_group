@@ -41,7 +41,7 @@ class request {
 	int		path_is_exist( std::string& );
 	int 	handle_GetAndDelete();
 	int 	handle_PostMethod();
-	void	default_root();
+	void	default_root( std::string, std::string& );
 
 	const std::string	get_extension( const std::string& target );
 	/* check if location has upload enabled or not*/

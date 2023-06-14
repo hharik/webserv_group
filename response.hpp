@@ -7,6 +7,7 @@
 #include <fstream>
 #include <string>
 #include <sys/_types/_pid_t.h>
+#include <sys/_types/_size_t.h>
 
 #define DEFAULT_MIME_TYPE "application/octet-stream"
 #define HTML "text/html"
@@ -48,7 +49,8 @@ class response {
 	std::string			auto_index_content;
 	std::streampos		cgi_body_pos;
 	std::string			cgi_start_line;
-
+	size_t				content_length;
+	size_t				sended_bytes;
 	/*####################################*/
 	int		cgifd[2];
 	char	*agv[3];
@@ -117,6 +119,8 @@ public:
 	void	Parse_Line( std::string );
 	void	get_res_status( std::string  );
 	void	check_for_cookies( std::string& );
+	void	Process_Cgi_Header();
+	void	Put_Header(const std::string &, const std::string &);
 	// void	Send_the_Body_WithCgi( int );
 	void	set_eof( bool );
 	/* GET method */

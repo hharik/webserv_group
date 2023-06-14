@@ -6,16 +6,14 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/30 12:25:24 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/12 17:21:53 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/14 06:46:21 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 
 #include "client.hpp"
+#include "parsing.hpp"
 #include "response.hpp"
-#include <fstream>
-#include <string>
-#include <unistd.h>
 
 response::response( const data_serv *dptr,  data_header *hptr ):server_data(dptr), header_data(hptr)
 {
@@ -26,6 +24,8 @@ response::response( const data_serv *dptr,  data_header *hptr ):server_data(dptr
 	s403 = 0;
 	is_alive = false;
 	auto_index = false;
+	content_length = 0;
+	sended_bytes = 0;
 	/*---------------*/
 }
 
@@ -92,7 +92,8 @@ void	response::Send_the_Body( int client_fd)
 			eof = true;
 			return ;
 		}
-		else if (requested_file.eof())
+		sended_bytes += size;
+		if (sended_bytes >= content_length)
 			eof = true;
 	}
 	else if (default_response == true)
@@ -318,31 +319,39 @@ int	response::search_inside_location( const std::string to_find )
 /* GET method */
 void	response::Get_method()
 {
+	std::cout << "[GET]" << std::endl;
 	int			status;
 	int			ind;
 
 	ind = header_data->new_uri.size() - 1;
 	/* requesting a directory without '/' at the end */
+	status = parsing::is_file_or_directory(header_data->requested_resource.c_str());
+	if (status == 0)
+	{
+		std::cout << "[" << header_data->requested_resource << "]" << " is a file" << std::endl;
+		serve_the_file();
+	}
+	else if (status == 1)
+	{
+		std::cout << "[" << header_data->requested_resource << "]" << " is a directory" << std::endl;
 	if (header_data->new_uri[ind] != '/')
 	{
+		std::cout << "[" << header_data->requested_resource << "]" << " is redirected" << std::endl;
 		header_data->res_status = 301;
 		header_data->new_uri += "/";
 		return ;
 	}
-	status = parsing::is_file_or_directory(header_data->requested_resource.c_str());
-
-
-	if (status == 0)
-		serve_the_file();
-	else if (status == 1)
 		requested_resource_is_dir();
+	}
+	else
+		std::cout << "[" << header_data->requested_resource << "]" << " No such file or directory" << std::endl;
 }
 
 /* POST method */
 void	response::Post_method()
 {
 	int			status;
-
+	std::cout << "[POST]" << std::endl;
 	if (header_data->res_status == 301)
 	{
 		header_data->new_uri += "/";
@@ -477,28 +486,7 @@ std::string	response::get_start_line()
 {
 	/* HTTP/1.1 code phrase               */
 	std::string	start = HTTP_V;
-	// int	find;
 
-	// if (header_data->_is_cgi == true)
-	// {
-	// 	find = cgi_start_line.find("HTTP/1.1");
-	// 	if (find != std::string::npos)
-	// 	{
-	// 		cgi_start_line.erase(find, cgi_start_line.find(" ", find + 1));
-	// 		header_data->res_status = std::stoi(cgi_start_line);
-	// 		/* ... throw execption ... */
-	// 	}
-	// 	iter = cgi_header.find("status");
-	// 	if (iter != cgi_header.end())
-	// 	{
-	// 		response_content = iter->second;
-	// 		start += response_content;
-	// 		start += "\r\n";
-	// 		header_data->res_status = std::stoi(iter->second);
-	// 		std::cout << "Status : " << header_data->res_status << std::endl;
-	// 		return (start);
-	// 	}
-	// }
 	start += std::to_string(header_data->res_status);
 	if (header_data->res_status == 200)
 		response_content += S200;
@@ -544,8 +532,8 @@ std::string	response::Get_Content_Type()
 	std::map<std::string, std::string>::iterator iterator;
 	std::string	Content_Type = "Content-Type: ";
 	std::string	result;
-
 	int	find;
+
 	if (default_response == false && auto_index == false)
 	{
 		result = header_data->requested_resource;
@@ -592,7 +580,6 @@ std::string	response::Get_Content_Length()
 {
 /* Content-Length: 1234\r\n\r\n             */
 	std::string Content_Length = "Content-Length: ";
-	std::string	size;
 	struct stat s;
 	
 	if (default_response == false)
@@ -608,18 +595,15 @@ std::string	response::Get_Content_Length()
 		// }
     	if (stat(header_data->requested_resource.c_str(), &s) == 0)
 		{
-			Content_Length += std::to_string(s.st_size);
+			content_length = s.st_size;
+			Content_Length += std::to_string(content_length);
     	    Content_Length += "\r\n\r\n";
 			return Content_Length;
     	}
 	}
 	if (default_response == true)
-	{
-		size = std::to_string(response_content.size());
-	}
-	else if (auto_index == true)
-		size = std::to_string(auto_index_content.size());
-	return (Content_Length + size + "\r\n\r\n");
+		content_length = response_content.size();
+	return (Content_Length + std::to_string(content_length) + "\r\n\r\n");
 }
 
 void	response::Pages()
@@ -644,16 +628,16 @@ std::string	response::get_Location()
 {
 	/* Location: http://example.com/dir/dir2/dir3/  */
 	std::string		Location = "Location: ";
-	// if (header_data->_is_cgi == true)
-	// {
-	// 	iter = cgi_header.find("location");
-	// 	if (iter != cgi_header.end())
-	// 	{
-	// 		Location += iter->second;
-	// 		Location += "\r\n";
-	// 		return (Location);
-	// 	}
-	// }
+	if (header_data->_is_cgi == true)
+	{
+		iter = cgi_header.find("location");
+		if (iter != cgi_header.end())
+		{
+			Location += iter->second;
+			Location += "\r\n";
+			return (Location);
+		}
+	}
 	if (header_data->is_redirect == true)
 		Location += header_data->redirect_path;
 	else
@@ -687,8 +671,8 @@ void	response::Parse_Line( std::string line )
 		status = cgi_header.insert(std::make_pair(key, value)).second;
 		if (status == false)
 		{
-			std::cout << "VAlue : " << value << std::endl;
 			cgi_header.erase(key);
+			std::cout<< "KEY : " << key << "VALUE : " << value << std::endl;
 			cgi_header.insert(std::make_pair(key, value));
 		}
 	}
@@ -716,15 +700,15 @@ void	response::Parse_cgi_header( std::string cgi_header )
 {
 	int 	find;
 	std::string res;
-
+	std::cout << cgi_header << std::endl;
 	find = cgi_header.find("\r\n\r\n");
-
 	cgi_body_pos = 0;
 	if (find != std::string::npos)
 	{
 		cgi_body_pos = find + 4;
 		cgi_header.resize(find + 2);
 		find = cgi_header.find_first_of("\r\n");
+		// cgi_body_pos += find;
 		cgi_start_line = cgi_header;
 		cgi_start_line.resize(find);
 		while (find != std::string::npos)
@@ -734,7 +718,9 @@ void	response::Parse_cgi_header( std::string cgi_header )
 			cgi_header.erase(0, find + 2);
 			res = toLowerCase(res);
 			Parse_Line(res);
+			std::cout << "LINE : " << std::endl;
 			find = cgi_header.find_first_of("\r\n");
+			// cgi_body_pos += find;
 		}
 	}
 	/* start Line */
@@ -742,6 +728,56 @@ void	response::Parse_cgi_header( std::string cgi_header )
 	/* Content-Length */
 	/* Location */
 	/* Set-Cookie: */
+}
+
+void	response::Put_Header(const std::string &key, const std::string &value)
+{
+	struct stat s;
+	long	result;
+
+	if (key != "status")
+	{
+		header += key + ": ";
+		header += value + "\r\n";
+	}
+}
+
+void	response::Process_Cgi_Header()
+{
+	std::map<std::string, std::string>::iterator end = cgi_header.end();
+	int	find;
+	/* start line */
+	header += HTTP_V;
+	find = cgi_start_line.find("HTTP/1.1");
+	if (find != std::string::npos)
+	{
+		cgi_start_line.erase(find, cgi_start_line.find(" ", find + 1));
+		header_data->res_status = atoi(cgi_start_line.c_str());
+		header += cgi_start_line;
+		if (VALID_STATUS(header_data->res_status) == false)
+			header_data->res_status = 502;
+		/* ... throw execption ... */
+	}
+	else if ((iter = cgi_header.find("status")) != end)
+	{
+		response_content = iter->second;
+		header += response_content;
+		header_data->res_status = atoi(iter->second.c_str());
+		if (VALID_STATUS(header_data->res_status) == false)
+			header_data->res_status = 502;
+	}
+	else
+		header += "200 OK";
+	header += "\r\n";
+	iter = cgi_header.begin();
+	
+	while (iter != end)
+	{
+		std::cout << iter->first << ": " << iter->second << std::endl;
+		Put_Header(iter->first, iter->second);
+		iter++;
+	}
+	header += "\r\n";
 }
 
 void	response::handle_cgi_header( )
@@ -756,19 +792,8 @@ void	response::handle_cgi_header( )
 		Parse_cgi_header(buffer);
 	}
 	requested_file.close();
+	Process_Cgi_Header();
 }
-
-void	response::check_for_cookies( std::string &header )
-{
-	iter = cgi_header.find("set-cookie");
-	if (iter != cgi_header.end())
-	{
-		header += "Set-Cookie: ";
-		header += iter->second;
-		header += "\r\n";
-	}
-}
-
 
 /* ============================================================================== */
 
@@ -782,6 +807,8 @@ void response::create_header()
 	if (header_data->_is_cgi == true)
 	{
 		handle_cgi_header();
+		if (FAILED(header_data->res_status) == true)
+			Pages();
 		return ;
 	}
 	header = get_start_line();

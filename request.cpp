@@ -66,9 +66,7 @@ int	request::generate_name()
 		}
 	}
 	else if (d_header->_is_cgi == true)
-	{
 		d_header->requested_resource += "/tmp/" + time_date() +  get_extension(d_header->new_uri);
-	}
 	std::cout << "=============================" << std::endl;
 	std::cout << "Method               : " << d_header->method << std::endl;
 	std::cout << "uri                  : " << d_header->uri << std::endl;
@@ -111,7 +109,7 @@ int		request::path_is_exist( std::string &path )
 	return (1);
 }
 
-void	request::default_root()
+void	request::default_root( std::string to_append, std::string &result )
 {
 	std::string	rest(server_data->root_dir);
 	size_t		size;
@@ -120,7 +118,7 @@ void	request::default_root()
 	if (rest[size - 1] == '/')
 		size--;
 	rest.resize(size);
-	d_header->requested_resource = rest + d_header->new_uri;
+	result = rest + to_append;
 }
 
 int request::handle_GetAndDelete()
@@ -129,7 +127,7 @@ int request::handle_GetAndDelete()
 
 	status_code = treat_target_resource("root", d_header->new_uri, d_header->requested_resource);
 	if (status_code == 0)
-		default_root();
+		default_root(d_header->new_uri, d_header->requested_resource);
 	if (d_header->method == "GET" )
 	{
 		status_code = path_is_exist(d_header->requested_resource);
@@ -154,29 +152,30 @@ int request::handle_PostMethod()
 {
 	int status_code;
 
+	/* Check if the location supports the upload. */
 	status_code = treat_target_resource("upload", d_header->new_uri, d_header->requested_resource);
 	if (status_code == 1)
 	{
 		status_code = path_is_exist(d_header->requested_resource);
 		if (status_code && status_code != -1)
 			return (1);
+		else
+		 	return (0);
 	}
+	/* Check if the location supports the CGI  */
 	status_code = treat_target_resource("cgi " + get_extension(d_header->new_uri), "", d_header->cgi_path);
 	if (status_code == 1)
 	{
 		status_code = treat_target_resource("root", d_header->new_uri, d_header->cgi_script);
-		if (status_code == 1)
-		{
-			status_code = path_is_exist(d_header->cgi_script);
-		}
-		if (status_code && status_code != -3)
-		{
+		if (status_code == 0)
+			default_root(d_header->cgi_script, d_header->new_uri);
+		status_code = path_is_exist(d_header->cgi_script);
+		if (status_code && status_code != -2)
 			d_header->_is_cgi = true;
-		}
 		else
 		{
 			d_header->res_status = 403;
-			return (0);
+			return (1);
 		}
 	}
 	return (1);
@@ -376,6 +375,11 @@ void request::parse(std::string &header)
 			if (buffer.find("Transfer-Encoding:") != std::string::npos)
 			{
 				d_header->transfer_encoding = (buffer.substr(pos + 1));
+			}
+			if (buffer.find("Set-Cookie:") != std::string::npos)
+			{
+				d_header->Cookies = (buffer.substr(pos + 1));
+				std::cout << "Cookies :  " << d_header->Cookies << std::endl;
 			}
 			if (buffer.size() == 1 && buffer == "\r")
 			{

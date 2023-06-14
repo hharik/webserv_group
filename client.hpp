@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 14:51:32 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/11 12:10:26 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/14 07:40:48 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@ struct data_header {
 	std::string	query;
 	std::string	redirect_path;
 	std::string	methods;
+	std::string	Cookies;
 	bool	is_redirect;
 	std::string file;
 	std::string	requested_resource;

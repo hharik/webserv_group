@@ -17,6 +17,7 @@
 #include <vector>
 #include <dirent.h>
 #include <signal.h>
+#include <stdlib.h>
 /* hamid's includes */
 # include <map>
 # include <stack>
@@ -40,6 +41,9 @@ struct data_header;
 #define BACKLOG 10
 #define BUFFER_SIZE 2000
 #define CMP(path)(strcmp(path, ".") && strcmp(path, ".."))
+#define VALID_STATUS(x) x >= 100 && x < 600 ? true : false
+#define FAILED(x) x >= 400 ? true : false
+#define SUCCESS(x) x < 400 ? true : false
 
 struct data_serv {
 	std::map<std::string, std::map<std::string, std::string> > location;
