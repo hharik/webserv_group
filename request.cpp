@@ -68,8 +68,8 @@ int	request::generate_name()
 				d_header->res_status = 301;
 				return (0);
 			}
+			d_header->requested_resource += time_date() +  "." + parsing::mime_type.find(d_header->Content_type)->second;
 		}
-		d_header->requested_resource += time_date() +  "." + parsing::mime_type.find(d_header->Content_type)->second;
 	}
 	else if (d_header->_is_cgi == true)
 		d_header->requested_resource += "/tmp/" + time_date() +  get_extension(d_header->new_uri);
@@ -185,6 +185,12 @@ int request::handle_PostMethod()
 	{
 		if (access(d_header->requested_resource.c_str(), F_OK))
 			ProvideToUpload(d_header->requested_resource);
+		else if (access(d_header->requested_resource.c_str(), W_OK))
+		{
+			d_header->res_status = 403;
+			return (0);
+		}
+		std::cout << "qqqq :::  " << d_header->requested_resource << std::endl;
 		return (1);
 	}
 	std::cout << " FORBIDEN : : TEST " << std::endl;
