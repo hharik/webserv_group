@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/30 12:25:24 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/14 06:46:21 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/14 12:28:20 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -614,7 +614,6 @@ void	response::Pages()
 		return ;
 	if (header_data->res_status >= 400)
 	{
-		std::cout << "updated : " << std::endl;
 		er_it = server_data->errors.find(header_data->res_status);
 		header_data->requested_resource = er_it->second;
 		if (access(er_it->second.c_str(), F_OK) == 0)
@@ -700,7 +699,6 @@ void	response::Parse_cgi_header( std::string cgi_header )
 {
 	int 	find;
 	std::string res;
-	std::cout << cgi_header << std::endl;
 	find = cgi_header.find("\r\n\r\n");
 	cgi_body_pos = 0;
 	if (find != std::string::npos)

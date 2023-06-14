@@ -42,7 +42,7 @@ class request {
 	int 	handle_GetAndDelete();
 	int 	handle_PostMethod();
 	void	default_root( std::string, std::string& );
-
+	void	ProvideToUpload( std::string );
 	const std::string	get_extension( const std::string& target );
 	/* check if location has upload enabled or not*/
 
