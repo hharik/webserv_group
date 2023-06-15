@@ -12,7 +12,7 @@ class request {
 	long rsize;
 	int chunked_size;
 	int size;
-
+	std::string new_name;
 	public:
 	bool end_of_file;
 	std::fstream file_obj;
@@ -39,8 +39,9 @@ class request {
 	int		get_requested_resource();
 	int		treat_target_resource( std::string, std::string, std::string& );
 	int		path_is_exist( std::string& );
-	int 	handle_GetAndDelete();
-	int 	handle_PostMethod();
+	void 	handle_GetMethod();
+	void	handle_DeleteMethod();
+	void 	handle_PostMethod();
 	void	default_root( std::string, std::string& );
 	void	ProvideToUpload( std::string );
 	const std::string	get_extension( const std::string& target );

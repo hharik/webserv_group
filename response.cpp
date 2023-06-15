@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/30 12:25:24 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/15 10:31:32 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/15 13:35:25 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,8 @@
 #include "client.hpp"
 #include "parsing.hpp"
 #include "response.hpp"
+#include <cstring>
+#include <fstream>
 
 response::response( const data_serv *dptr,  data_header *hptr ):server_data(dptr), header_data(hptr)
 {
@@ -37,6 +39,21 @@ response::~response( )
 
 void	response::response_handler( int client_fd )
 {
+
+
+	std::cout << "=============================" << std::endl;
+	std::cout << "NEW URI                     : [" << header_data->new_uri << "]" << std::endl;
+	std::cout << "METHOD                  : [" << header_data->method << "]" << std::endl;
+	std::cout << "STATUS CODE             : [" << header_data->res_status << "]" <<  std::endl;
+	std::cout << "Requested Resource      : [" << header_data->requested_resource << "]" << std::endl;
+	std::cout << "cgi_script              : [" << header_data->cgi_script << "]" << std::endl;
+	std::cout << "cgi_path                : [" << header_data->cgi_path << "]" << std::endl;
+	if (header_data->_is_cgi == true)
+		std::cout << "CGI                 : ON" << std::endl;
+	else
+	 	std::cout << "CGI                 : OFF" << std::endl;
+	std::cout << "=============================" << std::endl;
+	exit(0);	
 	if (is_open == false && header_data->res_status < 400 && header_data->is_redirect == false)
 	{
 		if (header_data->method == "GET")
@@ -268,7 +285,7 @@ void response::generateAutoIndex(std::string &directory)
 			std::string filename = ent->d_name;
 			if (filename == ".")
 				continue;
-			if (parsing::is_file_or_directory(std::string(directory + filename).c_str()) == 1)
+			if (Client::is_file_or_directory(std::string(directory + filename).c_str(), header_data) == 1)
 				filename.append("/");
 			autoIndexHtml += "<li> <a href=\"" + filename + "\">" + filename + "</a> </li>";
 		}
@@ -328,27 +345,26 @@ void	response::Get_method()
 	int			ind;
 
 	ind = header_data->new_uri.size() - 1;
-	/* requesting a directory without '/' at the end */
-	status = parsing::is_file_or_directory(header_data->requested_resource.c_str());
-	if (status == 0)
+	/* requesting a directory */
+	if (header_data->is_dir == true)
+	{
+		std::cout << "[" << header_data->requested_resource << "]" << " is a directory" << std::endl;
+		/* requesting a directory without '/' at the end */
+		if (header_data->new_uri[ind] != '/')
+		{
+			std::cout << "[" << header_data->requested_resource << "]" << " is redirected" << std::endl;
+			header_data->res_status = 301;
+			header_data->new_uri += "/";
+			return ;
+		}
+		requested_resource_is_dir();
+	}
+	/* requesting a file */
+	else
 	{
 		std::cout << "[" << header_data->requested_resource << "]" << " is a file" << std::endl;
 		serve_the_file();
 	}
-	else if (status == 1)
-	{
-		std::cout << "[" << header_data->requested_resource << "]" << " is a directory" << std::endl;
-	if (header_data->new_uri[ind] != '/')
-	{
-		std::cout << "[" << header_data->requested_resource << "]" << " is redirected" << std::endl;
-		header_data->res_status = 301;
-		header_data->new_uri += "/";
-		return ;
-	}
-		requested_resource_is_dir();
-	}
-	else
-		std::cout << "[" << header_data->requested_resource << "]" << " No such file or directory" << std::endl;
 }
 
 /* POST method */
@@ -419,7 +435,7 @@ int	response::delete_dir( const char *directory )
 		{
 			str += "/";
 			str += dp->d_name;
-			status = parsing::is_file_or_directory(str.c_str());
+			status = Client::is_file_or_directory(str.c_str(), header_data);
 		}
 		/* first remove all files */
 		if (status == 0 && CMP(dp->d_name))
@@ -446,7 +462,7 @@ void	response:: Delete_method()
 	int			size;
 
 	size = header_data->requested_resource.size();
-	status = parsing::is_file_or_directory(header_data->requested_resource.c_str());
+	status = Client::is_file_or_directory(header_data->requested_resource.c_str(), header_data);
 	if (status == 0)
 		delete_the_file();
 	else if (status == 1)

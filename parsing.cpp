@@ -24,21 +24,6 @@ std::string parsing::trim(std::string line, std::string whitespaces)
 	return line.substr(strbegin, strRange);
 }
 
-int parsing::is_file_or_directory(const char *str)
-{
-	struct	stat	spath;
-
-	if (stat(str, &spath) == 0)
-	{
-		if (S_ISREG(spath.st_mode))
-			return (0);
-		else if (S_ISDIR(spath.st_mode))
-			return (1);
-	}
-	return (-1);
-}
-
-
 std::string parsing::reduce(std::string buff, std::string whitespaces, std::string to_replace = " ")
 {
 	buff = trim(buff, " \t\r\v\f\n");

@@ -52,19 +52,17 @@ int	request::treat_target_resource( std::string path, std::string to_append ,std
 int	request::generate_name()
 {
 	/*error u dont generate names when uploading to me files 
-	only gives directory in requested_resource */ 
+	only gives directory in requested_resource */
 	int status;
-	int	size;
-	std::string new_name;
-	std::string name(d_header->requested_resource);
-	size = d_header->new_uri.size();
+	int	ind;
 
+	new_name = d_header->requested_resource;
+	ind = d_header->new_uri.size();
 	if (d_header->_is_cgi == false)
 	{
-		status = parsing::is_file_or_directory(d_header->requested_resource.c_str());
-		if  (status == 1)
+		if (d_header->is_dir == true)
 		{
-			if (d_header->new_uri[size - 1] != '/')
+			if (d_header->new_uri[ind - 1] != '/')
 			{
 				d_header->res_status = 301;
 				return (0);
@@ -73,10 +71,10 @@ int	request::generate_name()
 		}
 		else
 		{
-			size = d_header->requested_resource.find_last_of(".");
-			if (size != std::string::npos)
-				name.resize(size);
-			new_name = name + "." + parsing::mime_type.find(d_header->Content_type)->second;
+			ind = new_name.find_last_of(".");
+			if (ind != std::string::npos)
+				new_name.resize(ind);
+			new_name += "." + parsing::mime_type.find(d_header->Content_type)->second;
 			status = rename(d_header->requested_resource.c_str(), new_name.c_str());
 			if (status == 0)
 				d_header->requested_resource = new_name;
@@ -86,18 +84,6 @@ int	request::generate_name()
 	{
 		d_header->requested_resource += "/tmp/" + time_date();
 	}
-	std::cout << "=============================" << std::endl;
-	std::cout << "NEW URI                     : [" << d_header->new_uri << "]" << std::endl;
-	std::cout << "METHOD                  : [" << d_header->method << "]" << std::endl;
-	std::cout << "STATUS CODE             : [" << d_header->res_status << "]" <<  std::endl;
-	std::cout << "Requested Resource      : [" << d_header->requested_resource << "]" << std::endl;
-	std::cout << "cgi_script              : [" << d_header->cgi_script << "]" << std::endl;
-	std::cout << "cgi_path                : [" << d_header->cgi_path << "]" << std::endl;
-	if (d_header->_is_cgi == true)
-		std::cout << "CGI                 : ON" << std::endl;
-	else
-	 	std::cout << "CGI                 : OFF" << std::endl;
-	std::cout << "=============================" << std::endl;
 	return (1);
 }
 
@@ -118,15 +104,15 @@ int		request::path_is_exist( std::string &path )
 	}
 	if (access(path.c_str(), W_OK))
 	{
-		return (-1);
+		d_header->write_p = false;
 	}
 	if (access(path.c_str(), R_OK))
 	{
-		return (-2);
+		d_header->read_p = false;
 	}
 	if (access(path.c_str(), X_OK))
 	{
-		return (-3);
+		d_header->exec_p = false;
 	}
 	return (1);
 }
@@ -143,31 +129,94 @@ void	request::default_root( std::string to_append, std::string &result )
 	result = rest + to_append;
 }
 
-int request::handle_GetAndDelete()
+void	request::handle_DeleteMethod()
+{
+	int		status_code;
+	/* Check if this location has a root */
+	status_code = treat_target_resource("root", d_header->new_uri, d_header->requested_resource);
+	/* If the location does not have a root, it will work with the default root */
+	if (status_code == 0)
+	{
+		default_root(d_header->new_uri, d_header->requested_resource);
+	}
+	if (access(d_header->requested_resource.c_str(), F_OK) == 0)
+	{
+		status_code = Client::is_file_or_directory(d_header->requested_resource.c_str(), d_header);
+		/* Requested Resource is a Directory */
+		if (status_code == 1)
+		{
+			d_header->is_dir = true;
+			/* Check if this directory has read and execute permissions */
+			if (d_header->exec_p == false || d_header->read_p == false)
+			{
+				d_header->res_status = 403;
+			}
+		}
+		/* Requested Resource is not a Directory */
+		else
+		{
+			status_code = path_is_exist(d_header->requested_resource);
+			/* Check if this file has write permission */
+			if (d_header->write_p == false)
+			{
+				d_header->res_status = 403;
+			}
+		}
+
+	}
+	else
+	{
+		d_header->res_status = 404;
+	}
+}
+
+void	request::handle_GetMethod()
 {
 	int		status_code;
 
+	/* Check if this location has a root */
 	status_code = treat_target_resource("root", d_header->new_uri, d_header->requested_resource);
+	/* If the location does not have a root, it will work with the default root */
 	if (status_code == 0)
-		default_root(d_header->new_uri, d_header->requested_resource);
-	if (d_header->method == "GET" )
 	{
-		status_code = path_is_exist(d_header->requested_resource);
-		if (status_code && status_code != -2)
-		{
-			status_code = treat_target_resource("cgi " + get_extension(d_header->requested_resource), "", d_header->cgi_path);
-			if (status_code == 1)
-				d_header->_is_cgi = true;
-		}
-		else if (status_code)
-		{
-			d_header->res_status = 403;
-			return (0);
-		}
-		else
-			return (0);
+		default_root(d_header->new_uri, d_header->requested_resource);
 	}
-	return (1);
+	if (access(d_header->requested_resource.c_str(), F_OK) == 0)
+	{
+		status_code = Client::is_file_or_directory(d_header->requested_resource.c_str(), d_header);
+		/* Requested Resource is a Directory */
+		if (status_code == 1)
+		{
+			d_header->is_dir = true;
+			/* Check if this directory has execution and read permissions */
+			if (d_header->exec_p == false || d_header->read_p == false)
+			{
+				d_header->res_status = 403;
+			}
+		}
+		/* Requested Resource is not a Directory */
+		else
+		{
+			status_code = path_is_exist(d_header->requested_resource);
+			/* Check if this file has read permission */
+			if (d_header->read_p == false)
+			{
+				d_header->res_status = 403;
+			}
+			/* Check if this file can be passed as an input to the CGI */
+			status_code = treat_target_resource("cgi " + get_extension(d_header->requested_resource), "", d_header->cgi_path);
+			/* needs check if this input file has the permission  */
+			if (status_code == 1)
+			{
+				d_header->_is_cgi = true;
+			}
+		}
+
+	}
+	else
+	{
+		d_header->res_status = 404;
+	}
 }
 
 void	request::ProvideToUpload( std::string path)
@@ -193,64 +242,83 @@ void	request::ProvideToUpload( std::string path)
 	d_header->res_status = 0;
 }
 
-int request::handle_PostMethod()
+void request::handle_PostMethod()
 {
-	int status_code;
+	int		status_code;
 
-	/* Check if the location supports the upload. */
+	/* Check if this location has an upload */
 	status_code = treat_target_resource("upload", d_header->new_uri, d_header->requested_resource);
-	if (status_code == 1)
+	if (status_code == 1 && access(d_header->requested_resource.c_str(), F_OK) == 0)
 	{
-		if (access(d_header->requested_resource.c_str(), F_OK))
-			ProvideToUpload(d_header->requested_resource);
-		status_code = parsing::is_file_or_directory(d_header->requested_resource.c_str());
-		if (status_code == 1 && access(d_header->requested_resource.c_str(), X_OK))
+		status_code = Client::is_file_or_directory(d_header->requested_resource.c_str(), d_header);
+		/* Requested Resource is a Directory */
+		if (status_code == 1)
 		{
-			d_header->res_status = 403;
-			return (0);
+			d_header->is_dir = true;
+			/* Check if this directory has execution and write permission */
+			if (d_header->exec_p == false || d_header->write_p)
+			{
+				d_header->res_status = 403;
+			}
 		}
-		else if (access(d_header->requested_resource.c_str(), F_OK) == 0 && access(d_header->requested_resource.c_str(), W_OK))
+		/* Requested Resource is not a Directory */
+		else
 		{
-			std::cout << "file : " << d_header->res_status << std::endl;
-			d_header->res_status = 403;
-			return (0);
+			status_code = path_is_exist(d_header->requested_resource);
+			/* Check if this file has write permission */
+			if (d_header->write_p == false)
+			{
+				d_header->res_status = 403;
+			}
 		}
-		else if (access(d_header->requested_resource.c_str(), F_OK))
-		{
-			d_header->res_status = 404;
-			return (0);
-		}
-		return (1);
 	}
-	/* Check if the location supports the CGI  */
-	status_code = treat_target_resource("cgi " + get_extension(d_header->new_uri), "", d_header->cgi_path);
-	if (status_code == 1)
+	/* Check if this file can be passed as an input to the CGI */
+	else
 	{
-		status_code = treat_target_resource("root", d_header->new_uri, d_header->cgi_script);
-		if (status_code == 0)
-			default_root(d_header->cgi_script, d_header->new_uri);
-		if (access(d_header->cgi_script.c_str(), F_OK) == 0 && access(d_header->cgi_script.c_str(), R_OK) == 0)
+		status_code = treat_target_resource("cgi " + get_extension(d_header->new_uri), "", d_header->cgi_path);
+		/* This file can be passed as an input to the CGI  */
+		if (status_code == 1)
 		{
-			d_header->_is_cgi = true;
+			/* Append this to the root, then process the result */
+			status_code = treat_target_resource("root", d_header->new_uri, d_header->cgi_script);
+			if (status_code == 0)
+				default_root(d_header->cgi_script, d_header->new_uri);
+			/* Check if this file has the required permission to be passed as an input to the CGI */
+			/* This function may cause an error (something like a missed or extra '/' at the end in the cgi-script) */
+			status_code = path_is_exist(d_header->requested_resource);
+			/* Check if the file exists */
+			if (status_code == 0)
+			{
+				d_header->res_status = 404;
+			}
+			/*  Check if the file has read permission */
+			else if (d_header->read_p == false)
+			{
+				d_header->res_status = 403;
+			}
+			/* This file can be passed as an input to the CGI  */
+			else 
+			{
+				d_header->_is_cgi = true;
+			}
 		}
 		else
 		{
 			d_header->res_status = 403;
-			return (0);
 		}
 	}
-	return (1);
 }
 
 
 int	request::get_requested_resource()
 {
-	int		status_code;
-	if (d_header->method == "GET" || d_header->method == "DELETE")
-		status_code = handle_GetAndDelete();
+	if (d_header->method == "GET")
+		handle_GetMethod();
 	else if (d_header->method == "POST")
-		status_code = handle_PostMethod();
-	return (status_code);
+		handle_PostMethod();
+	else if (d_header->method == "DELETE")
+		handle_DeleteMethod();
+	return (d_header->res_status);
 }
 
 void request::read_body(std::string &body) { 
@@ -459,27 +527,27 @@ void request::parse(std::string &header)
 		/* check if the requested uri exist in locations block */
 		if (find_required_location() < 0)
 		{
-		// std::cout << "STATUS_CODE 1 : " << d_header->res_status << std::endl;
+		std::cout << "STATUS_CODE 1 : " << d_header->res_status << std::endl;
 			return ;
 		}
 		/* requested uri is exist */
 		/* if this location have a redirection */
 		else if (check_for_redirection() < 0)
 		{
-		// std::cout << "STATUS_CODE 2 : " << d_header->res_status << std::endl;
+		std::cout << "STATUS_CODE 2 : " << d_header->res_status << std::endl;
 
 			return ;
 		}
 		/* if this method is allowed in this location */
 		else if (allowed_methods() < 0)
 		{
-		// std::cout << "STATUS_CODE 3 : " << d_header->res_status << std::endl;
+		std::cout << "STATUS_CODE 3 : " << d_header->res_status << std::endl;
 
 			return ;
 		}
-		else if (get_requested_resource() == 0)
+		else if (get_requested_resource() != 0)
 		{
-		// std::cout << "STATUS_CODE 4 : " << d_header->res_status << std::endl;
+		std::cout << "STATUS_CODE 4 : " << d_header->res_status << std::endl;
 			return ;
 		}
 		/* generate the name of the file if hte method is POST */

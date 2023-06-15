@@ -6,13 +6,14 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 16:39:08 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/14 06:47:02 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/15 11:04:53 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "client.hpp"
 #include "parsing.hpp"
 #include "user_data.hpp"
+#include <sys/_types/_s_ifmt.h>
 
 
 
@@ -98,4 +99,26 @@ bool	Client::eof()
 int	Client::get_fd()
 {
 	return fd;
+}
+
+int Client::is_file_or_directory(const char *str, data_header *header_ptr)
+{
+	struct	stat	spath;
+
+	if (stat(str, &spath) == 0)
+	{
+		if (S_ISREG(spath.st_mode))
+			return (0);
+		else if (S_ISDIR(spath.st_mode))
+		{
+			if ((spath.st_mode & S_IWUSR) != 0)
+				header_ptr->write_p = false;
+			if ((spath.st_mode & S_IRUSR) != 0)
+				header_ptr->read_p = false;
+			if ((spath.st_mode & S_IXUSR) != 0)
+				header_ptr->exec_p = false;
+			return (1);
+		}
+	}
+	return (-1);
 }

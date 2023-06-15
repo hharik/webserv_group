@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 14:51:32 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/14 07:40:48 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/15 11:18:23 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,8 +45,19 @@ struct data_header {
 	int 	res_status;
 	bool		upload_flag;
 	bool		_is_cgi;
+	/* --------------- */
+	bool		read_p;
+	bool		write_p;
+	bool		exec_p;
+	bool		is_dir;
+	/* ----------- */
 	/* the default value of res_status is updated if there is no problem  */
-	data_header() : Content_Length(-2), res_status(0), is_redirect(false) { }
+	data_header() : Content_Length(-2), res_status(0), is_redirect(false) {
+		read_p = true;
+		write_p = true;
+		exec_p = true;
+		is_dir = false;
+	}
 	void print() {
 		std::cout << " h" << Content_type <<  " " << Host << " " << Content_Length << " " << transfer_encoding << " " << method << "res : " << res_status << std::endl;
 	}
@@ -82,6 +93,7 @@ public:
 	void	read_from_socket();
 	void	send_the_response();
 
+	static int is_file_or_directory(const char *str, data_header *);
 
 	bool eof();
 	int	get_fd();
