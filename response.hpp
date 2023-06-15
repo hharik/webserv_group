@@ -92,7 +92,7 @@ public:
 	int		delete_dir( const char * );
 	int		delete_the_file();
 	int		file_status();
-	void	delete_path( const char *path);
+	void	delete_path( const char *path, bool );
 
 	int		requested_resource_is_dir();
 
@@ -123,6 +123,7 @@ public:
 	void	Put_Header(const std::string &, const std::string &);
 	// void	Send_the_Body_WithCgi( int );
 	void	set_eof( bool );
+	DIR *open_dir( const char *directory );
 	/* GET method */
 	void	Get_method();
 

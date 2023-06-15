@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/30 12:25:24 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/15 14:42:16 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/15 16:53:16 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -207,17 +207,23 @@ void	response::handle_cgi()
 	// 	agv[1] = (char *)header_data->cgi_script.c_str(); //requested script
 	// else
 	// 	agv[1] = (char *)request_file.c_str();
-	std::cout << "AV[0] : " << agv[0] << std::endl;
-	std::cout << "AV[1] : " << agv[1] << std::endl;
-	std::cout << "REQUEST[0] : " << header_data->requested_resource << std::endl;
-
+	// std::cout << "AV[0] : " << agv[0] << std::endl;
+	// std::cout << "AV[1] : " << agv[1] << std::endl;
+	// std::cout << "REQUEST[0] : " << header_data->requested_resource << std::endl;
+	// std::cout << "CGI OUT PUT " << cgi_output << std::endl;
 	Env.push_back("PATH_INFO=" + std::string(agv[1]));
+	Env.push_back("CONTENT_TYPE=" + header_data->Content_type);
+	if (header_data->Cookies.empty() == false)
+	{
+		Env.push_back("HTTP_COOKIE=" + header_data->Cookies);
+	}
 	agv[2] = NULL;
 
 	env = new char *[Env.size() * sizeof(char*)];
 	for (size_t i = 0; i < Env.size(); i++)
 	{
 		env[i] = (char *) Env[i].c_str();
+		// std::cout << "{" << env[i] << "}" << std::endl;
 	}
 	env[Env.size()] = NULL;
 	pid = fork();
@@ -230,6 +236,7 @@ void	response::handle_cgi()
 		close(cgifd[1]);
 		if (header_data->method == "POST")
 		{
+		std::cout << "HERE IS THE INPUT FROM THE BODY " << std::endl;
 			cgifd[0] = open(header_data->requested_resource.c_str(), O_RDONLY);
 			dup2(cgifd[0], 0);
 			close(cgifd[0]);
@@ -404,15 +411,48 @@ int	response::delete_the_file()
 	return (403);
 }
 
-void	response::delete_path( const char *path)
+void	response::delete_path( const char *path, bool is_directory )
 {
-	if (access(path, W_OK) == 0)
-	{
-		if (remove(path) == 0)
-			s204++;
+	if (is_directory == true)
+	{	
+		if (access(path, R_OK) == 0)
+		{
+			if (remove(path) == 0)
+				s204++;
+		}
+		else
+			s403++;
 	}
 	else
-		s403++;
+	{
+		if (access(path, W_OK) == 0)
+		{
+			if (remove(path) == 0)
+				s204++;
+		}
+		else
+			s403++;
+	}
+}
+
+DIR *response::open_dir( const char *directory )
+{
+	struct	stat	spath;
+	DIR 			*dir;
+
+	dir = NULL;
+	if (stat(directory, &spath) == 0)
+	{
+		if ((spath.st_mode & S_IXUSR) != 0)
+		{
+			dir = opendir (directory);
+		}
+		else 
+		{
+			delete_path(directory, true);
+		}
+	}
+	return dir;
 }
 
 int	response::delete_dir( const char *directory )
@@ -421,8 +461,8 @@ int	response::delete_dir( const char *directory )
 	DIR 			*dir;
 	std::string 	str;
 	int				status;
-
-	if ((dir = opendir (directory)) == NULL)
+	
+	if ((dir = open_dir (directory)) == NULL)
 		return -1;
 	status = -2;
     while ((dp = readdir (dir)) != NULL)
@@ -438,13 +478,13 @@ int	response::delete_dir( const char *directory )
 		/* first remove all files */
 		if (status == 0 && CMP(dp->d_name))
 		{	
-			delete_path(str.c_str());
+			delete_path(str.c_str(), false);
 		}
 		/* than remove all subdirectories recessively */
 		else if (status == 1 && CMP(dp->d_name)) 
 		{
 			delete_dir(str.c_str());
-			delete_path(str.c_str());
+			delete_path(str.c_str(), true);
 		}
 	}
 	closedir(dir);
@@ -456,14 +496,9 @@ int	response::delete_dir( const char *directory )
 /* Delete method */
 void	response:: Delete_method()
 {
-	int			status;
 	int			size;
 
 	size = header_data->requested_resource.size();
-	{
-		
-	}
-	status = Client::is_file_or_directory(header_data->requested_resource.c_str(), header_data);
 	if (header_data->is_dir == true)
 	{
 		if (header_data->uri[header_data->uri.size() - 1] != '/')
@@ -482,10 +517,8 @@ void	response:: Delete_method()
 		else if (s403 > s204)
 			header_data->res_status = 500;
 	}
-	if (status == 0)
+	else
 		delete_the_file();
-	else 
-		header_data->res_status = 404;
 }
 
 std::string	response::Default_Response(const std::string &status_code, const std::string &Meaning)
@@ -823,7 +856,7 @@ void	response::handle_cgi_header( )
 	/* Content-Length: 1234\r\n\r\n             */
 void response::create_header()
 {
-	if (header_data->_is_cgi == true)
+	if (header_data->_is_cgi == true && header_data->res_status < 400)
 	{
 		handle_cgi_header();
 		if (FAILED(header_data->res_status) == true)

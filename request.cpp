@@ -147,7 +147,7 @@ void	request::handle_DeleteMethod()
 		{
 			d_header->is_dir = true;
 			/* Check if this directory has read and execute permissions */
-			if (d_header->exec_p == false || d_header->read_p == false)
+			if (d_header->read_p == false)
 			{
 				d_header->res_status = 403;
 			}
@@ -233,7 +233,6 @@ void	request::ProvideToUpload( std::string path)
 			status = mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 			if (status == -1)
 			{
-				std::cout << "FOUND : " << path << std::endl;
 				d_header->res_status = 403;
 				return ;
 			}
