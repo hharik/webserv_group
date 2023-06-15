@@ -508,8 +508,8 @@ void request::parse(std::string &header)
 			}
 			if (buffer.find("Cookie:") != std::string::npos)
 			{
-				d_header->Cookies = (buffer.substr(pos + 1));
-				std::cout << "Cookies :  " << d_header->Cookies << std::endl;
+				d_header->Cookies = (buffer.substr(pos + 2));
+				d_header->Cookies.pop_back();
 			}
 			if (buffer.size() == 1 && buffer == "\r")
 			{

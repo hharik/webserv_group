@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/30 12:25:24 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/15 16:53:16 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/15 18:28:40 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -215,6 +215,9 @@ void	response::handle_cgi()
 	Env.push_back("CONTENT_TYPE=" + header_data->Content_type);
 	if (header_data->Cookies.empty() == false)
 	{
+		std::cout << "+==================================+++" << std::endl;
+		std::cout << "COOKIE : " << header_data->Cookies << std::endl;
+		std::cout << "+==================================+++" << std::endl;
 		Env.push_back("HTTP_COOKIE=" + header_data->Cookies);
 	}
 	agv[2] = NULL;
@@ -223,7 +226,7 @@ void	response::handle_cgi()
 	for (size_t i = 0; i < Env.size(); i++)
 	{
 		env[i] = (char *) Env[i].c_str();
-		// std::cout << "{" << env[i] << "}" << std::endl;
+		std::cout << "{" << env[i] << "}" << std::endl;
 	}
 	env[Env.size()] = NULL;
 	pid = fork();
@@ -236,7 +239,7 @@ void	response::handle_cgi()
 		close(cgifd[1]);
 		if (header_data->method == "POST")
 		{
-		std::cout << "HERE IS THE INPUT FROM THE BODY " << std::endl;
+		// std::cout << "HERE IS THE INPUT FROM THE BODY " << std::endl;
 			cgifd[0] = open(header_data->requested_resource.c_str(), O_RDONLY);
 			dup2(cgifd[0], 0);
 			close(cgifd[0]);
