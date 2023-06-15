@@ -256,7 +256,7 @@ void request::handle_PostMethod()
 		{
 			d_header->is_dir = true;
 			/* Check if this directory has execution and write permission */
-			if (d_header->exec_p == false || d_header->write_p)
+			if (d_header->exec_p == false || d_header->write_p == false)
 			{
 				d_header->res_status = 403;
 			}
@@ -285,7 +285,7 @@ void request::handle_PostMethod()
 				default_root(d_header->cgi_script, d_header->new_uri);
 			/* Check if this file has the required permission to be passed as an input to the CGI */
 			/* This function may cause an error (something like a missed or extra '/' at the end in the cgi-script) */
-			status_code = path_is_exist(d_header->requested_resource);
+			status_code = path_is_exist(d_header->cgi_script);
 			/* Check if the file exists */
 			if (status_code == 0)
 			{

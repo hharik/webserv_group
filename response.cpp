@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/30 12:25:24 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/15 13:35:25 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/15 14:42:16 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,6 @@
 #include "client.hpp"
 #include "parsing.hpp"
 #include "response.hpp"
-#include <cstring>
-#include <fstream>
 
 response::response( const data_serv *dptr,  data_header *hptr ):server_data(dptr), header_data(hptr)
 {
@@ -40,20 +38,21 @@ response::~response( )
 void	response::response_handler( int client_fd )
 {
 
-
-	std::cout << "=============================" << std::endl;
-	std::cout << "NEW URI                     : [" << header_data->new_uri << "]" << std::endl;
-	std::cout << "METHOD                  : [" << header_data->method << "]" << std::endl;
-	std::cout << "STATUS CODE             : [" << header_data->res_status << "]" <<  std::endl;
-	std::cout << "Requested Resource      : [" << header_data->requested_resource << "]" << std::endl;
-	std::cout << "cgi_script              : [" << header_data->cgi_script << "]" << std::endl;
-	std::cout << "cgi_path                : [" << header_data->cgi_path << "]" << std::endl;
-	if (header_data->_is_cgi == true)
-		std::cout << "CGI                 : ON" << std::endl;
-	else
-	 	std::cout << "CGI                 : OFF" << std::endl;
-	std::cout << "=============================" << std::endl;
-	exit(0);	
+	if (is_open == false)
+	{
+		std::cout << "=============================" << std::endl;
+		std::cout << "NEW URI                     : [" << header_data->new_uri << "]" << std::endl;
+		std::cout << "METHOD                  : [" << header_data->method << "]" << std::endl;
+		std::cout << "STATUS CODE             : [" << header_data->res_status << "]" <<  std::endl;
+		std::cout << "Requested Resource      : [" << header_data->requested_resource << "]" << std::endl;
+		std::cout << "cgi_script              : [" << header_data->cgi_script << "]" << std::endl;
+		std::cout << "cgi_path                : [" << header_data->cgi_path << "]" << std::endl;
+		if (header_data->_is_cgi == true)
+			std::cout << "CGI                 : ON" << std::endl;
+		else
+		 	std::cout << "CGI                 : OFF" << std::endl;
+		std::cout << "=============================" << std::endl;
+	}	
 	if (is_open == false && header_data->res_status < 400 && header_data->is_redirect == false)
 	{
 		if (header_data->method == "GET")
@@ -322,7 +321,6 @@ int		response::requested_resource_is_dir()
 	else
 	{
 		header_data->requested_resource += server_data->index;
-		std::cout << "ind : " << header_data->requested_resource << std::endl;
 		serve_the_file();
 	}
 	return (0);
@@ -462,10 +460,11 @@ void	response:: Delete_method()
 	int			size;
 
 	size = header_data->requested_resource.size();
+	{
+		
+	}
 	status = Client::is_file_or_directory(header_data->requested_resource.c_str(), header_data);
-	if (status == 0)
-		delete_the_file();
-	else if (status == 1)
+	if (header_data->is_dir == true)
 	{
 		if (header_data->uri[header_data->uri.size() - 1] != '/')
 		{
@@ -483,6 +482,8 @@ void	response:: Delete_method()
 		else if (s403 > s204)
 			header_data->res_status = 500;
 	}
+	if (status == 0)
+		delete_the_file();
 	else 
 		header_data->res_status = 404;
 }
@@ -806,7 +807,6 @@ void	response::handle_cgi_header( )
 	{
 		memset(buffer, 0, BUFFER_SIZE);
 		requested_file.read(buffer, BUFFER_SIZE);
-		std::cout << "BUFFER : " << buffer << std::endl;
 		std::streamsize size = requested_file.gcount();
 		Parse_cgi_header(buffer);
 	}
