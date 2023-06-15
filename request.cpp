@@ -6,6 +6,8 @@
 #include <string>
 #include <sys/_types/_rune_t.h>
 #include <sys/_types/_sigaltstack.h>
+#include <sys/unistd.h>
+#include <unistd.h>
 
 
 request::request( const data_serv *dptr, data_header *hptr ) : server_data(dptr), d_header(hptr), rsize(0) , size(0), chunked_size(-2), end_of_file(false)
@@ -56,6 +58,7 @@ int	request::generate_name()
 	std::string new_name;
 	std::string name(d_header->requested_resource);
 	size = d_header->new_uri.size();
+
 	if (d_header->_is_cgi == false)
 	{
 		status = parsing::is_file_or_directory(d_header->requested_resource.c_str());
@@ -75,13 +78,14 @@ int	request::generate_name()
 				name.resize(size);
 			new_name = name + "." + parsing::mime_type.find(d_header->Content_type)->second;
 			status = rename(d_header->requested_resource.c_str(), new_name.c_str());
-			d_header->requested_resource = new_name;
+			if (status == 0)
+				d_header->requested_resource = new_name;
 		}
 	}
 	else if (d_header->_is_cgi == true)
-		d_header->requested_resource += "/tmp/" + time_date() +  get_extension(d_header->new_uri);
-
-
+	{
+		d_header->requested_resource += "/tmp/" + time_date();
+	}
 	std::cout << "=============================" << std::endl;
 	std::cout << "NEW URI                     : [" << d_header->new_uri << "]" << std::endl;
 	std::cout << "METHOD                  : [" << d_header->method << "]" << std::endl;
@@ -202,7 +206,6 @@ int request::handle_PostMethod()
 		status_code = parsing::is_file_or_directory(d_header->requested_resource.c_str());
 		if (status_code == 1 && access(d_header->requested_resource.c_str(), X_OK))
 		{
-			std::cout << "dir : " << d_header->res_status << std::endl;
 			d_header->res_status = 403;
 			return (0);
 		}
@@ -218,7 +221,6 @@ int request::handle_PostMethod()
 			return (0);
 		}
 		return (1);
-		std::cout << "res_status : " << d_header->res_status;
 	}
 	/* Check if the location supports the CGI  */
 	status_code = treat_target_resource("cgi " + get_extension(d_header->new_uri), "", d_header->cgi_path);
@@ -227,13 +229,14 @@ int request::handle_PostMethod()
 		status_code = treat_target_resource("root", d_header->new_uri, d_header->cgi_script);
 		if (status_code == 0)
 			default_root(d_header->cgi_script, d_header->new_uri);
-		status_code = path_is_exist(d_header->cgi_script);
-		if (status_code && status_code != -3)
+		if (access(d_header->cgi_script.c_str(), F_OK) == 0 && access(d_header->cgi_script.c_str(), R_OK) == 0)
+		{
 			d_header->_is_cgi = true;
+		}
 		else
 		{
 			d_header->res_status = 403;
-			return (1);
+			return (0);
 		}
 	}
 	return (1);

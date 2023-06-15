@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/30 12:25:24 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/14 12:28:20 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/15 10:31:32 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -191,6 +191,10 @@ void	response::handle_cgi()
 	// 	agv[1] = (char *)header_data->cgi_script.c_str(); //requested script
 	// else
 	// 	agv[1] = (char *)request_file.c_str();
+	std::cout << "AV[0] : " << agv[0] << std::endl;
+	std::cout << "AV[1] : " << agv[1] << std::endl;
+	std::cout << "REQUEST[0] : " << header_data->requested_resource << std::endl;
+
 	Env.push_back("PATH_INFO=" + std::string(agv[1]));
 	agv[2] = NULL;
 
@@ -786,6 +790,7 @@ void	response::handle_cgi_header( )
 	{
 		memset(buffer, 0, BUFFER_SIZE);
 		requested_file.read(buffer, BUFFER_SIZE);
+		std::cout << "BUFFER : " << buffer << std::endl;
 		std::streamsize size = requested_file.gcount();
 		Parse_cgi_header(buffer);
 	}
