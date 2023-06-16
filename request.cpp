@@ -427,8 +427,9 @@ void request::save_binary(std::string &header)
 
 void request::parse(std::string &header) 
 {
-	std::string tes;
-	if (d_header->Host.empty() == true)
+	// std::string tes;
+	
+	if (d_header->method.empty() == true)
 	{
 		std::string first_line, buffer, token;
 		std::stringstream ss(header);

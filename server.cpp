@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:06:59 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/16 19:09:24 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/16 20:18:46 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,19 +14,17 @@
 #include "user_data.hpp"
 #include "server.hpp"
 #include "socket.hpp"
-#include <sys/event.h>
-#include <unistd.h>
 
 Server::Server(const std::string &config_file):parser(config_file), servers()
 {
+	std::vector<data_serv>::iterator it;
+	std::vector<data_serv>::iterator end;
 	parser.readAndParse();
 	parser.mime();
 	events_nbr = 0;
 	events_size = 0;
 	new_event = false;
 	Create_queue_object();
-	std::vector<data_serv>::iterator it;
-	std::vector<data_serv>::iterator end;
 	it = parser.servers_data.begin();
 	end = parser.servers_data.end();
 	for (int i = 0;it != end;it++ , i++)
@@ -42,6 +40,22 @@ Server::Server(const std::string &config_file):parser(config_file), servers()
 		events = new struct kevent [events_size];
 	}
 }
+
+Server::~Server()
+{
+	int	size;
+	int	i;
+
+	size = servers.size();
+	i = 0;
+	while(i < size)
+	{
+		delete servers[i];
+		i++;
+	}
+	delete [] events;
+}
+
 
 
 void	Server::Create_http_servers()
@@ -62,6 +76,7 @@ void	Server::Create_http_servers()
 			/* client request */
 			else if (events[i].filter == EVFILT_READ)
 				user_data->get_client()->read_from_socket();
+			/* send the response to the client */
 			if (events[i].filter == EVFILT_WRITE)
 			{
 				user_data->get_client()->send_the_response();
@@ -84,7 +99,7 @@ void	Server::Create_queue_object()
 	kq = kqueue();
 	if (kq < 0)
 	{
-		perror("kqueue");
+		perror("Http : Server ");
 		exit(EXIT_FAILURE);
 	}
 }
@@ -100,7 +115,7 @@ void	Server::Wait_for_incoming_events()
 	events_nbr = kevent(kq, NULL, 0, events, events_size, NULL);
 	if (events_nbr < 0)
 	{
-		std::cerr << "kevent : failed " << std::endl;
+		perror("Http : Server ");
 		exit(EXIT_FAILURE);
 	}
 }

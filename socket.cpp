@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/26 18:03:44 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/16 17:37:45 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/16 20:23:31 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,9 +25,9 @@ Socket::Socket()
 	new_client = false;
 	status = 0;
 	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_INET;// IPv4 address family
-	hints.ai_socktype = SOCK_STREAM;// TCP socket type
-	hints.ai_protocol = IPPROTO_TCP;// TCP protocol
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
 }
 
 Socket::~Socket()
@@ -83,31 +83,27 @@ int	Socket::Create_the_socket( )
 
 void	Socket::attach_server_socket( int kq )
 {
-	// std::cout << "attch_server_socket . . fd : " << sockfd << std::endl;
-	// struct kevent server_ev;
+
 	user_data->set_status(true);
 	user_data->set_socket(this);
 	EV_SET(&server_event, sockfd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, user_data);
 
-    // Register the server event with the kqueue
+    /* Register the server event with the kqueue */
     status = kevent(kq, &server_event, 1, NULL, 0, NULL);
 	if (status < 0)
 	{
-        perror("kevent (serverEvent)");
+        perror("Server : kevent ");
         exit(EXIT_FAILURE);
     }
-	// vevents.push_back(server_ev);
-	// events = vevents.data();
 }
 
 void	Socket::Accept_new_connection( int kq )
 {
 	clients.push_back(new Client(server_data, this));
-	// accept new connction
+	/* accept new connction */
 	clients_ind = clients.size() - 1;
 	clients[clients_ind]->client_connection(sockfd);
 	clients[clients_ind]->attach_client_socket(kq);
-	// clients_ind++;
 }
 
 void	Socket::Destruct_client(  )
@@ -123,7 +119,9 @@ void	Socket::Destruct_client(  )
 			clients.erase(clients.begin() + index);
 		}
 		else
+		{
 			index++;
+		}
 	}
 }
 

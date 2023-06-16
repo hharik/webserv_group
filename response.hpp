@@ -3,17 +3,12 @@
 
 #include "parsing.hpp"
 #include "request.hpp"
-#include <_types/_intmax_t.h>
-#include <fstream>
-#include <string>
-#include <sys/_types/_pid_t.h>
-#include <sys/_types/_size_t.h>
-#include <vector>
 
 #define DEFAULT_MIME_TYPE "application/octet-stream"
 #define HTML "text/html"
 #define HTTP_V "HTTP/1.1 "
 #define SERVER "Server: Sarii/v1.0\r\n"
+
 #define S200 " OK"
 #define S201 " Created"
 #define S204 " No Content"
@@ -44,31 +39,31 @@ class response {
 
 	std::ifstream		requested_file;
 	std::string			response_content;
+	std::string			cgi_start_line;
+	std::string			cgi_output;
+	std::streampos		cgi_body_pos;
+	std::string			header;
+
 	bool				is_open;
 	bool				default_response;
-	int					s204;
-	int					s403;
 	bool				auto_index;
-	std::string			auto_index_content;
-	std::streampos		cgi_body_pos;
-	std::string			cgi_start_line;
+	bool				is_alive;
+
 	size_t				content_length;
 	size_t				sended_bytes;
-	long				start_time;
-	long				end_time;
-	/*####################################*/
-	int		cgifd[2];
-	char	*agv[3];
-	std::string cgi_output;
-	std::vector<std::string> Env;
-	pid_t		pid;
-	bool		is_alive;
-	int			*status;
-	char		**env;
-	/*####################################*/
 
-	std::string			header;
-	
+	int					s204;
+	int					s403;
+
+	/* CGI params */
+	std::vector<std::string>	Env;
+	long						start_time;
+	long						end_time;
+	pid_t						pid;
+	int							cgifd[2];
+	int							*status;
+	char						*agv[3];
+	char						**env;
 
 public:
 	bool	eof;

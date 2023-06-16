@@ -6,13 +6,22 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 16:39:08 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/16 18:11:57 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/16 20:53:27 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "client.hpp"
 #include "parsing.hpp"
 #include "user_data.hpp"
+
+
+data_header::data_header() : Content_Length(-2), res_status(0), is_redirect(false)
+{
+	read_p = true;
+	write_p = true;
+	exec_p = true;
+	is_dir = false;
+}
 
 Client::Client( const data_serv *dptr, Socket *Pbase ):server_data(dptr), Base(Pbase), header_data(new data_header)
 {
@@ -24,7 +33,8 @@ Client::Client( const data_serv *dptr, Socket *Pbase ):server_data(dptr), Base(P
 
 Client::~Client()
 {
-	// delete user_data;
+	/* may be cause an error */
+	delete user_data;
 	delete client_request;
 	delete client_response;
 	delete header_data;
@@ -34,9 +44,7 @@ void	Client::client_connection( int server_socket )
 {
 	memset(&client, 0, sizeof(client));
 	len = sizeof(client);
-	// std::cout << "server_socket ... " << server_socket <<  std::endl;]
 	fd = accept(server_socket, &client, &len);
-	// std::cout << "fd : " << fd << std::endl;
 	if (fd < 0)
 	{
 		perror("client:accept");

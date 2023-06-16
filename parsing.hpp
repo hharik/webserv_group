@@ -32,14 +32,12 @@ class User_data;
 class request;
 class response;
 struct data_header;
-// #include "user_data.hpp"
 
+// macros
 # define INSERV 10
 # define OUTSERV 5
-// macros
-
 #define BACKLOG 10
-#define BUFFER_SIZE 5000
+#define BUFFER_SIZE 2000
 #define CMP(path)(strcmp(path, ".") && strcmp(path, ".."))
 #define VALID_STATUS(x) x >= 100 && x < 600 ? true : false
 #define FAILED(x) x >= 400 ? true : false
