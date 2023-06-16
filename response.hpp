@@ -8,6 +8,7 @@
 #include <string>
 #include <sys/_types/_pid_t.h>
 #include <sys/_types/_size_t.h>
+#include <vector>
 
 #define DEFAULT_MIME_TYPE "application/octet-stream"
 #define HTML "text/html"
@@ -34,7 +35,7 @@ class response {
 	std::map<std::string, std::string>::const_iterator iter;
 	std::map<int, std::string>::const_iterator er_it;
 	std::map<std::string, std::string> cgi_header;
-
+	std::vector<std::string>			cookies;
 	const data_serv 	*server_data;
 	data_header			*header_data;
 	char				buffer[BUFFER_SIZE];
@@ -93,6 +94,7 @@ public:
 	int		delete_the_file();
 	int		file_status();
 	void	delete_path( const char *path, bool );
+	void	SetCgiStartLine();
 
 	int		requested_resource_is_dir();
 

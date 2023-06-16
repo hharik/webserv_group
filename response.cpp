@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/30 12:25:24 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/15 18:28:40 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/16 12:23:59 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #include "client.hpp"
 #include "parsing.hpp"
 #include "response.hpp"
+#include <vector>
 
 response::response( const data_serv *dptr,  data_header *hptr ):server_data(dptr), header_data(hptr)
 {
@@ -215,9 +216,9 @@ void	response::handle_cgi()
 	Env.push_back("CONTENT_TYPE=" + header_data->Content_type);
 	if (header_data->Cookies.empty() == false)
 	{
-		std::cout << "+==================================+++" << std::endl;
-		std::cout << "COOKIE : " << header_data->Cookies << std::endl;
-		std::cout << "+==================================+++" << std::endl;
+		// std::cout << "+==================================+++" << std::endl;
+		// std::cout << "COOKIE : " << header_data->Cookies << std::endl;
+		// std::cout << "+==================================+++" << std::endl;
 		Env.push_back("HTTP_COOKIE=" + header_data->Cookies);
 	}
 	agv[2] = NULL;
@@ -226,7 +227,7 @@ void	response::handle_cgi()
 	for (size_t i = 0; i < Env.size(); i++)
 	{
 		env[i] = (char *) Env[i].c_str();
-		std::cout << "{" << env[i] << "}" << std::endl;
+		// std::cout << "{" << env[i] << "}" << std::endl;
 	}
 	env[Env.size()] = NULL;
 	pid = fork();
@@ -724,12 +725,18 @@ void	response::Parse_Line( std::string line )
 	{
 		key.resize(find);
 		value.erase(0, find + 1);
-		status = cgi_header.insert(std::make_pair(key, value)).second;
-		if (status == false)
+		if (key == "set-cookie")
 		{
-			cgi_header.erase(key);
-			std::cout<< "KEY : " << key << "VALUE : " << value << std::endl;
-			cgi_header.insert(std::make_pair(key, value));
+			cookies.push_back(value);
+		}
+		else
+		{
+			status = cgi_header.insert(std::make_pair(key, value)).second;
+			if (status == false)
+			{
+				cgi_header.erase(key);
+				cgi_header.insert(std::make_pair(key, value));
+			}
 		}
 	}
 }
@@ -773,9 +780,7 @@ void	response::Parse_cgi_header( std::string cgi_header )
 			cgi_header.erase(0, find + 2);
 			res = toLowerCase(res);
 			Parse_Line(res);
-			std::cout << "LINE : " << std::endl;
 			find = cgi_header.find_first_of("\r\n");
-			// cgi_body_pos += find;
 		}
 	}
 	/* start Line */
@@ -797,11 +802,11 @@ void	response::Put_Header(const std::string &key, const std::string &value)
 	}
 }
 
-void	response::Process_Cgi_Header()
+void	response::SetCgiStartLine()
 {
 	std::map<std::string, std::string>::iterator end = cgi_header.end();
 	int	find;
-	/* start line */
+	/* CGI start line */
 	header += HTTP_V;
 	find = cgi_start_line.find("HTTP/1.1");
 	if (find != std::string::npos)
@@ -811,7 +816,6 @@ void	response::Process_Cgi_Header()
 		header += cgi_start_line;
 		if (VALID_STATUS(header_data->res_status) == false)
 			header_data->res_status = 502;
-		/* ... throw execption ... */
 	}
 	else if ((iter = cgi_header.find("status")) != end)
 	{
@@ -824,13 +828,26 @@ void	response::Process_Cgi_Header()
 	else
 		header += "200 OK";
 	header += "\r\n";
+}
+
+void	response::Process_Cgi_Header()
+{
+	std::map<std::string, std::string>::iterator end = cgi_header.end();
+	std::vector<std::string>::iterator beg = cookies.begin();
+	std::vector<std::string>::iterator vend = cookies.end();
+
+	SetCgiStartLine();
 	iter = cgi_header.begin();
-	
 	while (iter != end)
 	{
 		std::cout << iter->first << ": " << iter->second << std::endl;
 		Put_Header(iter->first, iter->second);
 		iter++;
+	}
+	while(beg != vend)
+	{
+		Put_Header("set-cookie", *beg);
+		beg++;
 	}
 	header += "\r\n";
 }
