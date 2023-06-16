@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/30 12:25:24 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/16 12:23:59 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/16 17:52:56 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,6 @@
 #include "client.hpp"
 #include "parsing.hpp"
 #include "response.hpp"
-#include <vector>
 
 response::response( const data_serv *dptr,  data_header *hptr ):server_data(dptr), header_data(hptr)
 {
@@ -27,34 +26,38 @@ response::response( const data_serv *dptr,  data_header *hptr ):server_data(dptr
 	auto_index = false;
 	content_length = 0;
 	sended_bytes = 0;
-	/*---------------*/
 }
 
 response::~response( )
 {
-	if (is_alive == true)
-		kill(pid, 0);
+	if (header_data->_is_cgi == true)
+	{
+		/* Kill the child and close their FD if it's still running */
+		if (is_alive == true)
+		{
+			kill(pid, 0);
+		}
+		close(cgifd[1]);
+		/* Remove the CGI output and input files */
+		unlink(cgi_output.c_str());
+		if (header_data->method == "POST")
+		{
+			unlink(header_data->requested_resource.c_str());
+		}
+		delete [] env;
+	}
+	/* delete the auto index outputfile */
+	if (auto_index == true)
+	{
+		unlink(header_data->requested_resource.c_str());
+	}
 }
 
 void	response::response_handler( int client_fd )
 {
+	int		status_code;
 
-	if (is_open == false)
-	{
-		std::cout << "=============================" << std::endl;
-		std::cout << "NEW URI                     : [" << header_data->new_uri << "]" << std::endl;
-		std::cout << "METHOD                  : [" << header_data->method << "]" << std::endl;
-		std::cout << "STATUS CODE             : [" << header_data->res_status << "]" <<  std::endl;
-		std::cout << "Requested Resource      : [" << header_data->requested_resource << "]" << std::endl;
-		std::cout << "cgi_script              : [" << header_data->cgi_script << "]" << std::endl;
-		std::cout << "cgi_path                : [" << header_data->cgi_path << "]" << std::endl;
-		if (header_data->_is_cgi == true)
-			std::cout << "CGI                 : ON" << std::endl;
-		else
-		 	std::cout << "CGI                 : OFF" << std::endl;
-		std::cout << "=============================" << std::endl;
-	}	
-	if (is_open == false && header_data->res_status < 400 && header_data->is_redirect == false)
+	if (is_open == false && header_data->res_status < 400 && header_data->is_redirect == false && is_alive == false)
 	{
 		if (header_data->method == "GET")
 			Get_method();
@@ -65,14 +68,47 @@ void	response::response_handler( int client_fd )
 	}
 	if (is_open == false)
 	{
+		if (is_alive == true)
+		{
+			status_code = waitpid(pid, status, WNOHANG);
+			/* returns 0 if the child is still running */
+			if (status_code == 0)
+			{
+				return ;
+			}
+			/* The child is finishing their execution */
+			else
+			{
+				is_alive = false;
+				/* returns true if the child terminated normally */
+				if (WIFEXITED(status) == false)
+				{
+					header_data->res_status = 500;
+				}
+			}
+		}
 		create_header();
 		Send_the_Header(client_fd);
 		std::cout << "----------------* HEADER *----------------" << std::endl;
 		std::cout << header << std::endl;
 		std::cout << "----------------* HEADER *----------------" << std::endl;
+		std::cout << "============= #INFO# ================" << std::endl;
+		std::cout << "NEW URI                     : [" << header_data->new_uri << "]" << std::endl;
+		std::cout << "METHOD                  : [" << header_data->method << "]" << std::endl;
+		std::cout << "STATUS CODE             : [" << header_data->res_status << "]" <<  std::endl;
+		std::cout << "Requested Resource      : [" << header_data->requested_resource << "]" << std::endl;
+		std::cout << "cgi_script              : [" << header_data->cgi_script << "]" << std::endl;
+		std::cout << "cgi_path                : [" << header_data->cgi_path << "]" << std::endl;
+		if (header_data->_is_cgi == true)
+			std::cout << "CGI                 : ON" << std::endl;
+		else
+		 	std::cout << "CGI                 : OFF" << std::endl;
+		std::cout << "============= #INFO# ================" << std::endl;
 	}
 	else
+	{
 		Send_the_Body( client_fd );
+	}
 }
 
 void	response::Send_the_Header( int client_fd )
@@ -90,7 +126,7 @@ void	response::Send_the_Header( int client_fd )
 	}
 	if (send(client_fd, header.c_str(), header.size(), 0) < 0)
 	{
-		perror("send_header : ");
+		perror("Send : Header ");
 		eof = true;
 		return ;
 	}
@@ -105,7 +141,7 @@ void	response::Send_the_Body( int client_fd)
 		std::streamsize size = requested_file.gcount();
 		if (send(client_fd, buffer, size, 0) < 0)
 		{
-			perror("send_body : ");
+			perror("Send : Body ");
 			eof = true;
 			return ;
 		}
@@ -117,7 +153,7 @@ void	response::Send_the_Body( int client_fd)
 	{
 		if (send(client_fd, response_content.c_str(), response_content.size(), 0) < 0)
 		{
-			perror("send");
+			perror("Send : Body ");
 		}
 		eof = true;
 	}
@@ -162,19 +198,11 @@ std::string time_date()
 		return std::string(date_string);
 }
 
-void	response::handle_cgi()
+void	response::SetCGI_Env( std::string script_filename )
 {
-
-
-	/* cgi path ----> header_data->cgi_path .....*/
-	/* for POST REQUEST'S WE READ FROM THE FILE THAT WAS UPLOADED TO US 
-	AND GIVE IT AS AN INPUT TO THE EXECVE */
-
-	// search_inside_location("cgi " + get_extension(request_file));
-	/*file to store*/
-	cgi_output = "/tmp/" + time_date();
-	cgifd[1] = open(cgi_output.c_str(), O_CREAT | O_RDWR, 0644);
-
+	std::stringstream	len;
+	std::string			content_len;
+	
 	/* env to store	*/
 	Env.push_back("REQUEST_METHOD=" + header_data->method);
 	Env.push_back("REDIRECT_STATUS=200");
@@ -182,65 +210,55 @@ void	response::handle_cgi()
 	{
 		Env.push_back("QUERY_STRING=" + header_data->query);
 	}
-
+	
 	if (header_data->Content_Length != -2)
  	{
-		std::stringstream len;
 		len << header_data->Content_Length;
-		std::string content_len;
 		len >> content_len;
 		Env.push_back("CONTENT_LENGTH=" + content_len);
 	}
-
-	char **env;
-	/* data to execute*/
-	agv[0] = (char*)header_data->cgi_path.c_str();
-	if (header_data->method == "POST")
-		agv[1] =  (char*)header_data->cgi_script.c_str();
-	else
-		agv[1] =  (char*)header_data->requested_resource.c_str();
-	std::string tem;
-	tem = "SCRIPT_FILENAME=" +  std::string(agv[1]);
-	Env.push_back(tem);
-	// agv[0] = (char *)header_data->cgi_path.c_str();  //executable
-	// if (header_data->method == "POST")
 	
-	// 	agv[1] = (char *)header_data->cgi_script.c_str(); //requested script
-	// else
-	// 	agv[1] = (char *)request_file.c_str();
-	// std::cout << "AV[0] : " << agv[0] << std::endl;
-	// std::cout << "AV[1] : " << agv[1] << std::endl;
-	// std::cout << "REQUEST[0] : " << header_data->requested_resource << std::endl;
-	// std::cout << "CGI OUT PUT " << cgi_output << std::endl;
+	Env.push_back("SCRIPT_FILENAME=" + script_filename);
 	Env.push_back("PATH_INFO=" + std::string(agv[1]));
 	Env.push_back("CONTENT_TYPE=" + header_data->Content_type);
 	if (header_data->Cookies.empty() == false)
 	{
-		// std::cout << "+==================================+++" << std::endl;
-		// std::cout << "COOKIE : " << header_data->Cookies << std::endl;
-		// std::cout << "+==================================+++" << std::endl;
 		Env.push_back("HTTP_COOKIE=" + header_data->Cookies);
 	}
-	agv[2] = NULL;
 
 	env = new char *[Env.size() * sizeof(char*)];
 	for (size_t i = 0; i < Env.size(); i++)
 	{
 		env[i] = (char *) Env[i].c_str();
-		// std::cout << "{" << env[i] << "}" << std::endl;
 	}
 	env[Env.size()] = NULL;
+}
+
+void	response::handle_cgi()
+{
+	/* for POST REQUEST'S WE READ FROM THE FILE THAT WAS UPLOADED TO US 
+	AND GIVE IT AS AN INPUT TO THE EXECVE */
+
+	/*file to store*/
+	cgi_output = "/tmp/" + time_date();
+	cgifd[1] = open(cgi_output.c_str(), O_CREAT | O_RDWR, 0644);
+
+	agv[0] = (char*)header_data->cgi_path.c_str();
+	if (header_data->method == "POST")
+		agv[1] =  (char*)header_data->cgi_script.c_str();
+	else
+		agv[1] =  (char*)header_data->requested_resource.c_str();
+	SetCGI_Env(agv[1]);
+	agv[2] = NULL;
 	pid = fork();
 	if(pid == -1)
 		perror("fork");
 	else if (pid == 0)
 	{
-		//child process 
 		dup2(cgifd[1], 1);
 		close(cgifd[1]);
 		if (header_data->method == "POST")
 		{
-		// std::cout << "HERE IS THE INPUT FROM THE BODY " << std::endl;
 			cgifd[0] = open(header_data->requested_resource.c_str(), O_RDONLY);
 			dup2(cgifd[0], 0);
 			close(cgifd[0]);
@@ -249,10 +267,6 @@ void	response::handle_cgi()
 		perror("execve");
 		exit(EXIT_SUCCESS);
 	}
-	close(cgifd[1]);
-	wait(NULL);
-	/* ===================== */
-
 }
 
 
@@ -260,29 +274,28 @@ int		response::serve_the_file()
 {
 	if (file_status() == 0)
 	{
-		/* if location support cgi */
-		/* pass file to cgi*/
+		/* If the location supports the CGI, 
+		pass the file to it */
 		if (header_data->_is_cgi == true)
 		{
 			is_alive = true;
 			handle_cgi();
-			is_alive = false;
-			// header_data->requested_resource = file_tmp;
-			header_data->res_status = 200;
 		/*	return depend on the cgi */
 		}
 		/* send the requested file with 200 status code */
 		else
+		{
 			header_data->res_status = 200;
+		}
 	}
 	return (0);
 }
 
 void response::generateAutoIndex(std::string &directory)
 {
-	std::string filena = "/tmp/AutoIndex_" + time_date() + ".html";
+	header_data->requested_resource = "/tmp/AutoIndex_" + time_date() + ".html";
 	std::fstream file;
-	file.open(filena, std::ofstream::out );
+	file.open(header_data->requested_resource, std::ofstream::out );
 
 	std::string autoIndexHtml = "<html><body> <title> Auto Index!! </title> <h1> Index of ";
 	autoIndexHtml += header_data->new_uri + " </h1>  <hr> ";
@@ -304,7 +317,6 @@ void response::generateAutoIndex(std::string &directory)
 	autoIndexHtml += "<hr> </url> </body> </html>";
 	file << autoIndexHtml;
 	file.close();
-	header_data->requested_resource = filena;
 }
 
 int		response::requested_resource_is_dir()
@@ -387,7 +399,10 @@ void	response::Post_method()
 		return ;
 	}
 	if (header_data->_is_cgi == true)
+	{
+		is_alive = true;
 		handle_cgi();
+	}
 }
 
 int	response::delete_the_file()
@@ -417,6 +432,7 @@ int	response::delete_the_file()
 
 void	response::delete_path( const char *path, bool is_directory )
 {
+	/* if the path is a directory */
 	if (is_directory == true)
 	{	
 		if (access(path, R_OK) == 0)
@@ -425,8 +441,11 @@ void	response::delete_path( const char *path, bool is_directory )
 				s204++;
 		}
 		else
+		{
 			s403++;
+		}
 	}
+	/* if the path is a file */
 	else
 	{
 		if (access(path, W_OK) == 0)
@@ -435,7 +454,9 @@ void	response::delete_path( const char *path, bool is_directory )
 				s204++;
 		}
 		else
+		{
 			s403++;
+		}
 	}
 }
 
@@ -480,7 +501,7 @@ int	response::delete_dir( const char *directory )
 			status = Client::is_file_or_directory(str.c_str(), header_data);
 		}
 		/* first remove all files */
-		if (status == 0 && CMP(dp->d_name))
+		if (status != 1 && CMP(dp->d_name))
 		{	
 			delete_path(str.c_str(), false);
 		}
@@ -642,15 +663,6 @@ std::string	response::Get_Content_Length()
 	
 	if (default_response == false)
 	{
-		// if (header_data->_is_cgi == true)
-		// {
-		// 	if (stat(cgi_output.c_str(), &s) == 0)
-		// 	{
-		// 		Content_Length += std::to_string(s.st_size - cgi_body_pos);
-    	//     	Content_Length += "\r\n\r\n";
-		// 		return Content_Length;
-		// 	}
-		// }
     	if (stat(header_data->requested_resource.c_str(), &s) == 0)
 		{
 			content_length = s.st_size;
@@ -740,10 +752,10 @@ void	response::Parse_Line( std::string line )
 		}
 	}
 }
+
 /*
 	Start_line
 	HTTP/1.1 200 OK || Status: 200 OK
-	
 	Content-Type: text/html; charset=UTF-8
 	Content-Length: 1024
 	Cache-Control: no-cache
@@ -868,12 +880,13 @@ void	response::handle_cgi_header( )
 }
 
 /* ============================================================================== */
-
 	/* HTTP/1.1 200 OK\r\n                      */
 	/* Date: Wed, 11 May 2023 12:00:00 GMT\r\n  */
 	/* Server: Apache/2.4.38 (Unix)\r\n         */
 	/* Content-Type: text/html\r\n              */
 	/* Content-Length: 1234\r\n\r\n             */
+/* ============================================================================== */
+
 void response::create_header()
 {
 	if (header_data->_is_cgi == true && header_data->res_status < 400)
@@ -899,7 +912,7 @@ void response::create_header()
 	header += Get_Content_Length();
 }
 
-bool	response::Is_End_Of_File()
+bool	response::IsEndOfFile()
 {
 	return(eof);	
 }

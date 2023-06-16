@@ -6,16 +6,13 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 16:39:08 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/15 14:26:05 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/16 18:02:25 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "client.hpp"
 #include "parsing.hpp"
 #include "user_data.hpp"
-#include <sys/_types/_s_ifmt.h>
-
-
 
 Client::Client( const data_serv *dptr, Socket *Pbase ):server_data(dptr), Base(Pbase), header_data(new data_header)
 {
@@ -87,13 +84,13 @@ void	Client::read_from_socket()
 		return ;
 		// exit(EXIT_FAILURE);
 	}
-	if (client_request->end_of_file == false)
+	if (client_request->end_of_file == false && header_data->res_status == 0)
 		client_request->parse(request_buffer);
 }
 
 bool	Client::eof()
 {
-	return client_response->Is_End_Of_File();
+	return client_response->IsEndOfFile();
 }
 
 int	Client::get_fd()

@@ -52,6 +52,8 @@ class response {
 	std::string			cgi_start_line;
 	size_t				content_length;
 	size_t				sended_bytes;
+	long				start_time;
+	long				end_time;
 	/*####################################*/
 	int		cgifd[2];
 	char	*agv[3];
@@ -59,7 +61,8 @@ class response {
 	std::vector<std::string> Env;
 	pid_t		pid;
 	bool		is_alive;
-	// std::ifstream cgi_outputfile;
+	int			*status;
+	char		**env;
 	/*####################################*/
 
 	std::string			header;
@@ -70,18 +73,9 @@ public:
 	response( const data_serv *,  data_header* );
 	~response( );
 	void	response_handler( int );
-	// /* check for location and redirections and allowed methods */
-	// void	check_location_block();
-	
-	// /*check if requested resorce in such location */
-	// int		find_required_location(  );
-	// void	parse_the_uri();
-	// int		update_the_uri();
-	// /* check if there is any redirection */
-	// int		redirection();
-	// /* check for allowed methods */
-	// int 	allowed_methods();
-	
+
+	long	get_time();
+
 	/* create response header */
 	void	create_header();
 
@@ -95,6 +89,7 @@ public:
 	int		file_status();
 	void	delete_path( const char *path, bool );
 	void	SetCgiStartLine();
+	void	SetCGI_Env( std::string );
 
 	int		requested_resource_is_dir();
 
@@ -110,7 +105,7 @@ public:
 	/* some helpful functions */
 	int		search_inside_location( const std::string );
 	// int		path_is_exist( const char * );
-	bool	Is_End_Of_File();
+	bool	IsEndOfFile();
 
 	/*#############################################*/
 	void generateAutoIndex(std::string &directory);

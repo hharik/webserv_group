@@ -2,13 +2,6 @@
 
 #include "client.hpp"
 #include "parsing.hpp"
-#include <algorithm>
-#include <string>
-#include <sys/_types/_rune_t.h>
-#include <sys/_types/_sigaltstack.h>
-#include <sys/unistd.h>
-#include <unistd.h>
-
 
 request::request( const data_serv *dptr, data_header *hptr ) : server_data(dptr), d_header(hptr), rsize(0) , size(0), chunked_size(-2), end_of_file(false)
 {
@@ -303,6 +296,7 @@ void request::handle_PostMethod()
 		}
 		else
 		{
+			std::cout << "FORBIDEN 88888 * ** ** **  * " << std::endl;
 			d_header->res_status = 403;
 		}
 	}
@@ -546,7 +540,7 @@ void request::parse(std::string &header)
 		}
 		else if (get_requested_resource() != 0)
 		{
-		std::cout << "STATUS_CODE 4 : " << d_header->res_status << std::endl;
+			std::cout << "STATUS_CODE 4 : " << d_header->res_status << std::endl;
 			return ;
 		}
 		/* generate the name of the file if hte method is POST */

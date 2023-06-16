@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/26 18:03:44 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/07 22:20:24 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/16 17:37:45 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,6 @@
 #include "client.hpp"
 #include "parsing.hpp"
 #include "user_data.hpp"
-#include <vector>
 
 Socket::Socket()
 {
@@ -43,40 +42,41 @@ int	Socket::Create_the_socket( )
 	
 	if (status)
 	{
-		std::cerr << gai_strerror(status) << std::endl;
+		std::cerr << "Server :" << gai_strerror(status) << std::endl;
 		return -1;
 	}
  	// Create the Server socket
 	sockfd = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
 	if (sockfd < 0)
 	{
-        perror("socket");
-		exit(EXIT_FAILURE);
+        perror("Server : Socket ");
+		return -1;
 	}
 	// Set socket options 
 	status = setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &reuseaddr_opt, sizeof(reuseaddr_opt));
-    if (status < 0) {
-		perror("setsockopt");
-        exit(EXIT_FAILURE);
+    if (status < 0)
+	{
+		perror("Server : Setsockopt ");
+        return -1;
     }
 	// use non-blocking socket
 	if (fcntl(sockfd, F_SETFL, O_NONBLOCK) < 0)
 	{
-		perror("server:fcntl");
-		exit(EXIT_FAILURE);
+		perror("Server : Fcntl ");
+		return -1;
 	}
 	// bind the socket 
 	status = bind(sockfd, result->ai_addr, sizeof(*(result->ai_addr)));
 	if (status < 0)
 	{
-		perror("bind");
-		exit(EXIT_FAILURE);
+		perror("Server : Bind ");
+		return -1;
 	}
 	status = listen(sockfd, BACKLOG);
 	if (status < 0)
 	{
-		perror("listen");
-		exit(EXIT_FAILURE);
+		perror("Server : Bind ");
+		return -1;
 	}
 	return sockfd;
 }
