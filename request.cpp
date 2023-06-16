@@ -560,7 +560,11 @@ void request::parse(std::string &header)
 	}
 	if (d_header->method == "POST") 
 	{
-	
+		if (server_data->max_body_size == -1)
+		{
+			d_header->res_status = 501;
+			return ; 
+		}
 		if (d_header->transfer_encoding.empty() == true && d_header->Content_Length ==  -2)
 		{
 			d_header->res_status = 400;

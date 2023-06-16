@@ -51,9 +51,10 @@ struct data_serv {
 	std::string port;
 	std::string index;
 	std::string root_dir;
+	std::string cgi_mode;
 	long long	max_body_size;
 	std::map<int, std::string> errors;
-
+	data_serv() : max_body_size(-1) { }
 };
 
 class parsing

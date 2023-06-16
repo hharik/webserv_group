@@ -4,8 +4,16 @@ int parsing::check_ints(std::string str)
 {
 	for (std::string::iterator it = str.begin(); it != str.end() ; it++)
 	{
-		if (!isdigit(*it))
-			return -1;
+		if ((!isdigit(*it)))
+		{
+			if (*it == '-' || *it == '+')
+			{
+				if ( !isdigit(*(it + 1)))
+					return -1;
+			}
+			else
+				return -1;
+		}
 	}
 	return 0;
 }
@@ -118,9 +126,9 @@ void parsing::save_data(std::vector <std::string> server)
 				std::cout << "Error : Max body size isnt int" << std::endl;
 				exit(1);
 			}
-			temp.max_body_size =  std::atoi(_value.c_str());
-			// std::cout << temp.max_body_size << std::endl;
-			// temp.default_data.insert(std::make_pair("max_body_size", _value));
+			temp.max_body_size = std::atoi(_value.c_str());
+			if (temp.max_body_size < 0)
+				temp.max_body_size = 0;
 		}
 		else if ((it->find("index ")) != std::string::npos)
 		{
@@ -135,6 +143,21 @@ void parsing::save_data(std::vector <std::string> server)
 				temp.index.erase(0, 1);
 			}
 		}
+		else if (it->find("cgi_timeout ") != std::string::npos)
+		{
+			_value = it->substr(pos + 1);
+			if ((_value.find(" ") != std::string::npos))
+			{
+				std::cout << "error " << std::endl;
+				exit(EXIT_FAILURE);
+			}
+			else if (_value != "on" && _value != "off")
+			{
+				std::cout << "error in cgi_timeout" << std::endl;
+				exit(1);
+			}
+			temp.cgi_mode = _value;
+		}
 		else if ((it->find("root ")) != std::string::npos)
 		{
 			temp.root_dir = it->substr(pos + 1);
@@ -147,8 +170,6 @@ void parsing::save_data(std::vector <std::string> server)
 			{
 				temp.root_dir.append("/");
 			}
-			// std::cout << temp.root_dir << std::endl;
-			// temp.default_data.insert(std::make_pair("root", _value));
 		}
 		else if ((it->find("error ")) != std::string::npos)
 		{
@@ -247,7 +268,7 @@ void parsing::save_data(std::vector <std::string> server)
 						exit(1);
 					}
 				}
-				else if (_key == "error" || _key == "max_body_size" || _key == "listen") {
+				else if (_key == "error" || _key == "max_body_size" || _key == "listen" || _key == "cgi_timeout") {
 					std::cout << "Can't specify variable "  << _key << " pages in location " << std::endl;
 					exit(1);
 				}
