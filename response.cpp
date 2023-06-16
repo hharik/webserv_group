@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/30 12:25:24 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/16 17:52:56 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/16 19:05:51 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,8 @@
 #include "client.hpp"
 #include "parsing.hpp"
 #include "response.hpp"
+#include <new>
+#include <unistd.h>
 
 response::response( const data_serv *dptr,  data_header *hptr ):server_data(dptr), header_data(hptr)
 {
@@ -51,6 +53,11 @@ response::~response( )
 	{
 		unlink(header_data->requested_resource.c_str());
 	}
+	/* Delete the file in the post method if the transfer encoding is chunked and the body content is larger than the maximum body size */
+	if (header_data->res_status == 413 && header_data->transfer_encoding.empty() == false)
+	{
+		unlink(header_data->requested_resource.c_str());
+	}
 }
 
 void	response::response_handler( int client_fd )
@@ -74,7 +81,11 @@ void	response::response_handler( int client_fd )
 			/* returns 0 if the child is still running */
 			if (status_code == 0)
 			{
-				return ;
+				status_code = handle_CGI_timeOut();
+				if (status_code == 0)
+				{
+					return ;
+				}
 			}
 			/* The child is finishing their execution */
 			else
@@ -183,6 +194,21 @@ int	response::file_status()
 	return (0);
 }
 
+int	response::handle_CGI_timeOut()
+{
+	if (server_data->cgi_mode.empty() == true || server_data->cgi_mode == "off")
+		return (0);
+	end_time = get_time();
+	if (end_time - start_time > 30)
+	{
+		kill(pid, 0);
+		is_alive = false;
+		header_data->res_status = 504;
+		/* Send a response back to the client indicating there is a time out */
+	}
+	return (1);
+}
+
 std::string time_date()
 {
 	/* Date: Wed, 11 May 2023 12:00:00 GMT\r\n  */
@@ -240,6 +266,7 @@ void	response::handle_cgi()
 	AND GIVE IT AS AN INPUT TO THE EXECVE */
 
 	/*file to store*/
+	start_time = get_time();
 	cgi_output = "/tmp/" + time_date();
 	cgifd[1] = open(cgi_output.c_str(), O_CREAT | O_RDWR, 0644);
 
@@ -554,6 +581,16 @@ std::string	response::Default_Response(const std::string &status_code, const std
 	html_resp += Meaning;
 	html_resp += rest;
 	return (html_resp);
+}
+
+
+long	response::get_time( )
+{
+	struct timeval	t;
+
+	if (gettimeofday(&t, NULL) == -1)
+		return (-1);
+	return (t.tv_sec + t.tv_usec / 1000000);
 }
 
 void	response::get_res_status( std::string res )

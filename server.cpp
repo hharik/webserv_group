@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:06:59 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/07 21:41:46 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/16 19:09:24 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,10 +36,11 @@ Server::Server(const std::string &config_file):parser(config_file), servers()
 		servers[i]->Create_the_socket();
 		servers[i]->attach_server_socket( kq );
 		events_size++;
-		// size of events
 	}
 	if (events_size > 0)
+	{
 		events = new struct kevent [events_size];
+	}
 }
 
 

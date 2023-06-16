@@ -25,11 +25,13 @@
 #define S404 " Not Found"
 #define S405 " Method Not Allowed"
 #define S409 " Conflict"
+#define S413 " Content Too Large"
 #define S414 " URI Too Long"
 #define S415 " Unsupported Media Type"
 #define S431 " Request Header Fields Too Large"
 #define S500 " Internal Server Error"
 #define S501 " Not Implemented"
+#define S504 " Gateway Timeout"
 
 class response {
 	std::map<std::string, std::string>::const_iterator iter;
@@ -90,7 +92,7 @@ public:
 	void	delete_path( const char *path, bool );
 	void	SetCgiStartLine();
 	void	SetCGI_Env( std::string );
-
+	int		handle_CGI_timeOut();
 	int		requested_resource_is_dir();
 
 	// void	send_response();
@@ -106,6 +108,7 @@ public:
 	int		search_inside_location( const std::string );
 	// int		path_is_exist( const char * );
 	bool	IsEndOfFile();
+	void	handle_timeOut();
 
 	/*#############################################*/
 	void generateAutoIndex(std::string &directory);

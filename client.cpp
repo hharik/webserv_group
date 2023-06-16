@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 16:39:08 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/16 18:02:25 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/16 18:11:57 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,7 +82,6 @@ void	Client::read_from_socket()
 		perror("recv_client : ");
 		client_response->set_eof(true);
 		return ;
-		// exit(EXIT_FAILURE);
 	}
 	if (client_request->end_of_file == false && header_data->res_status == 0)
 		client_request->parse(request_buffer);

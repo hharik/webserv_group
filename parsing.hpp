@@ -74,7 +74,7 @@ class parsing
 
 		int			check_ints(std::string str);
 		std::string	trim(std::string line, std::string whitespaces);
-		void		save_data(std::vector <std::string> server);
+		int		save_data(std::vector <std::string> server);
 		std::string reduce(std::string buff, std::string whitespaces, std::string to_replace);
 		void		readAndParse();
 		static void 		mime();
