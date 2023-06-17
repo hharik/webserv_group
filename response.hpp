@@ -106,7 +106,7 @@ public:
 	void	handle_timeOut();
 
 	/*#############################################*/
-	void generateAutoIndex(std::string &directory);
+	void generateAutoIndex(std::string directory);
 	void	handle_cgi();
 	/*#############################################*/
 	void	handle_cgi_header();

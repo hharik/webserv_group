@@ -17,14 +17,13 @@
 
 class Server
 {
+	parsing					parser;
 	std::vector<Socket*>	servers;
 	User_data				*user_data;
 	int						kq;
-	int 					status;
 	unsigned int			events_nbr;
 	unsigned int			events_size;
 	bool					new_event;
-	parsing					parser;	
 	struct 	kevent			*events;
 
 public:

@@ -56,7 +56,7 @@ struct data_header {
 
 class Client
 {
-	const data_serv		*server_data;
+	// const data_serv		*server_data;
 	Socket		*Base;
 	User_data			*user_data;
 	char				buffer[BUFFER_SIZE];

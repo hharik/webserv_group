@@ -63,7 +63,7 @@ void	Server::Create_http_servers()
 	while( 1 )
 	{
 		Wait_for_incoming_events();
-		for(int i = 0; i < events_nbr; i++)
+		for(unsigned int i = 0; i < events_nbr; i++)
 		{
 			user_data = (User_data*)events[i].udata;
 			/* new client need to establish the connection with this server through this socket */

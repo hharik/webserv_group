@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parsing.hpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: hharik <hharik@student.42.fr>              +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/06/17 13:59:59 by hharik            #+#    #+#             */
+/*   Updated: 2023/06/17 14:05:01 by hharik           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef PARSING_HPP_
 #define PARSING_HPP_
 
@@ -44,14 +56,14 @@ struct data_header;
 #define SUCCESS(x) x < 400 ? true : false
 
 struct data_serv {
-	std::map<std::string, std::map<std::string, std::string> > location;
-	std::string server_name;
-	std::string port;
-	std::string index;
-	std::string root_dir;
-	std::string cgi_mode;
-	long long	max_body_size;
-	std::map<int, std::string> errors;
+	std::map<std::string, std::map<std::string, std::string> >  location;
+	std::string 												server_name;
+	std::string 												port;
+	std::string 												index;
+	std::string 												root_dir;
+	std::string 												cgi_mode;
+	long long													max_body_size;
+	std::map<int, std::string> 									errors;
 	data_serv() : max_body_size(-1) { }
 };
 

@@ -23,7 +23,7 @@ data_header::data_header() : Content_Length(-2), res_status(0), is_redirect(fals
 	is_dir = false;
 }
 
-Client::Client( const data_serv *dptr, Socket *Pbase ):server_data(dptr), Base(Pbase), header_data(new data_header)
+Client::Client( const data_serv *dptr, Socket *Pbase ):/*server_data(dptr),*/ Base(Pbase), header_data(new data_header)
 {
 	user_data = new User_data();
 	client_response = new response(dptr, header_data);
@@ -34,7 +34,7 @@ Client::Client( const data_serv *dptr, Socket *Pbase ):server_data(dptr), Base(P
 Client::~Client()
 {
 	/* may be cause an error */
-	delete user_data;
+	//delete user_data;
 	delete client_request;
 	delete client_response;
 	delete header_data;

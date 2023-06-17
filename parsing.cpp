@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parsing.cpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: hharik <hharik@student.42.fr>              +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/06/17 13:59:47 by hharik            #+#    #+#             */
+/*   Updated: 2023/06/17 13:59:48 by hharik           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "parsing.hpp"
 
 int parsing::check_ints(std::string str) 
@@ -18,7 +30,7 @@ int parsing::check_ints(std::string str)
 	return 0;
 }
 	
-parsing::parsing(std::string name) : filename(name), file(), servers_data(), end_brackets() 
+parsing::parsing(std::string name) : filename(name), end_brackets(), file() ,servers_data()
 {
 }
 
@@ -112,6 +124,12 @@ int parsing::save_data(std::vector <std::string> server)
 			}
 			temp.port = it->substr(it->find(":") + 1);
 			temp.server_name = it->substr(pos + 1, point);
+			if (check_ints(temp.port) == -1)
+			{
+				std::cout << "Error : port specified is not integer" << std::endl;
+				status =  -1;
+			}
+
 		}
 		else if ((it->find("max_body_size ")) != std::string::npos)
 		{
@@ -371,7 +389,6 @@ void parsing::readAndParse()
 		}
 		int i = 0;
 		std::vector<std::string> temp;
-		size_t pos = 0;
 		for (std::vector <std::string>::iterator it = before_file.begin(); it != before_file.end(); it++)
 		{
 			if (it->find("server {") != std::string::npos)
@@ -379,9 +396,7 @@ void parsing::readAndParse()
 			if (it->find("};") != std::string::npos )
 			{
 				i = OUTSERV;
-				// std::cout << "helloo world "<< std::endl;
 				save_data(temp);
-				// std::cout << "\n\n\n\n\nhello world !!!!" << std::endl;
 				temp.clear();
 			}
 			if (i == INSERV)
@@ -399,6 +414,7 @@ void parsing::readAndParse()
 			}
 			encounted[it->port] = true;
 		}
+		before_file.clear();
 	}
 	else { std::cout << "File Not Found" << std::endl;
 		exit(1);

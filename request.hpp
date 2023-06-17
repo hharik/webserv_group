@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   request.hpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: hharik <hharik@student.42.fr>              +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/06/17 14:00:07 by hharik            #+#    #+#             */
+/*   Updated: 2023/06/17 14:00:21 by hharik           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef REQUEST_HPP_
 
 #define REQUEST_HPP_
@@ -9,7 +21,6 @@ class request {
 	data_header 		*d_header;
 	std::string file;
 	std::string dir_to_upload;
-	long rsize;
 	int chunked_size;
 	int size;
 	std::string new_name;
@@ -26,14 +37,13 @@ class request {
 	void read_body(std::string &body);
 	void parse(std::string &header);
 
-	/* this will be added in this header 
-	(mzhmini lhih o jbthom lhna hada makan) */
-	/*check if requested resorce in such location */
 	void	parse_the_uri();
 	int		update_the_uri( std::string& );
 	int		find_required_location( );
+
 	/* check if this location have a redirection */
 	int		check_for_redirection();
+
 	/* if this method is allowed in this location */
 	int		allowed_methods();
 	int		get_requested_resource();

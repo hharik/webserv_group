@@ -215,7 +215,6 @@ std::string time_date()
 		time_t curr_time;
 		tm * curr_tm;
 		char date_string[100];
-		char time_string[100];
 
 		time(&curr_time);
 		curr_tm = localtime(&curr_time);
@@ -318,10 +317,11 @@ int		response::serve_the_file()
 	return (0);
 }
 
-void response::generateAutoIndex(std::string &directory)
+void response::generateAutoIndex(std::string directory)
 {
-	header_data->requested_resource = "/tmp/AutoIndex_" + time_date() + ".html";
+
 	std::fstream file;
+	header_data->requested_resource = "/tmp/AutoIndex_" + time_date() + ".html";
 	file.open(header_data->requested_resource, std::ofstream::out );
 
 	std::string autoIndexHtml = "<html><body> <title> Auto Index!! </title> <h1> Index of ";
@@ -389,7 +389,6 @@ int	response::search_inside_location( const std::string to_find )
 void	response::Get_method()
 {
 	std::cout << "[GET]" << std::endl;
-	int			status;
 	int			ind;
 
 	ind = header_data->new_uri.size() - 1;
@@ -418,7 +417,6 @@ void	response::Get_method()
 /* POST method */
 void	response::Post_method()
 {
-	int			status;
 	std::cout << "[POST]" << std::endl;
 	if (header_data->res_status == 301)
 	{
@@ -593,10 +591,6 @@ long	response::get_time( )
 	return (t.tv_sec + t.tv_usec / 1000000);
 }
 
-void	response::get_res_status( std::string res )
-{
-
-}
 
 std::string	response::get_start_line()
 {
@@ -648,7 +642,7 @@ std::string	response::Get_Content_Type()
 	std::map<std::string, std::string>::iterator iterator;
 	std::string	Content_Type = "Content-Type: ";
 	std::string	result;
-	int	find;
+	size_t	find;
 
 	if (default_response == false && auto_index == false)
 	{
@@ -681,7 +675,6 @@ std::string response::Get_Date()
 	time_t curr_time;
 	tm * curr_tm;
 	char date_string[100];
-	char time_string[100];
 
 	time(&curr_time);
 	curr_tm = localtime(&curr_time);
@@ -722,9 +715,12 @@ void	response::Pages()
 	if (header_data->res_status >= 400)
 	{
 		er_it = server_data->errors.find(header_data->res_status);
-		header_data->requested_resource = er_it->second;
-		if (access(er_it->second.c_str(), F_OK) == 0)
-			return ;
+		if (er_it != server_data->errors.end())
+		{
+			header_data->requested_resource = er_it->second;
+			if (access(er_it->second.c_str(), F_OK) == 0)
+				return ;
+		}
 	}
 	response_content = Default_Response( std::to_string(header_data->res_status), response_content);
 	default_response = true;
@@ -766,7 +762,7 @@ void	response::Parse_Line( std::string line )
 {
 	std::string key(line);
 	std::string value(line);
-	int 		find;
+	size_t 		find;
 	bool		status;
 
 	find = line.find_first_of(":");
@@ -810,7 +806,7 @@ std::string toLowerCase(const std::string& str) {
 
 void	response::Parse_cgi_header( std::string cgi_header )
 {
-	int 	find;
+	size_t 	find;
 	std::string res;
 	find = cgi_header.find("\r\n\r\n");
 	cgi_body_pos = 0;
@@ -841,8 +837,6 @@ void	response::Parse_cgi_header( std::string cgi_header )
 
 void	response::Put_Header(const std::string &key, const std::string &value)
 {
-	struct stat s;
-	long	result;
 
 	if (key != "status")
 	{
@@ -854,7 +848,7 @@ void	response::Put_Header(const std::string &key, const std::string &value)
 void	response::SetCgiStartLine()
 {
 	std::map<std::string, std::string>::iterator end = cgi_header.end();
-	int	find;
+	size_t	find;
 	/* CGI start line */
 	header += HTTP_V;
 	find = cgi_start_line.find("HTTP/1.1");
@@ -909,7 +903,7 @@ void	response::handle_cgi_header( )
 	{
 		memset(buffer, 0, BUFFER_SIZE);
 		requested_file.read(buffer, BUFFER_SIZE);
-		std::streamsize size = requested_file.gcount();
+		// std::streamsize size = requested_file.gcount();
 		Parse_cgi_header(buffer);
 	}
 	requested_file.close();

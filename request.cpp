@@ -1,9 +1,21 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   request.cpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: hharik <hharik@student.42.fr>              +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/06/17 14:00:04 by hharik            #+#    #+#             */
+/*   Updated: 2023/06/17 14:01:29 by hharik           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 
 
 #include "client.hpp"
 #include "parsing.hpp"
 
-request::request( const data_serv *dptr, data_header *hptr ) : server_data(dptr), d_header(hptr), rsize(0) , size(0), chunked_size(-2), end_of_file(false)
+request::request( const data_serv *dptr, data_header *hptr ) : server_data(dptr), d_header(hptr), chunked_size(-2), size(0),	 end_of_file(false)
 {
 	d_header->_is_cgi = false;
 }
@@ -47,7 +59,7 @@ int	request::generate_name()
 	/*error u dont generate names when uploading to me files 
 	only gives directory in requested_resource */
 	int status;
-	int	ind;
+	size_t	ind;
 
 	new_name = d_header->requested_resource;
 	ind = d_header->new_uri.size();
@@ -296,7 +308,6 @@ void request::handle_PostMethod()
 		}
 		else
 		{
-			std::cout << "FORBIDEN 88888 * ** ** **  * " << std::endl;
 			d_header->res_status = 403;
 		}
 	}
@@ -314,17 +325,6 @@ int	request::get_requested_resource()
 	return (d_header->res_status);
 }
 
-void request::read_body(std::string &body) { 
-	size += body.size();
-	body.clear();
-	if (size >= d_header->Content_Length)
-	{
-		/* end of the file */
-		end_of_file = true;
-		d_header->res_status = 200;
-		return ;
-	}
-}
 
 std::string request::time_date()
 {
@@ -332,7 +332,6 @@ std::string request::time_date()
 	time_t curr_time;
 	tm * curr_tm;
 	char date_string[100];
-	char time_string[100];
 
 	time(&curr_time);
 	curr_tm = localtime(&curr_time);
@@ -351,8 +350,6 @@ void	request::save_chunk_improve(std::string &body)
 	std::string to_delete = "\r\n";
 	if (file_obj.is_open() == false)
 	{
-		// body.erase(0, body.find(to_delete));
-		std::cout <<  "here is the file to out " <<  d_header->requested_resource << std::endl;
 		file_obj.open(d_header->requested_resource, std::fstream::out | std::fstream::trunc | std::fstream::binary);
 	}
 	std::stringstream to_hex;
@@ -366,7 +363,6 @@ void	request::save_chunk_improve(std::string &body)
 
 			std::string::iterator last = std::search(first + 1, body.end(), to_delete.begin(), to_delete.end());
 			std::string test(first, last);
-			// std::cout << "*" << test <<  "* "<<  std::endl;
 			if (test == "\r\n0")
 			{
 				end_of_file = true;
@@ -376,7 +372,7 @@ void	request::save_chunk_improve(std::string &body)
 			to_hex >> std::hex >> chunked_size;
 			body.erase(0, test.length() + 2);
 		}
-		if (chunked_size >= body.size())
+		if (chunked_size >= (int)body.size())
 		{
 			file_obj << body;
 			size += body.size();
@@ -594,7 +590,7 @@ void request::parse(std::string &header)
 
 void	request::parse_the_uri()
 {
-	int			find;
+	size_t			find;
 
 	d_header->new_uri = d_header->uri;
 	find = d_header->new_uri.find_last_of('?');
@@ -608,7 +604,7 @@ void	request::parse_the_uri()
 
 int	request::update_the_uri( std::string &uri )
 {
-	int			find;
+	size_t			find;
 
 	find = uri.find_last_of('/');
 	if (std::string::npos != find && !find && uri.size() > 1)

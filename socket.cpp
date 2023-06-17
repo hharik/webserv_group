@@ -108,7 +108,7 @@ void	Socket::Accept_new_connection( int kq )
 
 void	Socket::Destruct_client(  )
 {
-	int	index;
+	size_t	index;
 
 	index = 0;
 	while (index < clients.size())

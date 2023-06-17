@@ -13,7 +13,7 @@
 
 CC = g++ 
 
-CFLAGE = 
+CFLAGE = -Wall -Werror -Wextra
 
 SRC =	main.cpp \
 		parsing.cpp \
