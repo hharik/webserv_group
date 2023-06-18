@@ -6,7 +6,7 @@
 /*   By: hharik <hharik@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/17 13:59:47 by hharik            #+#    #+#             */
-/*   Updated: 2023/06/18 10:21:19 by hharik           ###   ########.fr       */
+/*   Updated: 2023/06/18 11:31:11 by hharik           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,19 +115,19 @@ int parsing::save_data(std::vector <std::string> server)
 			if (_value.find(" ") != std::string::npos)
 			{
 				std::cout << "error" << std::endl;
-				status = -1;
+				status = -1;break ;
 			}
 			if ((point = _value.find(":")) == std::string::npos)
 			{
 				std::cout << "Server_name not provided and doesnt have a specific port" << std::endl;
-				status =  -1;
+				status =  -1;break ;
 			}
 			temp.port = it->substr(it->find(":") + 1);
 			temp.server_name = it->substr(pos + 1, point);
 			if (check_ints(temp.port) == -1)
 			{
 				std::cout << "Error : port specified is not integer" << std::endl;
-				status =  -1;
+				status =  -1;break ;
 			}
 
 		}
@@ -137,13 +137,13 @@ int parsing::save_data(std::vector <std::string> server)
 			if (_value.find(" ") != std::string::npos)
 			{
 				std::cout << "error " <<  std::endl;
-				status =  -1;
+				status =  -1;break ;
 			}
 
 			if (check_ints(_value) == -1)
 			{
 				std::cout << "Error : Max body size isnt int" << std::endl;
-				status =  -1;
+				status =  -1;			break ;
 			}
 			temp.max_body_size = std::atoi(_value.c_str());
 			if (temp.max_body_size < 0)
@@ -155,7 +155,7 @@ int parsing::save_data(std::vector <std::string> server)
 			if (temp.index.find(" ") != std::string::npos)
 			{
 				std::cout << "Error in default index " << std::endl;
-				status =  -1;
+				status =  -1;	break ;
 			}
 			if (temp.index.find("/") == 0)
 			{
@@ -168,12 +168,12 @@ int parsing::save_data(std::vector <std::string> server)
 			if ((_value.find(" ") != std::string::npos))
 			{
 				std::cout << "error " << std::endl;
-				status =  -1;
+				status =  -1;	break ;
 			}
 			else if (_value != "on" && _value != "off")
 			{
 				std::cout << "error in cgi_timeout" << std::endl;
-				status =  -1;
+				status =  -1;	break ;
 			}
 			temp.cgi_mode = _value;
 		}
@@ -183,7 +183,7 @@ int parsing::save_data(std::vector <std::string> server)
 			if (temp.root_dir.find(" ") != std::string::npos)
 			{
 				std::cout << "error " << std::endl;
-				status =  -1;
+				status =  -1; break ;
 			}
 			if (temp.root_dir.find_last_of("/") != temp.root_dir.length() - 1)
 			{
@@ -199,10 +199,13 @@ int parsing::save_data(std::vector <std::string> server)
 			{
 				std::cout << "error "<< std::endl;
 				status =  -1;
+				break ;
+
 			}
 			if (check_ints(status) == -1) {
 				std::cout << "Error, please specify error status" << std::endl;
 				status =  -1;
+				break ;
 			}
 			temp.errors.insert(std::make_pair(std::atoi(status.c_str()), path));
 			// // temp.default_data.insert(std::make_pair("error", _value));
@@ -215,17 +218,20 @@ int parsing::save_data(std::vector <std::string> server)
 			{
 				std::cout << "error space " << std::endl;
 				status =  -1;
+				break ;
 			}
 			if (directory.find_first_of("/") != 0)
 			{
 				std::cout << "error, please add a slash at the first of location name" << std::endl;
 				status =  -1;
+				break ;
 			}
 			it++;
 			if (directory.find_first_of("{}") != std::string::npos || directory.find("/") == std::string::npos)
 			{
 				std::cout << "Error with one of the locations "  << std::endl;
 				status =  -1;
+				break ;
 			}
 			std::map<std::string, std::string> tem;
 			while (it->find("}") == std::string::npos )
@@ -312,6 +318,11 @@ int parsing::save_data(std::vector <std::string> server)
 						status =  -1;
 					}
 				}
+				else if (_key != "{" && _key != "}" && _key.empty() == false)
+				{
+					std::cout << "error undefined variable in location" << std::endl;
+					status = -1;
+				}
 				if (_value.find_first_of("{}") == std::string::npos)
 				{
 					if (_key == "cgi")
@@ -327,6 +338,7 @@ int parsing::save_data(std::vector <std::string> server)
 					std::cout << "ERROR " << std::endl;
 					status =  -1;
 				}
+
 				it++;
 			}
 			locations.insert(std::make_pair(directory, tem));
