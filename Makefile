@@ -3,17 +3,17 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+         #
+#    By: hharik <hharik@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/05/27 13:30:26 by ajemraou          #+#    #+#              #
-#    Updated: 2023/06/07 15:26:08 by ajemraou         ###   ########.fr        #
+#    Updated: 2023/06/18 10:26:35 by hharik           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 
 CC = g++ 
 
-CFLAGE = -Wall -Werror -Wextra
+CFLAGE = -Wall -Werror -Wextra -std=c++98
 
 SRC =	main.cpp \
 		parsing.cpp \

@@ -6,7 +6,7 @@
 /*   By: hharik <hharik@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/17 14:00:04 by hharik            #+#    #+#             */
-/*   Updated: 2023/06/17 14:01:29 by hharik           ###   ########.fr       */
+/*   Updated: 2023/06/18 09:04:23 by hharik           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -277,7 +277,7 @@ void request::handle_PostMethod()
 		}
 	}
 	/* Check if this file can be passed as an input to the CGI */
-	else
+	else if (status_code == 0)
 	{
 		status_code = treat_target_resource("cgi " + get_extension(d_header->new_uri), "", d_header->cgi_path);
 		/* This file can be passed as an input to the CGI  */
@@ -310,6 +310,10 @@ void request::handle_PostMethod()
 		{
 			d_header->res_status = 403;
 		}
+	}
+	else
+	{
+		d_header->res_status = 404;	
 	}
 }
 

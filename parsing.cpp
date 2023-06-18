@@ -6,7 +6,7 @@
 /*   By: hharik <hharik@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/17 13:59:47 by hharik            #+#    #+#             */
-/*   Updated: 2023/06/17 13:59:48 by hharik           ###   ########.fr       */
+/*   Updated: 2023/06/18 10:21:19 by hharik           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -376,11 +376,17 @@ void parsing::readAndParse()
 		while(getline(file, buff))
 		{
 			//first reduce spaces
-			buff = reduce(buff, " \t\n\r\v\f");
-			// std::cout << "*" << buff << "*" << std::endl;
-			tess += buff;
-			before_file.push_back(buff);
-			// std::cout << buff << std::endl;
+			if (buff.empty() == false)
+			{
+				buff = reduce(buff, " \t\n\r\v\f");
+				tess += buff;
+				before_file.push_back(buff);
+			}
+		}
+		if (before_file.size() == 0)
+		{
+			std::cout << "CONFIG EMPTY" << std::endl;
+			exit(1);
 		}
 		if ((before_file.end() - 1)->find("};") == std::string::npos || brackets.size() > 0 || end_brackets.size() > 0)
 		{

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
+/*   By: hharik <hharik@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 16:39:08 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/16 20:53:27 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/18 09:28:20 by hharik           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,11 +115,17 @@ int Client::is_file_or_directory(const char *str, data_header *header_ptr)
 			return (0);
 		else if (S_ISDIR(spath.st_mode))
 		{
-			if ((spath.st_mode & S_IWUSR) == 0)
+			// if ((spath.st_mode & S_IWUSR) == 0)
+			// 	header_ptr->write_p = false;
+			// if ((spath.st_mode & S_IRUSR) == 0)
+			// 	header_ptr->read_p = false;
+			// if ((spath.st_mode & S_IXUSR) == 0)
+			// 	header_ptr->exec_p = false;
+			if (access(str, W_OK) != 0)
 				header_ptr->write_p = false;
-			if ((spath.st_mode & S_IRUSR) == 0)
+			if (access(str, R_OK) != 0)
 				header_ptr->read_p = false;
-			if ((spath.st_mode & S_IXUSR) == 0)
+			if (access(str, X_OK) != 0)
 				header_ptr->exec_p = false;
 			return (1);
 		}
