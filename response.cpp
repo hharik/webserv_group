@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/30 12:25:24 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/16 19:05:51 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/19 09:49:07 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,7 @@
 #include "client.hpp"
 #include "parsing.hpp"
 #include "response.hpp"
-#include <new>
-#include <unistd.h>
+#include <cstdlib>
 
 response::response( const data_serv *dptr,  data_header *hptr ):server_data(dptr), header_data(hptr)
 {
@@ -28,10 +27,12 @@ response::response( const data_serv *dptr,  data_header *hptr ):server_data(dptr
 	auto_index = false;
 	content_length = 0;
 	sended_bytes = 0;
+	status = new int;
 }
 
 response::~response( )
 {
+	delete status;
 	if (header_data->_is_cgi == true)
 	{
 		/* Kill the child and close their FD if it's still running */
@@ -92,7 +93,7 @@ void	response::response_handler( int client_fd )
 			{
 				is_alive = false;
 				/* returns true if the child terminated normally */
-				if (WIFEXITED(status) == false)
+				if (WIFEXITED(*status) == false)
 				{
 					header_data->res_status = 500;
 				}
@@ -100,21 +101,21 @@ void	response::response_handler( int client_fd )
 		}
 		create_header();
 		Send_the_Header(client_fd);
-		std::cout << "----------------* HEADER *----------------" << std::endl;
-		std::cout << header << std::endl;
-		std::cout << "----------------* HEADER *----------------" << std::endl;
-		std::cout << "============= #INFO# ================" << std::endl;
-		std::cout << "NEW URI                     : [" << header_data->new_uri << "]" << std::endl;
-		std::cout << "METHOD                  : [" << header_data->method << "]" << std::endl;
-		std::cout << "STATUS CODE             : [" << header_data->res_status << "]" <<  std::endl;
-		std::cout << "Requested Resource      : [" << header_data->requested_resource << "]" << std::endl;
-		std::cout << "cgi_script              : [" << header_data->cgi_script << "]" << std::endl;
-		std::cout << "cgi_path                : [" << header_data->cgi_path << "]" << std::endl;
-		if (header_data->_is_cgi == true)
-			std::cout << "CGI                 : ON" << std::endl;
-		else
-		 	std::cout << "CGI                 : OFF" << std::endl;
-		std::cout << "============= #INFO# ================" << std::endl;
+		// std::cout << "----------------* HEADER *----------------" << std::endl;
+		// std::cout << header << std::endl;
+		// std::cout << "----------------* HEADER *----------------" << std::endl;
+		// std::cout << "============= #INFO# ================" << std::endl;
+		// std::cout << "NEW URI                     : [" << header_data->new_uri << "]" << std::endl;
+		// std::cout << "METHOD                  : [" << header_data->method << "]" << std::endl;
+		// std::cout << "STATUS CODE             : [" << header_data->res_status << "]" <<  std::endl;
+		// std::cout << "Requested Resource      : [" << header_data->requested_resource << "]" << std::endl;
+		// std::cout << "cgi_script              : [" << header_data->cgi_script << "]" << std::endl;
+		// std::cout << "cgi_path                : [" << header_data->cgi_path << "]" << std::endl;
+		// if (header_data->_is_cgi == true)
+		// 	std::cout << "CGI                 : ON" << std::endl;
+		// else
+		//  	std::cout << "CGI                 : OFF" << std::endl;
+		// std::cout << "============= #INFO# ================" << std::endl;
 	}
 	else
 	{
@@ -157,7 +158,7 @@ void	response::Send_the_Body( int client_fd)
 			return ;
 		}
 		sended_bytes += size;
-		if (sended_bytes >= content_length)
+		if (sended_bytes >= content_length || requested_file.eof() == true)
 			eof = true;
 	}
 	else if (default_response == true)
@@ -204,9 +205,10 @@ int	response::handle_CGI_timeOut()
 		kill(pid, 0);
 		is_alive = false;
 		header_data->res_status = 504;
+		return (1);
 		/* Send a response back to the client indicating there is a time out */
 	}
-	return (1);
+	return (0);
 }
 
 std::string time_date()
@@ -291,7 +293,7 @@ void	response::handle_cgi()
 		}
 		execve(agv[0], agv, env);
 		perror("execve");
-		exit(EXIT_SUCCESS);
+		exit(EXIT_FAILURE);
 	}
 }
 
@@ -388,18 +390,17 @@ int	response::search_inside_location( const std::string to_find )
 /* GET method */
 void	response::Get_method()
 {
-	std::cout << "[GET]" << std::endl;
 	int			ind;
 
 	ind = header_data->new_uri.size() - 1;
 	/* requesting a directory */
 	if (header_data->is_dir == true)
 	{
-		std::cout << "[" << header_data->requested_resource << "]" << " is a directory" << std::endl;
+		// std::cout << "[" << header_data->requested_resource << "]" << " is a directory" << std::endl;
 		/* requesting a directory without '/' at the end */
 		if (header_data->new_uri[ind] != '/')
 		{
-			std::cout << "[" << header_data->requested_resource << "]" << " is redirected" << std::endl;
+			// std::cout << "[" << header_data->requested_resource << "]" << " is redirected" << std::endl;
 			header_data->res_status = 301;
 			header_data->new_uri += "/";
 			return ;
@@ -409,7 +410,7 @@ void	response::Get_method()
 	/* requesting a file */
 	else
 	{
-		std::cout << "[" << header_data->requested_resource << "]" << " is a file" << std::endl;
+		// std::cout << "[" << header_data->requested_resource << "]" << " is a file" << std::endl;
 		serve_the_file();
 	}
 }
@@ -630,6 +631,8 @@ std::string	response::get_start_line()
 		response_content += S500;
 	else if (header_data->res_status == 501)
 		response_content += S501;
+	else if (header_data->res_status == 504)
+		response_content += S504;
 	start += response_content;
 	start += "\r\n";
 	return (start);

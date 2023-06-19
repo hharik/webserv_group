@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/26 18:03:44 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/16 20:23:31 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/19 08:50:22 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,7 @@ Socket::~Socket()
 {
 	delete user_data;
 	delete server_data;
+	freeaddrinfo(result);
 }
 
 int	Socket::Create_the_socket( )
@@ -72,7 +73,7 @@ int	Socket::Create_the_socket( )
 		perror("Server : Bind ");
 		return -1;
 	}
-	status = listen(sockfd, BACKLOG);
+	status = listen(sockfd, SOMAXCONN);
 	if (status < 0)
 	{
 		perror("Server : Bind ");
@@ -99,8 +100,8 @@ void	Socket::attach_server_socket( int kq )
 
 void	Socket::Accept_new_connection( int kq )
 {
-	clients.push_back(new Client(server_data, this));
 	/* accept new connction */
+	clients.push_back(new Client(server_data, this));
 	clients_ind = clients.size() - 1;
 	clients[clients_ind]->client_connection(sockfd);
 	clients[clients_ind]->attach_client_socket(kq);
@@ -108,24 +109,24 @@ void	Socket::Accept_new_connection( int kq )
 
 void	Socket::Destruct_client(  )
 {
-	size_t	index;
+	std::vector<Client*>::iterator beg;
+	std::vector<Client*>::iterator end;
 
-	index = 0;
-	while (index < clients.size())
+	beg = clients.begin();
+	end = clients.end();
+	while (beg != end)
 	{
-		if (clients[index]->eof() == true)
+		if ((*beg)->eof() == true)
 		{
-			delete clients[index];
-			clients.erase(clients.begin() + index);
+			delete *beg;
+			clients.erase(beg);
+			break ;
 		}
-		else
-		{
-			index++;
-		}
+		beg++;
 	}
 }
 
-void	Socket::set_server_data(data_serv &data)
+void	Socket::set_server_data( data_serv &data )
 {
 	*server_data = data;
 }

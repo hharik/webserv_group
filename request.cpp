@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hharik <hharik@student.42.fr>              +#+  +:+       +#+        */
+/*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/17 14:00:04 by hharik            #+#    #+#             */
-/*   Updated: 2023/06/18 09:04:23 by hharik           ###   ########.fr       */
+/*   Updated: 2023/06/19 09:43:47 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,8 @@
 
 #include "client.hpp"
 #include "parsing.hpp"
+#include "request.hpp"
+
 
 request::request( const data_serv *dptr, data_header *hptr ) : server_data(dptr), d_header(hptr), chunked_size(-2), size(0),	 end_of_file(false)
 {
@@ -22,16 +24,26 @@ request::request( const data_serv *dptr, data_header *hptr ) : server_data(dptr)
 
 request::~request()
 {
-	
+
 }
 
 const std::string	request::get_extension( const std::string& target )
 {
 	std::string	result(target);
-	int	ind;
+	size_t		ind;
 
 	ind = target.find_last_of('.');
-	result.erase(0, ind);
+	if (ind != std::string::npos)
+	{
+		result.erase(0, ind);
+		ind = result.find_first_of('/');
+		if (ind != std::string::npos)
+		{
+			d_header->path_info = result;
+			d_header->path_info.erase(0, ind);
+			result.resize(ind);
+		}
+	}
 	return (result);
 }
 
@@ -95,7 +107,10 @@ int	request::generate_name()
 int		request::path_is_exist( std::string &path )
 {
 	int		ind;
-
+	
+	d_header->read_p = true;
+	d_header->write_p = true;
+	d_header->exec_p = true;
 	ind = path.size() - 1;
 	if (access(path.c_str(), F_OK))
 	{
@@ -175,6 +190,41 @@ void	request::handle_DeleteMethod()
 	}
 }
 
+void	request::CGI_Handler( )
+{
+	std::string	extension;
+	int			status_code;
+	int			new_size;
+
+	/* Check if the requested resource can be passed as an input to the CGI */
+	extension = get_extension(d_header->requested_resource);
+	status_code = treat_target_resource("cgi " + extension, "", d_header->cgi_path);
+	if (status_code == 1)
+	{
+		/* Check if the cgi-path exists and has execution permission */
+		status_code = path_is_exist(d_header->cgi_path);
+		/* CGI Path Not Found */
+		if (status_code == 0)
+		{
+			return ;
+		}
+		/* CGI Path Not authorized for execution */
+		else if (d_header->exec_p == false)
+		{
+			d_header->res_status = 403;
+		}
+		new_size = d_header->requested_resource.size() - d_header->path_info.size();
+		d_header->requested_resource.resize(new_size);
+		d_header->_is_cgi = true;
+	}
+	/* needs check if this input file has the permission  */
+	path_is_exist(d_header->requested_resource);
+	if (d_header->read_p == false)
+	{
+		d_header->res_status = 403;
+	}
+}
+
 void	request::handle_GetMethod()
 {
 	int		status_code;
@@ -198,30 +248,11 @@ void	request::handle_GetMethod()
 			{
 				d_header->res_status = 403;
 			}
+			return ;
 		}
-		/* Requested Resource is not a Directory */
-		else
-		{
-			status_code = path_is_exist(d_header->requested_resource);
-			/* Check if this file has read permission */
-			if (d_header->read_p == false)
-			{
-				d_header->res_status = 403;
-			}
-			/* Check if this file can be passed as an input to the CGI */
-			status_code = treat_target_resource("cgi " + get_extension(d_header->requested_resource), "", d_header->cgi_path);
-			/* needs check if this input file has the permission  */
-			if (status_code == 1)
-			{
-				d_header->_is_cgi = true;
-			}
-		}
-
 	}
-	else
-	{
-		d_header->res_status = 404;
-	}
+	/* Requested Resource is not a Directory */
+	CGI_Handler();
 }
 
 void	request::ProvideToUpload( std::string path)
@@ -313,7 +344,7 @@ void request::handle_PostMethod()
 	}
 	else
 	{
-		d_header->res_status = 404;	
+		d_header->res_status = 404;
 	}
 }
 
@@ -326,6 +357,8 @@ int	request::get_requested_resource()
 		handle_PostMethod();
 	else if (d_header->method == "DELETE")
 		handle_DeleteMethod();
+	if (FAILED(d_header->res_status))
+		d_header->_is_cgi = false;
 	return (d_header->res_status);
 }
 
@@ -521,27 +554,21 @@ void request::parse(std::string &header)
 		/* check if the requested uri exist in locations block */
 		if (find_required_location() < 0)
 		{
-		std::cout << "STATUS_CODE 1 : " << d_header->res_status << std::endl;
 			return ;
 		}
 		/* requested uri is exist */
 		/* if this location have a redirection */
 		else if (check_for_redirection() < 0)
 		{
-		std::cout << "STATUS_CODE 2 : " << d_header->res_status << std::endl;
-
 			return ;
 		}
 		/* if this method is allowed in this location */
 		else if (allowed_methods() < 0)
 		{
-		std::cout << "STATUS_CODE 3 : " << d_header->res_status << std::endl;
-
 			return ;
 		}
 		else if (get_requested_resource() != 0)
 		{
-			std::cout << "STATUS_CODE 4 : " << d_header->res_status << std::endl;
 			return ;
 		}
 		/* generate the name of the file if hte method is POST */

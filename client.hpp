@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 14:51:32 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/16 20:51:23 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/19 07:52:12 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,7 @@ struct data_header {
 	std::string		requested_resource;
 	std::string		cgi_path;
 	std::string		cgi_script;
+	std::string		path_info;
 
 	int				Content_Length;
 	int				res_status;
@@ -56,8 +57,7 @@ struct data_header {
 
 class Client
 {
-	// const data_serv		*server_data;
-	Socket		*Base;
+	Socket				*Base;
 	User_data			*user_data;
 	char				buffer[BUFFER_SIZE];
 	int					fd;
@@ -77,7 +77,7 @@ public:
 
 	void	client_connection( int );
 	void	attach_client_socket( int );
-	void	read_from_socket();
+	int		read_from_socket();
 	void	send_the_response();
 
 	static int is_file_or_directory(const char *str, data_header *);

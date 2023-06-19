@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hharik <hharik@student.42.fr>              +#+  +:+       +#+        */
+/*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/17 14:00:07 by hharik            #+#    #+#             */
-/*   Updated: 2023/06/17 14:00:21 by hharik           ###   ########.fr       */
+/*   Updated: 2023/06/18 17:34:25 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,7 @@ class request {
 	/* check if location has upload enabled or not*/
 
 	int	generate_name();
-
+	void    CGI_Handler( );
 
 };
 #endif

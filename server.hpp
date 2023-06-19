@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 14:49:46 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/16 20:09:25 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/19 09:23:37 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ class Server
 	std::vector<Socket*>	servers;
 	User_data				*user_data;
 	int						kq;
-	unsigned int			events_nbr;
+	long					events_nbr;
 	unsigned int			events_size;
 	bool					new_event;
 	struct 	kevent			*events;

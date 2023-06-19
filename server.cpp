@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:06:59 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/16 20:18:46 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/19 08:40:45 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,9 @@ Server::~Server()
 
 void	Server::Create_http_servers()
 {
-	while( 1 )
+	int 	status;
+
+	while( true )
 	{
 		Wait_for_incoming_events();
 		for(unsigned int i = 0; i < events_nbr; i++)
@@ -73,14 +75,18 @@ void	Server::Create_http_servers()
 				events_size++;
 				new_event = true;
 			}
-			/* client request */
-			else if (events[i].filter == EVFILT_READ)
-				user_data->get_client()->read_from_socket();
-			/* send the response to the client */
-			if (events[i].filter == EVFILT_WRITE)
+			else if (user_data->get_status() == false)
 			{
-				user_data->get_client()->send_the_response();
-				if (user_data->get_client()->eof() == true)
+				if (events[i].filter == EVFILT_READ)
+				{
+					status = user_data->get_client()->read_from_socket();
+				}
+				/* send the response to the client */
+				if (status == 1 && events[i].filter == EVFILT_WRITE)
+				{
+					user_data->get_client()->send_the_response();
+				}
+			 	if (status == -1 || user_data->get_client()->eof() == true)
 				{
 					close(user_data->get_client()->get_fd());
 					user_data->get_socket()->Destruct_client();
@@ -91,7 +97,6 @@ void	Server::Create_http_servers()
 			}
 		}
 	}
-	
 }
 
 void	Server::Create_queue_object()

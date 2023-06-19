@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parsing.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hharik <hharik@student.42.fr>              +#+  +:+       +#+        */
+/*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/17 13:59:59 by hharik            #+#    #+#             */
-/*   Updated: 2023/06/17 14:05:01 by hharik           ###   ########.fr       */
+/*   Updated: 2023/06/19 09:25:53 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 #pragma once
 
+#include <cstring>
 #include <sys/_types/_size_t.h>
 #include <iostream>
 #include <sys/_types/_socklen_t.h>
@@ -30,6 +31,7 @@
 #include <dirent.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <algorithm>
 /* hamid's includes */
 # include <map>
 # include <stack>
@@ -48,7 +50,6 @@ struct data_header;
 // macros
 # define INSERV 10
 # define OUTSERV 5
-#define BACKLOG 10
 #define BUFFER_SIZE 2000
 #define CMP(path)(strcmp(path, ".") && strcmp(path, ".."))
 #define VALID_STATUS(x) x >= 100 && x < 600 ? true : false

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parsing.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hharik <hharik@student.42.fr>              +#+  +:+       +#+        */
+/*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/17 13:59:47 by hharik            #+#    #+#             */
-/*   Updated: 2023/06/18 11:31:11 by hharik           ###   ########.fr       */
+/*   Updated: 2023/06/19 09:22:34 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -380,7 +380,7 @@ int parsing::save_data(std::vector <std::string> server)
 void parsing::readAndParse()
 { 
 	std::string buff;
-	file.open(filename);
+	file.open(filename.c_str());
 	if (file.is_open())
 	{
 		std::string tess;
