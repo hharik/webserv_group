@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/30 12:25:24 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/19 09:49:07 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/19 11:10:17 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,6 @@
 #include "client.hpp"
 #include "parsing.hpp"
 #include "response.hpp"
-#include <cstdlib>
 
 response::response( const data_serv *dptr,  data_header *hptr ):server_data(dptr), header_data(hptr)
 {

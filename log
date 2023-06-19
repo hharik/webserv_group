@@ -1,0 +1,31 @@
+==72443== Memcheck, a memory error detector
+==72443== Copyright (C) 2002-2022, and GNU GPL'd, by Julian Seward et al.
+==72443== Using Valgrind-3.22.0.GIT-lbmacos and LibVEX; rerun with -h for copyright info
+==72443== Command: ./webserv config.conf
+==72443== 
+--72443-- run: /usr/bin/dsymutil "./webserv"
+--72443-- UNKNOWN mach_msg unhandled MACH_SEND_TRAILER option
+==72443== Warning: set address range perms: large range [0x154000040, 0x2555b7de7) (undefined)
+==72443== Syscall param open(filename) points to uninitialised byte(s)
+==72443==    at 0x100A7518E: open$NOCANCEL (in /usr/lib/system/libsystem_kernel.dylib)
+==72443==    by 0x1008A2A97: fopen (in /usr/lib/system/libsystem_c.dylib)
+==72443==    by 0x10018FAAD: std::__basic_file<char>::open(char const*, std::_Ios_Openmode, int) (in /goinfre/ajemraou/.brew/Cellar/gcc/13.1.0/lib/gcc/current/libstdc++.6.dylib)
+==72443==    by 0x1001F6571: std::basic_filebuf<char, std::char_traits<char> >::open(char const*, std::_Ios_Openmode) (in /goinfre/ajemraou/.brew/Cellar/gcc/13.1.0/lib/gcc/current/libstdc++.6.dylib)
+==72443==    by 0x1001F682F: std::basic_fstream<char, std::char_traits<char> >::open(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::_Ios_Openmode) (in /goinfre/ajemraou/.brew/Cellar/gcc/13.1.0/lib/gcc/current/libstdc++.6.dylib)
+==72443==    by 0x1000146E1: request::save_binary(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&) (request.cpp:444)
+==72443==    by 0x100015445: request::parse(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&) (request.cpp:615)
+==72443==    by 0x100012277: Client::read_from_socket() (client.cpp:98)
+==72443==    by 0x10000E2DE: Server::Create_http_servers() (server.cpp:82)
+==72443==    by 0x100000D1D: main (main.cpp:31)
+==72443==  Address 0x154000056 is 22 bytes inside a block of size 4,317,740,455 alloc'd
+==72443==    at 0x100170F65: operator new(unsigned long) (in /goinfre/ajemraou/.brew/Cellar/valgrind/HEAD-bdcb3b9/libexec/valgrind/vgpreload_memcheck-amd64-darwin.so)
+==72443==    by 0x10022CA19: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_mutate(unsigned long, unsigned long, char const*, unsigned long) (in /goinfre/ajemraou/.brew/Cellar/gcc/13.1.0/lib/gcc/current/libstdc++.6.dylib)
+==72443==    by 0x10022E2E7: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_append(char const*, unsigned long) (in /goinfre/ajemraou/.brew/Cellar/gcc/13.1.0/lib/gcc/current/libstdc++.6.dylib)
+==72443==    by 0x10001BF86: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > std::operator+<char, std::char_traits<char>, std::allocator<char> >(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) (basic_string.h:3638)
+==72443==    by 0x100012C00: request::generate_name() (request.cpp:89)
+==72443==    by 0x100015150: request::parse(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&) (request.cpp:578)
+==72443==    by 0x100012277: Client::read_from_socket() (client.cpp:98)
+==72443==    by 0x10000E2DE: Server::Create_http_servers() (server.cpp:82)
+==72443==    by 0x100000D1D: main (main.cpp:31)
+==72443== 
+==72443== Warning: set address range perms: large range [0x154000028, 0x2555b7dff) (noaccess)

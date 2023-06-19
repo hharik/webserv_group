@@ -6,14 +6,14 @@
 #    By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/05/27 13:30:26 by ajemraou          #+#    #+#              #
-#    Updated: 2023/06/19 10:08:02 by ajemraou         ###   ########.fr        #
+#    Updated: 2023/06/19 11:29:08 by ajemraou         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 
-CC = g++
+CC = g++-13 -g
 
-CFLAGE = -Wall -Werror -Wextra -std=c++98 #-fsanitize=address 
+CFLAGE = -Wall -Werror -Wextra -std=c++11 #-fsanitize=address 
 
 SRC =	main.cpp \
 		parsing.cpp \

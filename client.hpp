@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 14:51:32 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/19 07:52:12 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/19 11:44:33 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,8 +82,8 @@ public:
 
 	static int is_file_or_directory(const char *str, data_header *);
 
-	bool eof();
-	int	get_fd();
+	bool 	eof();
+	void	close_fd();
 };
 
 #endif /* CLIENT_HPP */

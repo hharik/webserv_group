@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 16:39:08 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/19 09:42:26 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/19 11:14:41 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,12 +45,12 @@ void	Client::client_connection( int server_socket )
 	fd = accept(server_socket, &client, &len);
 	if (fd < 0)
 	{
-		client_response->set_eof(true);
+		user_data->set_is_terminated(true);
 		perror("Client : Accept ");
 	}
 	else if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0)
 	{
-		client_response->set_eof(true);
+		user_data->set_is_terminated(true);
 		perror("Client : Fcntl ");
 		return ;
 	}
@@ -66,7 +66,7 @@ void	Client::attach_client_socket( int kq )
 	if (kevent(kq, client_event, 2, NULL, 0, NULL) < 0)
 	{
 		perror("Client : Kevent ");
-		client_response->set_eof(true);
+		user_data->set_is_terminated(true);
 	}
 }
  
@@ -75,6 +75,8 @@ void	Client::send_the_response()
 	if (header_data->res_status > 0 || client_request->end_of_file == true)
 	{
 		client_response->response_handler(fd);
+		if (client_response->eof == true)
+			user_data->set_is_terminated(true);
 	}
 }
 
@@ -85,12 +87,11 @@ int	Client::read_from_socket()
 	if ( nbytes > 0 )
 	{
 		request_buffer.append(buffer, nbytes);
-		std::cout << buffer << std::endl;
 	}
 	else
 	{
 		perror("Client : recv ");
-		client_response->set_eof(true);
+		user_data->set_is_terminated(true);
 		return (-1);
 	}
 	if (client_request->end_of_file == false && header_data->res_status == 0)
@@ -98,14 +99,14 @@ int	Client::read_from_socket()
 	return  (1);
 }
 
-bool	Client::eof()
-{
-	return client_response->IsEndOfFile();
-}
+// bool	Client::eof()
+// {
+// 	return client_response->IsEndOfFile();
+// }
 
-int	Client::get_fd()
+void	Client::close_fd()
 {
-	return fd;
+	close(fd);
 }
 
 int Client::is_file_or_directory(const char *str, data_header *header_ptr)

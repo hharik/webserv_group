@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 14:50:54 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/16 20:20:13 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/19 11:00:02 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@ public:
 	void		Accept_new_connection( int );
 	void		Wait_for_incoming_events( int );
 	void		set_server_data(data_serv&);
-	void		Destruct_client(  );
+	void		Destruct_client( Client * );
 };
 
 #endif /* SOCKET_HPP */

@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/17 14:00:04 by hharik            #+#    #+#             */
-/*   Updated: 2023/06/19 09:43:47 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/19 12:04:14 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,9 @@
 #include "client.hpp"
 #include "parsing.hpp"
 #include "request.hpp"
+#include <exception>
+#include <nl_types.h>
+#include <string>
 
 
 request::request( const data_serv *dptr, data_header *hptr ) : server_data(dptr), d_header(hptr), chunked_size(-2), size(0),	 end_of_file(false)
@@ -70,10 +73,17 @@ int	request::generate_name()
 {
 	/*error u dont generate names when uploading to me files 
 	only gives directory in requested_resource */
+	std::map<std::string, std::string>::iterator it;
+	std::string	extension;
 	int status;
 	size_t	ind;
 
-	new_name = d_header->requested_resource;
+	it = parsing::mime_type.find(d_header->Content_type);
+	if (it != parsing::mime_type.end())
+	{
+		extension += "." + it->second;	
+	}
+	new_name = d_header->requested_resource;	
 	ind = d_header->new_uri.size();
 	if (d_header->_is_cgi == false)
 	{
@@ -84,14 +94,14 @@ int	request::generate_name()
 				d_header->res_status = 301;
 				return (0);
 			}
-			d_header->requested_resource += time_date() +  "." + parsing::mime_type.find(d_header->Content_type)->second;
+			d_header->requested_resource += time_date() + extension;
 		}
 		else
 		{
 			ind = new_name.find_last_of(".");
 			if (ind != std::string::npos)
 				new_name.resize(ind);
-			new_name += "." + parsing::mime_type.find(d_header->Content_type)->second;
+			new_name += extension;
 			status = rename(d_header->requested_resource.c_str(), new_name.c_str());
 			if (status == 0)
 				d_header->requested_resource = new_name;
@@ -99,7 +109,7 @@ int	request::generate_name()
 	}
 	else if (d_header->_is_cgi == true)
 	{
-		d_header->requested_resource += "/tmp/" + time_date();
+		d_header->requested_resource = "/tmp/" + time_date();
 	}
 	return (1);
 }
@@ -376,9 +386,6 @@ std::string request::time_date()
 	strftime(date_string, 50, "%B-%d-%Y-%H-%M-%S", curr_tm);
 	return std::string(date_string);
 }
-
-
-
 
 void	request::save_chunk_improve(std::string &body) 
 {

@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/26 18:03:44 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/19 08:50:22 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/19 11:03:33 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,7 +107,7 @@ void	Socket::Accept_new_connection( int kq )
 	clients[clients_ind]->attach_client_socket(kq);
 }
 
-void	Socket::Destruct_client(  )
+void	Socket::Destruct_client( Client *address )
 {
 	std::vector<Client*>::iterator beg;
 	std::vector<Client*>::iterator end;
@@ -116,9 +116,8 @@ void	Socket::Destruct_client(  )
 	end = clients.end();
 	while (beg != end)
 	{
-		if ((*beg)->eof() == true)
+		if ((*beg) == address)
 		{
-			delete *beg;
 			clients.erase(beg);
 			break ;
 		}

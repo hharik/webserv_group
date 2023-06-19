@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:06:59 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/19 08:40:45 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/19 11:04:58 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,13 +86,14 @@ void	Server::Create_http_servers()
 				{
 					user_data->get_client()->send_the_response();
 				}
-			 	if (status == -1 || user_data->get_client()->eof() == true)
+			 	if (status == -1 || user_data->get_is_terminated() == true)
 				{
-					close(user_data->get_client()->get_fd());
-					user_data->get_socket()->Destruct_client();
+					user_data->get_client()->close_fd();
+					user_data->get_socket()->Destruct_client( user_data->get_client() );
 					events_size--;
 					new_event = true;
 					delete user_data;
+					break ;
 				}
 			}
 		}
