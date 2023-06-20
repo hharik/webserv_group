@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:06:59 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/19 11:04:58 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/20 13:15:10 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,8 @@
 #include "user_data.hpp"
 #include "server.hpp"
 #include "socket.hpp"
+#include <sys/event.h>
+#include <unistd.h>
 
 Server::Server(const std::string &config_file):parser(config_file), servers()
 {
@@ -56,6 +58,28 @@ Server::~Server()
 	delete [] events;
 }
 
+void	Server::Destroy_clients()
+{
+	std::cout << "N OF EVENTS  : [" << events_nbr << "]" << std::endl;
+	for( int i = 0; i < events_nbr; i++)
+	{
+		if (user_data->get_is_terminated() == true)
+		{
+			user_data = (User_data*)events[i].udata;
+			user_data->get_client()->close_fd();
+			user_data->get_socket()->Destruct_client( user_data->get_client() );
+			events_size--;
+			delete user_data;
+		}
+	}
+	std::cout << "EVENT SISZE : " << events_size << std::endl; 
+	// std::cout << "DESTRUCT THIS CLIENT : " << user_data->get_client()->fd << std::endl;
+	// new_event = true;
+	// Destroy_clients();
+	// // i++;
+	// // break ;
+}
+
 
 
 void	Server::Create_http_servers()
@@ -86,12 +110,23 @@ void	Server::Create_http_servers()
 				{
 					user_data->get_client()->send_the_response();
 				}
+		
 			 	if (status == -1 || user_data->get_is_terminated() == true)
 				{
-					user_data->get_client()->close_fd();
+					EV_SET(&eventToRemove[0], events[i].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+					EV_SET(&eventToRemove[1], events[i].ident, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+					status = kevent(kq, eventToRemove, 2, NULL, 0, NULL);
+					if (status < 0)
+					{
+						std::cout << "ERROR" << std::endl;
+						break ;
+						
+					}
 					user_data->get_socket()->Destruct_client( user_data->get_client() );
 					events_size--;
+					events_nbr--;
 					new_event = true;
+					close(events[i].ident);
 					delete user_data;
 					break ;
 				}

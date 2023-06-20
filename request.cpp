@@ -6,19 +6,13 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/17 14:00:04 by hharik            #+#    #+#             */
-/*   Updated: 2023/06/19 12:04:14 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/20 08:13:02 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
-
 
 #include "client.hpp"
 #include "parsing.hpp"
 #include "request.hpp"
-#include <exception>
-#include <nl_types.h>
-#include <string>
-
 
 request::request( const data_serv *dptr, data_header *hptr ) : server_data(dptr), d_header(hptr), chunked_size(-2), size(0),	 end_of_file(false)
 {
@@ -71,12 +65,10 @@ int	request::treat_target_resource( std::string path, std::string to_append ,std
 
 int	request::generate_name()
 {
-	/*error u dont generate names when uploading to me files 
-	only gives directory in requested_resource */
-	std::map<std::string, std::string>::iterator it;
-	std::string	extension;
-	int status;
-	size_t	ind;
+	std::map<std::string, std::string>::iterator	it;
+	std::string										extension;
+	int 											status;
+	size_t											ind;
 
 	it = parsing::mime_type.find(d_header->Content_type);
 	if (it != parsing::mime_type.end())
@@ -265,11 +257,10 @@ void	request::handle_GetMethod()
 	CGI_Handler();
 }
 
-void	request::ProvideToUpload( std::string path)
+int		request::ProvideToUpload( std::string path)
 {
 	int status;
 
-	std::cout << "Uploading " << path << std::endl;
 	if (access(path.c_str(), F_OK))
 	{
 		update_the_uri(path);
@@ -280,19 +271,29 @@ void	request::ProvideToUpload( std::string path)
 			if (status == -1)
 			{
 				d_header->res_status = 403;
-				return ;
+				return -1;
 			}
 		}
 	}
-	d_header->res_status = 0;
+	return (1);
 }
 
 void request::handle_PostMethod()
 {
 	int		status_code;
-
+	int		size;
 	/* Check if this location has an upload */
 	status_code = treat_target_resource("upload", d_header->new_uri, d_header->requested_resource);
+	if (status_code == 1)
+	{
+		size = d_header->new_uri.size();
+		if (d_header->new_uri[size - 1] == '/')
+		{
+			status_code = ProvideToUpload(d_header->requested_resource.c_str());
+		}
+		if (status_code == -1)
+			return ;
+	}
 	if (status_code == 1 && access(d_header->requested_resource.c_str(), F_OK) == 0)
 	{
 		status_code = Client::is_file_or_directory(d_header->requested_resource.c_str(), d_header);
@@ -354,7 +355,7 @@ void request::handle_PostMethod()
 	}
 	else
 	{
-		d_header->res_status = 404;
+  		d_header->res_status = 404;
 	}
 }
 

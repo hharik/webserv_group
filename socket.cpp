@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/26 18:03:44 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/19 11:03:33 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/20 13:40:52 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #include "client.hpp"
 #include "parsing.hpp"
 #include "user_data.hpp"
+#include <sys/socket.h>
 
 Socket::Socket()
 {
@@ -54,7 +55,7 @@ int	Socket::Create_the_socket( )
 		return -1;
 	}
 	// Set socket options 
-	status = setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &reuseaddr_opt, sizeof(reuseaddr_opt));
+	status = setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &reuseaddr_opt, sizeof(reuseaddr_opt));
     if (status < 0)
 	{
 		perror("Server : Setsockopt ");
@@ -102,6 +103,7 @@ void	Socket::Accept_new_connection( int kq )
 {
 	/* accept new connction */
 	clients.push_back(new Client(server_data, this));
+	std::cout << "NEW_CLIENT" << std::endl;
 	clients_ind = clients.size() - 1;
 	clients[clients_ind]->client_connection(sockfd);
 	clients[clients_ind]->attach_client_socket(kq);

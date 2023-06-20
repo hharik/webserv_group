@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 14:51:32 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/19 11:44:33 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/20 08:26:35 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,6 @@ class Client
 	Socket				*Base;
 	User_data			*user_data;
 	char				buffer[BUFFER_SIZE];
-	int					fd;
 	struct				kevent	client_event[2];
 	struct				sockaddr client;
 	socklen_t			len;
@@ -72,6 +71,7 @@ class Client
 
 public:
 
+	int					fd;
 	Client( const data_serv*,  Socket* );
 	~Client( );
 

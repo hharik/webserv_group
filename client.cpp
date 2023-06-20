@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 16:39:08 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/19 11:14:41 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/20 13:10:50 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@ data_header::data_header() : Content_Length(-2), res_status(0), is_redirect(fals
 
 Client::Client( const data_serv *dptr, Socket *Pbase ): Base(Pbase)
 {
+	fd = -1;
 	header_data = new data_header();
 	user_data = new User_data();
 	client_response = new response(dptr, header_data);
@@ -54,6 +55,11 @@ void	Client::client_connection( int server_socket )
 		perror("Client : Fcntl ");
 		return ;
 	}
+	if (fd == 0)
+	{
+		std::cout << "this Client left the pending queue : " << std::endl;
+		user_data->set_is_terminated(true);
+	}
 }
 
 void	Client::attach_client_socket( int kq )
@@ -63,6 +69,7 @@ void	Client::attach_client_socket( int kq )
 	user_data->set_socket(Base);
 	EV_SET(&client_event[0], fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, user_data);
 	EV_SET(&client_event[1], fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, user_data);
+
 	if (kevent(kq, client_event, 2, NULL, 0, NULL) < 0)
 	{
 		perror("Client : Kevent ");
@@ -90,12 +97,15 @@ int	Client::read_from_socket()
 	}
 	else
 	{
+		std::cout << "RR : " << fd << std::endl; 
 		perror("Client : recv ");
 		user_data->set_is_terminated(true);
 		return (-1);
 	}
 	if (client_request->end_of_file == false && header_data->res_status == 0)
+	{
 		client_request->parse(request_buffer);
+	}
 	return  (1);
 }
 

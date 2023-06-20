@@ -6,14 +6,16 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/30 12:25:24 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/19 11:10:17 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/20 13:59:40 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
 
 #include "client.hpp"
 #include "parsing.hpp"
 #include "response.hpp"
+#include <csignal>
+#include <cstdlib>
+#include <sys/signal.h>
 
 response::response( const data_serv *dptr,  data_header *hptr ):server_data(dptr), header_data(hptr)
 {
@@ -31,13 +33,21 @@ response::response( const data_serv *dptr,  data_header *hptr ):server_data(dptr
 
 response::~response( )
 {
+	if (pid > 0)
+	{
+		std::cout << "KILLED : " << pid << std::endl;
+		kill(pid, SIGKILL);
+	}
 	delete status;
-	if (header_data->_is_cgi == true)
+	// std::cout << "DESTRUCT" << std::endl;
+ 	if (header_data->_is_cgi == true)
 	{
 		/* Kill the child and close their FD if it's still running */
 		if (is_alive == true)
 		{
-			kill(pid, 0);
+			//std::cout << "KILLED : " << pid << std::endl;
+		//	kill(pid, SIGTERM);
+	
 		}
 		close(cgifd[1]);
 		/* Remove the CGI output and input files */
@@ -46,7 +56,6 @@ response::~response( )
 		{
 			unlink(header_data->requested_resource.c_str());
 		}
-		delete [] env;
 	}
 	/* delete the auto index outputfile */
 	if (auto_index == true)
@@ -77,19 +86,21 @@ void	response::response_handler( int client_fd )
 	{
 		if (is_alive == true)
 		{
+			// std::cout << "IS ALIVE : " << pid << std::endl;
 			status_code = waitpid(pid, status, WNOHANG);
 			/* returns 0 if the child is still running */
 			if (status_code == 0)
 			{
-				status_code = handle_CGI_timeOut();
-				if (status_code == 0)
-				{
-					return ;
-				}
+				return ;
+				// status_code = handle_CGI_timeOut();
+				// if (status_code == 0)
+				// {
+				// 	return ;
+				// }
 			}
-			/* The child is finishing their execution */
-			else
+			else if (pid == status_code)
 			{
+				std::cout << "FINISHED : " << pid << std::endl;
 				is_alive = false;
 				/* returns true if the child terminated normally */
 				if (WIFEXITED(*status) == false)
@@ -97,6 +108,12 @@ void	response::response_handler( int client_fd )
 					header_data->res_status = 500;
 				}
 			}
+			else
+			{
+				std::cout << "WAITERROR" << std::endl;
+				kill(pid, SIGTERM);
+			}
+			/* The child is finishing their execution */
 		}
 		create_header();
 		Send_the_Header(client_fd);
@@ -158,7 +175,9 @@ void	response::Send_the_Body( int client_fd)
 		}
 		sended_bytes += size;
 		if (sended_bytes >= content_length || requested_file.eof() == true)
+		{
 			eof = true;
+		}
 	}
 	else if (default_response == true)
 	{
@@ -201,7 +220,7 @@ int	response::handle_CGI_timeOut()
 	end_time = get_time();
 	if (end_time - start_time > 30)
 	{
-		kill(pid, 0);
+		kill(pid, SIGKILL);
 		is_alive = false;
 		header_data->res_status = 504;
 		return (1);
@@ -269,7 +288,6 @@ void	response::handle_cgi()
 	start_time = get_time();
 	cgi_output = "/tmp/" + time_date();
 	cgifd[1] = open(cgi_output.c_str(), O_CREAT | O_RDWR, 0644);
-
 	agv[0] = (char*)header_data->cgi_path.c_str();
 	if (header_data->method == "POST")
 		agv[1] =  (char*)header_data->cgi_script.c_str();
@@ -279,7 +297,10 @@ void	response::handle_cgi()
 	agv[2] = NULL;
 	pid = fork();
 	if(pid == -1)
+	{
 		perror("fork");
+		exit(EXIT_FAILURE);
+	}
 	else if (pid == 0)
 	{
 		dup2(cgifd[1], 1);
@@ -294,6 +315,10 @@ void	response::handle_cgi()
 		perror("execve");
 		exit(EXIT_FAILURE);
 	}
+	std::cout << "CREATE_CHILD_WITH :  " << pid << std::endl;
+	delete [] env;
+	// wait(NULL);
+	// is_alive = false;
 }
 
 
@@ -712,7 +737,7 @@ void	response::Pages()
 {
 	if (header_data->method == "GET" && header_data->res_status == 200)
 		return ;
-	else if (header_data->method == "POST" && header_data->_is_cgi && header_data->res_status == 201)
+	else if (header_data->method == "POST" && header_data->_is_cgi == true && header_data->res_status == 201)
 		return ;
 	if (header_data->res_status >= 400)
 	{
@@ -732,16 +757,16 @@ std::string	response::get_Location()
 {
 	/* Location: http://example.com/dir/dir2/dir3/  */
 	std::string		Location = "Location: ";
-	if (header_data->_is_cgi == true)
-	{
-		iter = cgi_header.find("location");
-		if (iter != cgi_header.end())
-		{
-			Location += iter->second;
-			Location += "\r\n";
-			return (Location);
-		}
-	}
+	// if (header_data->_is_cgi == true)
+	// {
+	// 	iter = cgi_header.find("location");
+	// 	if (iter != cgi_header.end())
+	// 	{
+	// 		Location += iter->second;
+	// 		Location += "\r\n";
+	// 		return (Location);
+	// 	}
+	// }
 	if (header_data->is_redirect == true)
 		Location += header_data->redirect_path;
 	else
@@ -772,6 +797,7 @@ void	response::Parse_Line( std::string line )
 	{
 		key.resize(find);
 		value.erase(0, find + 1);
+
 		if (key == "set-cookie")
 		{
 			cookies.push_back(value);
@@ -810,6 +836,7 @@ void	response::Parse_cgi_header( std::string cgi_header )
 {
 	size_t 	find;
 	std::string res;
+
 	find = cgi_header.find("\r\n\r\n");
 	cgi_body_pos = 0;
 	if (find != std::string::npos)
@@ -873,6 +900,8 @@ void	response::SetCgiStartLine()
 	else
 		header += "200 OK";
 	header += "\r\n";
+	header += Get_Date();
+	header += SERVER;
 }
 
 void	response::Process_Cgi_Header()
@@ -885,7 +914,6 @@ void	response::Process_Cgi_Header()
 	iter = cgi_header.begin();
 	while (iter != end)
 	{
-		std::cout << iter->first << ": " << iter->second << std::endl;
 		Put_Header(iter->first, iter->second);
 		iter++;
 	}
@@ -894,6 +922,10 @@ void	response::Process_Cgi_Header()
 		Put_Header("set-cookie", *beg);
 		beg++;
 	}
+	// if (cgi_header.find("content-length") == cgi_header.end())
+	// {
+	// 	header += "content-length: "	
+	// }
 	header += "\r\n";
 }
 
@@ -905,7 +937,6 @@ void	response::handle_cgi_header( )
 	{
 		memset(buffer, 0, BUFFER_SIZE);
 		requested_file.read(buffer, BUFFER_SIZE);
-		// std::streamsize size = requested_file.gcount();
 		Parse_cgi_header(buffer);
 	}
 	requested_file.close();
@@ -922,7 +953,7 @@ void	response::handle_cgi_header( )
 
 void response::create_header()
 {
-	if (header_data->_is_cgi == true && header_data->res_status < 400)
+	if (header_data->_is_cgi == true && SUCCESS(header_data->res_status) == true)
 	{
 		handle_cgi_header();
 		if (FAILED(header_data->res_status) == true)

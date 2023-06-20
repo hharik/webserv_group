@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/17 14:00:07 by hharik            #+#    #+#             */
-/*   Updated: 2023/06/18 17:34:25 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/20 08:13:13 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,7 @@ class request {
 	void	handle_DeleteMethod();
 	void 	handle_PostMethod();
 	void	default_root( std::string, std::string& );
-	void	ProvideToUpload( std::string );
+	int		ProvideToUpload( std::string );
 	const std::string	get_extension( const std::string& target );
 	/* check if location has upload enabled or not*/
 
