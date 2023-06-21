@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
+/*   By: hharik <hharik@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/30 12:25:24 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/21 16:49:15 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/21 19:55:39 by hharik           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,9 +81,14 @@ int	response::CheckTheCGI_Process()
 	{
 		is_alive = false;
 		/* returns true if the child terminated normally */
-		if (WIFEXITED(*status) == false)
+		if (WIFEXITED(*status) == true)
 		{
-			header_data->res_status = 500;
+			int code;
+			code = WEXITSTATUS(*status);
+			if (code == 1)
+			{			
+				header_data->res_status = 500;
+			}
 		}
 	}
 	else

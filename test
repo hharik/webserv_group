@@ -1,0 +1,4 @@
+localhost:8008/index.js/test.php/file.php is file but it processed as a cgi_script.
+khass execv t failed   500
+khass execv t error pages t handle l permission
+cgi exit status;

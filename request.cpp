@@ -6,7 +6,7 @@
 /*   By: hharik <hharik@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/17 14:00:04 by hharik            #+#    #+#             */
-/*   Updated: 2023/06/21 17:35:54 by hharik           ###   ########.fr       */
+/*   Updated: 2023/06/21 19:39:15 by hharik           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -517,11 +517,11 @@ void request::parse(std::string &header)
 			if (buffer.find("Content-Length:") != std::string::npos)
 			{
 				d_header->Content_Length = atoi((buffer.substr(pos + 2)).c_str());
-				if (d_header->method == "POST" && server_data->max_body_size < d_header->Content_Length)
-				{
-					d_header->res_status = 413;
-					return ;
-				}
+				// if (d_header->method == "POST" && server_data->max_body_size < d_header->Content_Length)
+				// {
+				// 	d_header->res_status = 413;
+				// 	return ;
+				// }
 
 			}
 			if (buffer.find("Content-Type:") != std::string::npos)
@@ -615,11 +615,11 @@ void request::parse(std::string &header)
 		if (d_header->transfer_encoding.empty() == false)
 		{
 			save_chunk_improve(header);
-			if (size > server_data->max_body_size)
-			{
-				d_header->res_status = 413;
-				return ;
-			}
+			// if (size > server_data->max_body_size)
+			// {
+			// 	d_header->res_status = 413;
+			// 	return ;
+			// }
 		}
 		else 
 		{
