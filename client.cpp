@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 16:39:08 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/21 09:13:02 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/21 16:07:43 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,7 +87,7 @@ int	Client::read_from_socket()
 
 void	Client::client_index( int index )
 {
-	header_data->client_index = "/" + std::to_string(index);
+	header_data->client_index = "-" + std::to_string(index);
 }
 
 void	Client::close_fd()
@@ -115,4 +115,9 @@ int Client::is_file_or_directory(const char *str, data_header *header_ptr)
 		}
 	}
 	return (-1);
+}
+
+void	Client::SetTemporaryPath( std::string Path )
+{
+	header_data->TempPath = Path;
 }

@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/28 15:43:32 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/21 08:01:01 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/21 16:06:24 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@ class User_data
 {
 	bool	_is_server;
 	bool	_is_terminated;
+	
 	Socket	*socket;
 	Client	*client;
 public:
@@ -29,7 +30,7 @@ public:
 	void	set_is_terminated( bool );
 	void	set_socket( Socket* );
 	void	set_client( Client* );
-	
+
 	bool 	get_status() const;
 	bool	get_is_terminated( ) const;
 	Socket	*get_socket() const;

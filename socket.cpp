@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/26 18:03:44 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/21 07:54:34 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/21 16:56:56 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,6 @@ int	Socket::client_connection(  )
 	}
 	if (fd == 0)
 	{
-		std::cerr << "Socket : This Client left the pending queue ... !" << std::endl;
 		std::cout << "this Client left the pending queue : " << std::endl;
 		return (-1);
 	}
@@ -137,11 +136,32 @@ int	Socket::Accept_new_connection( int kq )
 	}
 	clients.push_back(new Client(server_data, this , client_fd));
 	clients_ind = clients.size() - 1;
-	clients[clients_ind]->attach_client_socket(kq);
-	clients[clients_ind]->client_index(index);
+	clients[clients_ind]->attach_client_socket( kq );
+	clients[clients_ind]->client_index( index );
+	clients[clients_ind]->SetTemporaryPath( tmepPath );
 	index++;
 	return (1);
 }
+
+void		Socket::CreateTemporaryPath(  )
+{
+	status = 1;
+
+	if (getcwd(temp, sizeof(temp)) != NULL)
+	{
+		tmepPath = temp;
+		tmepPath += "/tmp/";
+		if (access(tmepPath.c_str(), F_OK) != 0)
+		{
+			status = mkdir(tmepPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+		}
+		if (status == -1)
+		{
+			tmepPath = "/tmp/";
+		}
+	}
+}
+
 
 void	Socket::Destruct_client( Client *address )
 {

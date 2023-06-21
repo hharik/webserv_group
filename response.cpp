@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/30 12:25:24 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/21 09:26:04 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/21 16:49:15 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,11 +42,7 @@ response::~response( )
 		}
 		close(cgifd[1]);
 		/* Remove the CGI output and input files */
-		
-		if (unlink(cgi_output.c_str()))
-		{
-			std::cout << "REMOVE : FAILED : GG " << cgi_output << std::endl;
-		}
+		unlink(cgi_output.c_str());
 		if (header_data->method == "POST")
 		{
 			unlink(header_data->requested_resource.c_str());
@@ -69,11 +65,12 @@ response::~response( )
 int	response::CheckTheCGI_Process()
 {
 	int		status_code;
-	
+
 	status_code = waitpid(pid, status, WNOHANG);
 	/* returns 0 if the child is still running */
 	if (status_code == 0)
 	{
+		/* Returns 0 if CGI mode is disabled or the process does not expire */
 		status_code = handle_CGI_timeOut();
 		if (status_code == 0)
 		{
@@ -87,7 +84,6 @@ int	response::CheckTheCGI_Process()
 		if (WIFEXITED(*status) == false)
 		{
 			header_data->res_status = 500;
-			return (1);
 		}
 	}
 	else
@@ -95,9 +91,9 @@ int	response::CheckTheCGI_Process()
 		/* In case of the waitpid is failed */
 		kill(pid, SIGTERM);
 		while( waitpid(pid, status, 0) == 0);
-		return (1);
 	}
 	/* The child is finishing their execution */
+	is_alive = false;
 	return (1);
 
 }
@@ -216,9 +212,9 @@ int	response::handle_CGI_timeOut()
 	{
 		kill(pid, SIGKILL);
 		is_alive = false;
+		/* Send a response back to the client indicating there is a time out */
 		header_data->res_status = 504;
 		return (1);
-		/* Send a response back to the client indicating there is a time out */
 	}
 	return (0);
 }
@@ -280,7 +276,7 @@ void	response::handle_cgi()
 
 	/*file to store*/
 	start_time = get_time();
-	cgi_output = header_data->root + time_date() + header_data->client_index;
+	cgi_output = header_data->TempPath + time_date() + header_data->client_index;
 	cgifd[1] = open(cgi_output.c_str(), O_CREAT | O_RDWR, 0644);
 	agv[0] = (char*)header_data->cgi_path.c_str();
 	if (header_data->method == "POST")
@@ -652,6 +648,8 @@ std::string	response::get_start_line()
 		response_content += S502;
 	else if (header_data->res_status == 504)
 		response_content += S504;
+	else if (header_data->res_status == 505)
+		response_content += S505;
 	start += response_content;
 	start += "\r\n";
 	return (start);
@@ -811,7 +809,8 @@ void	response::Parse_Line( std::string line )
 std::string	toLowerCase(const std::string& str)
 {
     std::string result;
-    for (std::size_t i = 0; i < str.length(); ++i) {
+    for (std::size_t i = 0; i < str.length(); ++i)
+	{
         result += std::tolower(str[i]);
     }
     return result;
@@ -829,7 +828,6 @@ void	response::Parse_cgi_header( std::string cgi_header )
 		cgi_body_pos = find + 4;
 		cgi_header.resize(find + 2);
 		find = cgi_header.find_first_of("\r\n");
-		// cgi_body_pos += find;
 		cgi_start_line = cgi_header;
 		cgi_start_line.resize(find);
 		while (find != std::string::npos)
@@ -863,28 +861,31 @@ void	response::SetCgiStartLine()
 {
 	std::map<std::string, std::string>::iterator end = cgi_header.end();
 	size_t	find;
+	bool	status;
 	/* CGI start line */
-	header += HTTP_V;
+	/* Is the CGI set a start line? */
 	find = cgi_start_line.find("HTTP/1.1");
 	if (find != std::string::npos)
 	{
 		cgi_start_line.erase(find, cgi_start_line.find(" ", find + 1));
 		header_data->res_status = atoi(cgi_start_line.c_str());
-		header += cgi_start_line;
-		if (VALID_STATUS(header_data->res_status) == false)
-			header_data->res_status = 502;
 	}
+	/* Is the CGI set a status code? */
 	else if ((iter = cgi_header.find("status")) != end)
 	{
-		response_content = iter->second;
-		header += response_content;
 		header_data->res_status = atoi(iter->second.c_str());
-		if (VALID_STATUS(header_data->res_status) == false)
-			header_data->res_status = 502;
 	}
 	else
-		header += "200 OK";
-	header += "\r\n";
+	{
+		header_data->res_status = 200;
+	}
+	/* Does the CGI set a valid status code? */
+	status = VALID_STATUS(header_data->res_status);
+	if (status == false)
+	{
+		header_data->res_status = 502;
+	}
+	header += get_start_line();
 	header += Get_Date();
 	header += SERVER;
 }
@@ -907,10 +908,13 @@ void	response::Process_Cgi_Header()
 		Put_Header("set-cookie", *beg);
 		beg++;
 	}
-	// if (cgi_header.find("content-length") == cgi_header.end())
-	// {
-	// 	header += "content-length: "	
-	// }
+	if (cgi_header.find("content-length") == cgi_header.end())
+	{
+
+		content_length -= cgi_body_pos;
+		header += "content-length: " + std::to_string(content_length);
+		header += "\r\n";
+	}
 	header += "\r\n";
 }
 
@@ -918,6 +922,12 @@ void	response::Process_Cgi_Header()
 void	response::handle_cgi_header( )
 {
 	std::string line;
+	struct	stat s;
+
+	if (stat(cgi_output.c_str(), &s) == 0)
+	{
+		content_length = s.st_size;
+	}
 	requested_file.open(cgi_output, std::ios::binary);
 	if (requested_file.is_open())
 	{
@@ -942,9 +952,9 @@ void response::create_header()
 	if (header_data->_is_cgi == true && SUCCESS(header_data->res_status) == true)
 	{
 		handle_cgi_header();
-		if (FAILED(header_data->res_status) == true)
-			Pages();
-		return ;
+		if (SUCCESS(header_data->res_status) == true)
+			return ;
+		response_content.clear();
 	}
 	header = get_start_line();
 	header += Get_Date();

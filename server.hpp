@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 14:49:46 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/20 10:01:49 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/21 16:24:37 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,7 @@ public:
 	void	Create_http_servers();
 	void	Wait_for_incoming_events();
 	void	Destroy_clients();
+	void	Destroy_resource( int );
 };
 
 #endif /* SERVER_HPP */

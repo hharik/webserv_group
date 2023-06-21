@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/20 08:14:08 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/21 09:24:29 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/21 16:42:38 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,6 @@
 
 #include "parsing.hpp"
 #include "request.hpp"
-#include <string>
 
 #define DEFAULT_MIME_TYPE "application/octet-stream"
 #define HTML "text/html"
@@ -41,6 +40,7 @@
 #define S501 " Not Implemented"
 #define S502 " Bad Gateway"
 #define S504 " Gateway Timeout"
+#define S505 " HTTP Version Not Supported"
 
 class response {
 	std::map<std::string, std::string>::const_iterator iter;

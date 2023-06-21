@@ -6,12 +6,12 @@
 #    By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/05/27 13:30:26 by ajemraou          #+#    #+#              #
-#    Updated: 2023/06/21 09:30:01 by ajemraou         ###   ########.fr        #
+#    Updated: 2023/06/21 16:29:20 by ajemraou         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 
-CC = g++
+CC = c++
 
 CFLAGE = -Wall -Werror -Wextra -std=c++98
 
@@ -43,6 +43,3 @@ fclean : clean
 	rm -f $(NAME)
 
 re : fclean all
-
-r : re
-	clear ; ./webserv config.conf

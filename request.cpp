@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/17 14:00:04 by hharik            #+#    #+#             */
-/*   Updated: 2023/06/21 08:36:12 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/21 16:54:35 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,7 +101,7 @@ int	request::generate_name()
 	}
 	else if (d_header->_is_cgi == true)
 	{
-		d_header->requested_resource = "/tmp/" + time_date();
+		d_header->requested_resource = d_header->TempPath + time_date();
 	}
 	return (1);
 }
@@ -238,7 +238,6 @@ void	request::handle_GetMethod()
 	{
 		default_root(d_header->new_uri, d_header->requested_resource);
 	}
-	d_header->root = d_header->iter->second;
 	if (access(d_header->requested_resource.c_str(), F_OK) == 0)
 	{
 		status_code = Client::is_file_or_directory(d_header->requested_resource.c_str(), d_header);
@@ -264,7 +263,12 @@ int		request::ProvideToUpload( std::string path)
 
 	if (access(path.c_str(), F_OK))
 	{
-		update_the_uri(path);
+		status = update_the_uri(path);
+		if (status == 0 && access(path.c_str(), F_OK) != 0)
+		{
+			d_header->res_status = 404;
+			return (-1);
+		}
 		ProvideToUpload(path);
 		if (access(path.c_str(), F_OK))
 		{
@@ -332,7 +336,6 @@ void request::handle_PostMethod()
 			if (status_code == 0)
 				default_root(d_header->cgi_script, d_header->new_uri);
 			/* Check if this file has the required permission to be passed as an input to the CGI */
-			/* This function may cause an error (something like a missed or extra '/' at the end in the cgi-script) */
 			status_code = path_is_exist(d_header->cgi_script);
 			/* Check if the file exists */
 			if (status_code == 0)
@@ -457,7 +460,6 @@ void request::save_binary(std::string &header)
 		file_obj << header;
 		header.clear();
 	}
-	// file_obj.close();
 	if (size == d_header->Content_Length)
 	{
 		header.clear();
@@ -469,9 +471,7 @@ void request::save_binary(std::string &header)
 }
 
 void request::parse(std::string &header) 
-{
-	// std::string tes;
-	
+{	
 	if (d_header->method.empty() == true)
 	{
 		std::string first_line, buffer, token;
@@ -491,6 +491,12 @@ void request::parse(std::string &header)
 				d_header->uri = token;
 			else if (i == 2)
 				d_header->http_version = token;
+		}
+		d_header->http_version.pop_back();	
+		if (d_header->http_version != "HTTP/1.1")
+		{
+			d_header->res_status = 505;
+			return ;
 		}
 		std::string allowed_char = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~:/?#[]@!$&'()*+,;=";
 		for (std::string::iterator it = d_header->uri.begin(); it != d_header->uri.end(); it++)
@@ -538,7 +544,6 @@ void request::parse(std::string &header)
 			{
 				d_header->Host = buffer.substr(pos + 2);
 				d_header->Host.pop_back();
-				// std::cout << d_header.Host	<< std::endl;
 			}
 			if (buffer.find("Transfer-Encoding:") != std::string::npos)
 			{

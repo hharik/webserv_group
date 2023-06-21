@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/28 15:44:21 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/19 10:50:03 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/21 16:06:06 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@ User_data::User_data()
 {
 	_is_server = false;
 	_is_terminated = false;
+
 }
 
 User_data::~User_data()

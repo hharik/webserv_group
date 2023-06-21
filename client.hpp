@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 14:51:32 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/21 09:15:48 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/21 16:07:33 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ struct data_header {
 	std::string		cgi_path;
 	std::string		cgi_script;
 	std::string		path_info;
-	std::string		root;
+	std::string		TempPath;
 	std::string		client_index;
 	int				Content_Length;
 	int				res_status;
@@ -52,7 +52,6 @@ struct data_header {
 	bool			write_p;
 	bool			exec_p;
 	bool			is_dir;
-	
 	data_header();
 };
 
@@ -86,6 +85,7 @@ public:
 	bool 	eof();
 	void	close_fd();
 	void	client_index( int index );
+	void	SetTemporaryPath( std::string );
 };
 
 #endif /* CLIENT_HPP */

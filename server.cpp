@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:06:59 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/21 07:59:35 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/21 16:41:03 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,12 +27,13 @@ Server::Server(const std::string &config_file):parser(config_file), servers()
 	Create_queue_object();
 	it = parser.servers_data.begin();
 	end = parser.servers_data.end();
-	for (int i = 0;it != end;it++ , i++)
+	for (int i = 0;it != end; it++ , i++)
 	{
 		servers.push_back(new Socket());
 		servers[i]->set_server_data(*it);
 		servers[i]->Create_the_socket();
 		servers[i]->attach_server_socket( kq );
+		servers[i]->CreateTemporaryPath();
 		events_size++;
 	}
 	if (events_size > 0)
@@ -56,23 +57,21 @@ Server::~Server()
 	delete [] events;
 }
 
-void	Server::Destroy_clients()
+void	Server::Destroy_resource( int i )
 {
-	for( int i = 0; i < events_nbr; i++)
-	{
-		if (user_data->get_is_terminated() == true)
-		{
-			user_data = (User_data*)events[i].udata;
-			user_data->get_client()->close_fd();
-			user_data->get_socket()->Destruct_client( user_data->get_client() );
-			events_size--;
-			delete user_data;
-		}
-	}
-	std::cout << "EVENT SISZE : " << events_size << std::endl; 
+	int		status;
+
+	EV_SET(&eventToRemove[0], events[i].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+	EV_SET(&eventToRemove[1], events[i].ident, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+	status = kevent(kq, eventToRemove, 2, NULL, 0, NULL);
+	user_data->get_socket()->Destruct_client( user_data->get_client() );
+	events_size--;
+	events_nbr--;
+	new_event = true;
+	close(events[i].ident);
+	delete user_data;
+	user_data = NULL;
 }
-
-
 
 void	Server::Create_http_servers()
 {
@@ -91,7 +90,6 @@ void	Server::Create_http_servers()
 				status = user_data->get_socket()->Accept_new_connection( kq );
 				if (status == -1)
 				{
-					std::cout << "SOCKET  ERROR " << std::endl;
 					break;
 				}
 				events_size++;
@@ -111,24 +109,7 @@ void	Server::Create_http_servers()
 		
 			 	if (status == -1 || user_data->get_is_terminated() == true)
 				{
-
-					EV_SET(&eventToRemove[0], events[i].ident, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-					EV_SET(&eventToRemove[1], events[i].ident, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
-					status = kevent(kq, eventToRemove, 2, NULL, 0, NULL);
-					if (status < 0)
-					{
-						std::cout << "ERROR" << std::endl;
-						// exit(0);
-						// break ;
-						
-					}
-					user_data->get_socket()->Destruct_client( user_data->get_client() );
-					events_size--;
-					events_nbr--;
-					new_event = true;
-					close(events[i].ident);
-					delete user_data;
-					user_data = NULL;
+					Destroy_resource(i);
 					break ;
 				}
 			}
