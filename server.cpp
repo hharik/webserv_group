@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
+/*   By: hharik <hharik@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 15:06:59 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/21 16:41:03 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/21 18:02:05 by hharik           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,10 @@ Server::Server(const std::string &config_file):parser(config_file), servers()
 	std::vector<data_serv>::iterator end;
 	parser.readAndParse();
 	parser.mime();
+	if (parser.servers_data.size() == 0)
+	{
+		exit(EXIT_FAILURE);
+	}
 	events_nbr = 0;
 	events_size = 0;
 	new_event = false;
