@@ -6,7 +6,7 @@
 /*   By: hharik <hharik@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/17 14:00:04 by hharik            #+#    #+#             */
-/*   Updated: 2023/06/21 17:25:18 by hharik           ###   ########.fr       */
+/*   Updated: 2023/06/21 17:35:54 by hharik           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -722,7 +722,11 @@ int 	request::allowed_methods()
 		while ( my_stream >> method	)
 		{
 			if (method == d_header->method)
+			{
+				if (method != "GET" && method != "POST" && method != "DELETE")
+					break;
 				return (0);
+			}
 		}
 	}
 	d_header->res_status = 405;
