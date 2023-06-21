@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parsing.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
+/*   By: hharik <hharik@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/17 13:59:47 by hharik            #+#    #+#             */
-/*   Updated: 2023/06/19 09:22:34 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/22 00:13:32 by hharik           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,18 +134,18 @@ int parsing::save_data(std::vector <std::string> server)
 		else if ((it->find("max_body_size ")) != std::string::npos)
 		{
 			_value = it->substr(pos + 1);
-			if (_value.find(" ") != std::string::npos)
+			if (_value.find(" ") != std::string::npos || _value.length() > 10)
 			{
-				std::cout << "error " <<  std::endl;
+				std::cout << "error in max_body_size" <<  std::endl;
 				status =  -1;break ;
 			}
-
 			if (check_ints(_value) == -1)
 			{
 				std::cout << "Error : Max body size isnt int" << std::endl;
 				status =  -1;			break ;
 			}
-			temp.max_body_size = std::atoi(_value.c_str());
+			std::stringstream ss(_value);
+			ss >> temp.max_body_size;
 			if (temp.max_body_size < 0)
 				temp.max_body_size = 0;
 		}

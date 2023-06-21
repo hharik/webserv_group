@@ -6,7 +6,7 @@
 /*   By: hharik <hharik@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/17 14:00:04 by hharik            #+#    #+#             */
-/*   Updated: 2023/06/21 19:39:15 by hharik           ###   ########.fr       */
+/*   Updated: 2023/06/22 00:15:00 by hharik           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -602,6 +602,11 @@ void request::parse(std::string &header)
 	}
 	if (d_header->method == "POST") 
 	{
+		if (d_header->Content_type.empty() == true)
+		{
+			d_header->res_status = 415;
+			return ;
+		}
 		if (server_data->max_body_size == -1)
 		{
 			d_header->res_status = 501;
@@ -615,11 +620,11 @@ void request::parse(std::string &header)
 		if (d_header->transfer_encoding.empty() == false)
 		{
 			save_chunk_improve(header);
-			// if (size > server_data->max_body_size)
-			// {
-			// 	d_header->res_status = 413;
-			// 	return ;
-			// }
+			if (size > server_data->max_body_size)
+			{
+				d_header->res_status = 413;
+				return ;
+			}
 		}
 		else 
 		{
