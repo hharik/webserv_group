@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/17 14:00:04 by hharik            #+#    #+#             */
-/*   Updated: 2023/06/20 08:13:02 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/21 08:36:12 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -238,6 +238,7 @@ void	request::handle_GetMethod()
 	{
 		default_root(d_header->new_uri, d_header->requested_resource);
 	}
+	d_header->root = d_header->iter->second;
 	if (access(d_header->requested_resource.c_str(), F_OK) == 0)
 	{
 		status_code = Client::is_file_or_directory(d_header->requested_resource.c_str(), d_header);
@@ -282,6 +283,7 @@ void request::handle_PostMethod()
 {
 	int		status_code;
 	int		size;
+
 	/* Check if this location has an upload */
 	status_code = treat_target_resource("upload", d_header->new_uri, d_header->requested_resource);
 	if (status_code == 1)

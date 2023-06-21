@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/20 08:14:08 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/20 11:06:49 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/21 09:24:29 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 #include "parsing.hpp"
 #include "request.hpp"
+#include <string>
 
 #define DEFAULT_MIME_TYPE "application/octet-stream"
 #define HTML "text/html"
@@ -38,6 +39,7 @@
 #define S431 " Request Header Fields Too Large"
 #define S500 " Internal Server Error"
 #define S501 " Not Implemented"
+#define S502 " Bad Gateway"
 #define S504 " Gateway Timeout"
 
 class response {
@@ -76,69 +78,57 @@ class response {
 	int							*status;
 	char						*agv[3];
 	char						**env;
+	bool						eof;
 
 public:
-	bool	eof;
 	response( const data_serv *,  data_header* );
 	~response( );
-	void	response_handler( int );
 
-	long	get_time();
-
-	/* create response header */
-	void	create_header();
-
+	/* Send the Header and the Body */
 	void			Pages();
-	void	treat_target_resource( const char * );
-	void	Send_the_Body( int );
+	void	create_header();
+	void	response_handler( int client_fd );
 	void	Send_the_Header( int );
-	// void	get_requested_resource();
-	int		delete_dir( const char * );
-	int		delete_the_file();
-	int		file_status();
-	void	delete_path( const char *path, bool );
-	void	SetCgiStartLine();
-	void	SetCGI_Env( std::string );
-	int		handle_CGI_timeOut();
-	int		requested_resource_is_dir();
-
-	// void	send_response();
-	int		serve_the_file();
-	const std::string	get_extension( const std::string& );
-	std::string	Get_Content_Type();
-	std::string	Get_Content_Length();
-	std::string Get_Date();
-	std::string	get_start_line();
-	std::string	get_Location();
-	std::string	Default_Response( const std::string&, const std::string& );
-	/* some helpful functions */
-	int		search_inside_location( const std::string );
-	// int		path_is_exist( const char * );
-	bool	IsEndOfFile();
-	void	handle_timeOut();
-
-	/*#############################################*/
-	void generateAutoIndex(std::string directory);
-	void	handle_cgi();
-	/*#############################################*/
-	void	handle_cgi_header();
-	void	Parse_cgi_header( std::string cgi_header );
-	void	Parse_Line( std::string );
-	void	get_res_status( std::string  );
-	void	check_for_cookies( std::string& );
-	void	Process_Cgi_Header();
-	void	Put_Header(const std::string &, const std::string &);
-	// void	Send_the_Body_WithCgi( int );
-	void	set_eof( bool );
-	DIR *open_dir( const char *directory );
+	void	Send_the_Body( int );
 	/* GET method */
 	void	Get_method();
-
+	int		requested_resource_is_dir();
+	int		file_status();
+	int		serve_the_file();
+	void	generateAutoIndex(std::string directory);
+	/* CGI */
+	void	SetCGI_Env( std::string );
+	void	handle_cgi();
+	int		handle_CGI_timeOut();
+	int		CheckTheCGI_Process();
 	/* POST method */
 	void	Post_method();
-
 	/* Delete method */
 	void	Delete_method();
+	int		delete_the_file();
+	void	delete_path( const char *path, bool );
+	DIR		*open_dir( const char *directory );
+	int		delete_dir( const char * );
+	/* Create the response header */
+	std::string		Default_Response( const std::string&, const std::string& );
+	std::string		get_start_line();
+	std::string		Get_Content_Type();
+	std::string		Get_Content_Length();
+	std::string 	Get_Date();
+	std::string		get_Location();
+	/* Parse CGI Header */
+	void	Parse_Line( std::string );
+	void	Process_Cgi_Header();
+	void	Put_Header(const std::string &, const std::string &);
+	void	SetCgiStartLine();
+	void	handle_cgi_header();
+	void	Parse_cgi_header( std::string cgi_header );
+	/* Utils member functions */
+	int		search_inside_location( const std::string );
+	long	get_time();
+	bool	IsEndOfFile();
+	void	Set_eof( bool );
+	bool	Get_eof(  ) const;
 };
 
 #endif

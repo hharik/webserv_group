@@ -6,16 +6,13 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/30 12:25:24 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/20 13:59:40 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/21 09:26:04 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "client.hpp"
 #include "parsing.hpp"
 #include "response.hpp"
-#include <csignal>
-#include <cstdlib>
-#include <sys/signal.h>
 
 response::response( const data_serv *dptr,  data_header *hptr ):server_data(dptr), header_data(hptr)
 {
@@ -33,25 +30,23 @@ response::response( const data_serv *dptr,  data_header *hptr ):server_data(dptr
 
 response::~response( )
 {
-	if (pid > 0)
-	{
-		std::cout << "KILLED : " << pid << std::endl;
-		kill(pid, SIGKILL);
-	}
-	delete status;
-	// std::cout << "DESTRUCT" << std::endl;
  	if (header_data->_is_cgi == true)
 	{
 		/* Kill the child and close their FD if it's still running */
 		if (is_alive == true)
 		{
-			//std::cout << "KILLED : " << pid << std::endl;
-		//	kill(pid, SIGTERM);
-	
+			/* Send a SIGTERM To The Child Process */
+			kill(pid, SIGTERM);
+			/* The parent process should enter a loop to explicitly reap the terminated child process */
+			while( waitpid(pid, status, 0) == 0);
 		}
 		close(cgifd[1]);
 		/* Remove the CGI output and input files */
-		unlink(cgi_output.c_str());
+		
+		if (unlink(cgi_output.c_str()))
+		{
+			std::cout << "REMOVE : FAILED : GG " << cgi_output << std::endl;
+		}
 		if (header_data->method == "POST")
 		{
 			unlink(header_data->requested_resource.c_str());
@@ -67,7 +62,46 @@ response::~response( )
 	{
 		unlink(header_data->requested_resource.c_str());
 	}
+	delete status;
+	requested_file.close();
 }
+
+int	response::CheckTheCGI_Process()
+{
+	int		status_code;
+	
+	status_code = waitpid(pid, status, WNOHANG);
+	/* returns 0 if the child is still running */
+	if (status_code == 0)
+	{
+		status_code = handle_CGI_timeOut();
+		if (status_code == 0)
+		{
+			return (-1);
+		}
+	}
+	else if (pid == status_code)
+	{
+		is_alive = false;
+		/* returns true if the child terminated normally */
+		if (WIFEXITED(*status) == false)
+		{
+			header_data->res_status = 500;
+			return (1);
+		}
+	}
+	else
+	{
+		/* In case of the waitpid is failed */
+		kill(pid, SIGTERM);
+		while( waitpid(pid, status, 0) == 0);
+		return (1);
+	}
+	/* The child is finishing their execution */
+	return (1);
+
+}
+
 
 void	response::response_handler( int client_fd )
 {
@@ -86,52 +120,12 @@ void	response::response_handler( int client_fd )
 	{
 		if (is_alive == true)
 		{
-			// std::cout << "IS ALIVE : " << pid << std::endl;
-			status_code = waitpid(pid, status, WNOHANG);
-			/* returns 0 if the child is still running */
-			if (status_code == 0)
-			{
+			status_code = CheckTheCGI_Process();
+			if (status_code == -1)
 				return ;
-				// status_code = handle_CGI_timeOut();
-				// if (status_code == 0)
-				// {
-				// 	return ;
-				// }
-			}
-			else if (pid == status_code)
-			{
-				std::cout << "FINISHED : " << pid << std::endl;
-				is_alive = false;
-				/* returns true if the child terminated normally */
-				if (WIFEXITED(*status) == false)
-				{
-					header_data->res_status = 500;
-				}
-			}
-			else
-			{
-				std::cout << "WAITERROR" << std::endl;
-				kill(pid, SIGTERM);
-			}
-			/* The child is finishing their execution */
 		}
 		create_header();
 		Send_the_Header(client_fd);
-		// std::cout << "----------------* HEADER *----------------" << std::endl;
-		// std::cout << header << std::endl;
-		// std::cout << "----------------* HEADER *----------------" << std::endl;
-		// std::cout << "============= #INFO# ================" << std::endl;
-		// std::cout << "NEW URI                     : [" << header_data->new_uri << "]" << std::endl;
-		// std::cout << "METHOD                  : [" << header_data->method << "]" << std::endl;
-		// std::cout << "STATUS CODE             : [" << header_data->res_status << "]" <<  std::endl;
-		// std::cout << "Requested Resource      : [" << header_data->requested_resource << "]" << std::endl;
-		// std::cout << "cgi_script              : [" << header_data->cgi_script << "]" << std::endl;
-		// std::cout << "cgi_path                : [" << header_data->cgi_path << "]" << std::endl;
-		// if (header_data->_is_cgi == true)
-		// 	std::cout << "CGI                 : ON" << std::endl;
-		// else
-		//  	std::cout << "CGI                 : OFF" << std::endl;
-		// std::cout << "============= #INFO# ================" << std::endl;
 	}
 	else
 	{
@@ -160,7 +154,7 @@ void	response::Send_the_Header( int client_fd )
 	}
 }
 
-void	response::Send_the_Body( int client_fd)
+void	response::Send_the_Body( int client_fd )
 {
 	if (requested_file.is_open() == true && default_response == false)
 	{
@@ -286,7 +280,7 @@ void	response::handle_cgi()
 
 	/*file to store*/
 	start_time = get_time();
-	cgi_output = "/tmp/" + time_date();
+	cgi_output = header_data->root + time_date() + header_data->client_index;
 	cgifd[1] = open(cgi_output.c_str(), O_CREAT | O_RDWR, 0644);
 	agv[0] = (char*)header_data->cgi_path.c_str();
 	if (header_data->method == "POST")
@@ -315,10 +309,7 @@ void	response::handle_cgi()
 		perror("execve");
 		exit(EXIT_FAILURE);
 	}
-	std::cout << "CREATE_CHILD_WITH :  " << pid << std::endl;
 	delete [] env;
-	// wait(NULL);
-	// is_alive = false;
 }
 
 
@@ -396,6 +387,7 @@ int		response::requested_resource_is_dir()
 	}
 	else
 	{
+		/* Use the default index if booth of index and auto index not found in the location */
 		header_data->requested_resource += server_data->index;
 		serve_the_file();
 	}
@@ -420,11 +412,9 @@ void	response::Get_method()
 	/* requesting a directory */
 	if (header_data->is_dir == true)
 	{
-		// std::cout << "[" << header_data->requested_resource << "]" << " is a directory" << std::endl;
 		/* requesting a directory without '/' at the end */
 		if (header_data->new_uri[ind] != '/')
 		{
-			// std::cout << "[" << header_data->requested_resource << "]" << " is redirected" << std::endl;
 			header_data->res_status = 301;
 			header_data->new_uri += "/";
 			return ;
@@ -434,7 +424,6 @@ void	response::Get_method()
 	/* requesting a file */
 	else
 	{
-		// std::cout << "[" << header_data->requested_resource << "]" << " is a file" << std::endl;
 		serve_the_file();
 	}
 }
@@ -442,7 +431,7 @@ void	response::Get_method()
 /* POST method */
 void	response::Post_method()
 {
-	std::cout << "[POST]" << std::endl;
+	/* requesting a directory without '/' at the end */
 	if (header_data->res_status == 301)
 	{
 		header_data->new_uri += "/";
@@ -593,7 +582,9 @@ void	response:: Delete_method()
 			header_data->res_status = 500;
 	}
 	else
+	{
 		delete_the_file();
+	}
 }
 
 std::string	response::Default_Response(const std::string &status_code, const std::string &Meaning)
@@ -645,6 +636,8 @@ std::string	response::get_start_line()
 		response_content += S405;
 	else if (header_data->res_status == 409)
 		response_content += S409;
+	else if (header_data->res_status == 413)
+		response_content += S413;
 	else if (header_data->res_status == 414)
 		response_content += S414;
 	else if (header_data->res_status == 415)
@@ -655,6 +648,8 @@ std::string	response::get_start_line()
 		response_content += S500;
 	else if (header_data->res_status == 501)
 		response_content += S501;
+	else if (header_data->res_status == 502)
+		response_content += S502;
 	else if (header_data->res_status == 504)
 		response_content += S504;
 	start += response_content;
@@ -757,16 +752,7 @@ std::string	response::get_Location()
 {
 	/* Location: http://example.com/dir/dir2/dir3/  */
 	std::string		Location = "Location: ";
-	// if (header_data->_is_cgi == true)
-	// {
-	// 	iter = cgi_header.find("location");
-	// 	if (iter != cgi_header.end())
-	// 	{
-	// 		Location += iter->second;
-	// 		Location += "\r\n";
-	// 		return (Location);
-	// 	}
-	// }
+
 	if (header_data->is_redirect == true)
 		Location += header_data->redirect_path;
 	else
@@ -782,8 +768,6 @@ std::string	response::get_Location()
 	Location += "\r\n";
 	return (Location);
 }
-
-/* ============================================================================== */
 
 void	response::Parse_Line( std::string line )
 {
@@ -824,7 +808,8 @@ void	response::Parse_Line( std::string line )
 	Set-Cookie: session_id=abc123; path=/; HttpOnly
 */
 
-std::string toLowerCase(const std::string& str) {
+std::string	toLowerCase(const std::string& str)
+{
     std::string result;
     for (std::size_t i = 0; i < str.length(); ++i) {
         result += std::tolower(str[i]);
@@ -929,6 +914,7 @@ void	response::Process_Cgi_Header()
 	header += "\r\n";
 }
 
+
 void	response::handle_cgi_header( )
 {
 	std::string line;
@@ -981,7 +967,12 @@ bool	response::IsEndOfFile()
 	return(eof);	
 }
 
-void	response::set_eof( bool end_f )
+void	response::Set_eof( bool end_f )
 {
 	eof = end_f;
+}
+
+bool	response::Get_eof(  ) const
+{
+	return  (eof);
 }

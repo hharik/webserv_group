@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 14:50:54 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/19 11:00:02 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/20 20:24:02 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #define SOCKET_HPP
 
 #include "parsing.hpp"
+#include <_types/_intmax_t.h>
 
 class Socket
 {
@@ -32,6 +33,9 @@ class Socket
 	bool					new_client;
 	Client					*client_ptr;
 	int						clients_ind;
+	unsigned long	long	index;
+	struct				sockaddr client;
+	socklen_t			len;
 public:
 	Socket();
 	~Socket();
@@ -41,10 +45,11 @@ public:
 	int			Create_the_socket();
 	void		attach_server_socket( int );
 	void		multiplexing( int );
-	void		Accept_new_connection( int );
+	int			Accept_new_connection( int );
 	void		Wait_for_incoming_events( int );
 	void		set_server_data(data_serv&);
 	void		Destruct_client( Client * );
+	int			client_connection( );
 };
 
 #endif /* SOCKET_HPP */

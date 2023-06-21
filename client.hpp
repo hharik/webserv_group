@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 14:51:32 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/20 08:26:35 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/21 09:15:48 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,8 @@ struct data_header {
 	std::string		cgi_path;
 	std::string		cgi_script;
 	std::string		path_info;
-
+	std::string		root;
+	std::string		client_index;
 	int				Content_Length;
 	int				res_status;
 
@@ -63,6 +64,7 @@ class Client
 	struct				kevent	client_event[2];
 	struct				sockaddr client;
 	socklen_t			len;
+	int					fd;
 	int					nbytes;
 	std::string			request_buffer;
 	data_header			*header_data;
@@ -71,11 +73,10 @@ class Client
 
 public:
 
-	int					fd;
-	Client( const data_serv*,  Socket* );
+	Client( const data_serv*,  Socket*, int );
 	~Client( );
 
-	void	client_connection( int );
+	int		client_connection( int );
 	void	attach_client_socket( int );
 	int		read_from_socket();
 	void	send_the_response();
@@ -84,6 +85,7 @@ public:
 
 	bool 	eof();
 	void	close_fd();
+	void	client_index( int index );
 };
 
 #endif /* CLIENT_HPP */

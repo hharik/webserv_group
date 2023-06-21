@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 16:39:08 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/20 13:10:50 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/21 09:13:02 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,11 +23,10 @@ data_header::data_header() : Content_Length(-2), res_status(0), is_redirect(fals
 	is_dir = false;
 }
 
-Client::Client( const data_serv *dptr, Socket *Pbase ): Base(Pbase)
+Client::Client( const data_serv *dptr, Socket *Pbase, int cfd ): Base(Pbase), fd(cfd)
 {
-	fd = -1;
-	header_data = new data_header();
 	user_data = new User_data();
+	header_data = new data_header();
 	client_response = new response(dptr, header_data);
 	client_request = new request(dptr, header_data);
 }
@@ -39,34 +38,12 @@ Client::~Client()
 	delete header_data;
 }
 
-void	Client::client_connection( int server_socket )
-{
-	memset(&client, 0, sizeof(client));
-	len = sizeof(client);
-	fd = accept(server_socket, &client, &len);
-	if (fd < 0)
-	{
-		user_data->set_is_terminated(true);
-		perror("Client : Accept ");
-	}
-	else if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0)
-	{
-		user_data->set_is_terminated(true);
-		perror("Client : Fcntl ");
-		return ;
-	}
-	if (fd == 0)
-	{
-		std::cout << "this Client left the pending queue : " << std::endl;
-		user_data->set_is_terminated(true);
-	}
-}
-
 void	Client::attach_client_socket( int kq )
 {
 	user_data->set_status(false);
 	user_data->set_client(this);
 	user_data->set_socket(Base);
+	
 	EV_SET(&client_event[0], fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, user_data);
 	EV_SET(&client_event[1], fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, user_data);
 
@@ -82,7 +59,7 @@ void	Client::send_the_response()
 	if (header_data->res_status > 0 || client_request->end_of_file == true)
 	{
 		client_response->response_handler(fd);
-		if (client_response->eof == true)
+		if (client_response->Get_eof() == true)
 			user_data->set_is_terminated(true);
 	}
 }
@@ -97,7 +74,6 @@ int	Client::read_from_socket()
 	}
 	else
 	{
-		std::cout << "RR : " << fd << std::endl; 
 		perror("Client : recv ");
 		user_data->set_is_terminated(true);
 		return (-1);
@@ -109,10 +85,10 @@ int	Client::read_from_socket()
 	return  (1);
 }
 
-// bool	Client::eof()
-// {
-// 	return client_response->IsEndOfFile();
-// }
+void	Client::client_index( int index )
+{
+	header_data->client_index = "/" + std::to_string(index);
+}
 
 void	Client::close_fd()
 {
