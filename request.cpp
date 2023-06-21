@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
+/*   By: hharik <hharik@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/17 14:00:04 by hharik            #+#    #+#             */
-/*   Updated: 2023/06/21 16:54:35 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/21 17:25:18 by hharik           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -434,7 +434,8 @@ void	request::save_chunk_improve(std::string &body)
 		}
 		else {
 			file_obj << body.substr(0, chunked_size);
-			size += chunked_size;
+			if (chunked_size != -2)
+				size += chunked_size;
 			body.erase(0, chunked_size);
 			chunked_size = -2;
 			if (body.size() <= 2 || body.find("\r\n", 2) == std::string::npos)
@@ -503,7 +504,6 @@ void request::parse(std::string &header)
 			if (allowed_char.find(*it) == std::string::npos)
 			{
 				d_header->res_status = 400;
-				std::cout << "ERRORR " << std::endl;
 				return ;
 			}
 		if (d_header->uri.length() > 2048)
@@ -511,7 +511,6 @@ void request::parse(std::string &header)
 			d_header->res_status = 414;
 			return ;
 		}
-		// still need to check for request entity too large
 		while (getline(ss, buffer, '\n'))
 		{
 			size_t pos = buffer.find(":");
@@ -622,7 +621,7 @@ void request::parse(std::string &header)
 				return ;
 			}
 		}
-		else // needs to check for cgi
+		else 
 		{
 			save_binary(header);
 		}
