@@ -6,7 +6,7 @@
 /*   By: hharik <hharik@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/17 14:00:04 by hharik            #+#    #+#             */
-/*   Updated: 2023/06/22 00:15:00 by hharik           ###   ########.fr       */
+/*   Updated: 2023/06/22 08:55:21 by hharik           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -466,7 +466,6 @@ void request::save_binary(std::string &header)
 		header.clear();
 		end_of_file = true;
 		d_header->res_status = 201;
-		size = 0;
 		file_obj.close();
 	}
 }
@@ -517,11 +516,11 @@ void request::parse(std::string &header)
 			if (buffer.find("Content-Length:") != std::string::npos)
 			{
 				d_header->Content_Length = atoi((buffer.substr(pos + 2)).c_str());
-				// if (d_header->method == "POST" && server_data->max_body_size < d_header->Content_Length)
-				// {
-				// 	d_header->res_status = 413;
-				// 	return ;
-				// }
+				if (d_header->method == "POST" && server_data->max_body_size < d_header->Content_Length)
+				{
+					d_header->res_status = 413;
+					return ;
+				}
 
 			}
 			if (buffer.find("Content-Type:") != std::string::npos)
@@ -532,11 +531,6 @@ void request::parse(std::string &header)
 				{
 					d_header->boundary = buffer.substr(buffer.find_last_of("boundary=") + 1);
 					d_header->boundary.pop_back();
-				}
-				if (d_header->method == "POST" && d_header->Content_type.empty() == true)
-				{
-					d_header->res_status = 415;
-					return ;
 				}
 			}
 			if (buffer.find("Host:") != std::string::npos)
@@ -629,6 +623,12 @@ void request::parse(std::string &header)
 		else 
 		{
 			save_binary(header);
+		}
+		if (size == 0)
+		{
+			std::cout << "HEEE " << std::endl;
+			d_header->res_status = 400;
+			return ;
 		}
 	}
 	else if (d_header->method.find("GET") != std::string::npos || d_header->method.find("DELETE") != std::string::npos)
