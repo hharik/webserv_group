@@ -6,7 +6,7 @@
 /*   By: hharik <hharik@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/17 14:00:04 by hharik            #+#    #+#             */
-/*   Updated: 2023/06/22 08:55:21 by hharik           ###   ########.fr       */
+/*   Updated: 2023/06/22 09:09:59 by hharik           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -413,13 +413,12 @@ void	request::save_chunk_improve(std::string &body)
 
 			std::string::iterator last = std::search(first + 1, body.end(), to_delete.begin(), to_delete.end());
 			std::string test(first, last);
-			if (test == "\r\n0")
+			chunked_size = std::stoi(test, NULL, 16);
+			if (chunked_size == 0)
 			{
 				end_of_file = true;
 				d_header->res_status = 201;
 			}
-			to_hex << test;
-			to_hex >> std::hex >> chunked_size;
 			body.erase(0, test.length() + 2);
 		}
 		if (chunked_size >= (int)body.size())
@@ -626,7 +625,6 @@ void request::parse(std::string &header)
 		}
 		if (size == 0)
 		{
-			std::cout << "HEEE " << std::endl;
 			d_header->res_status = 400;
 			return ;
 		}
