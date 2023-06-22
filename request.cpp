@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
+/*   By: hharik <hharik@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/17 14:00:04 by hharik            #+#    #+#             */
-/*   Updated: 2023/06/21 22:57:11 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/22 09:19:50 by hharik           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -426,13 +426,13 @@ void	request::save_chunk_improve(std::string &body)
 
 			std::string::iterator last = std::search(first + 1, body.end(), to_delete.begin(), to_delete.end());
 			std::string test(first, last);
-			if (test == "\r\n0")
+			chunked_size = std::stoi(test, NULL, 16);
+			if (chunked_size == 0)
 			{
 				end_of_file = true;
 				d_header->res_status = 201;
+				std::cout << "Finished " << std::endl;
 			}
-			to_hex << test;
-			to_hex >> std::hex >> chunked_size;
 			body.erase(0, test.length() + 2);
 		}
 		if (chunked_size >= (int)body.size())
@@ -479,7 +479,6 @@ void request::save_binary(std::string &header)
 		header.clear();
 		end_of_file = true;
 		d_header->res_status = 201;
-		size = 0;
 		file_obj.close();
 	}
 }
@@ -546,11 +545,6 @@ void request::parse(std::string &header)
 					d_header->boundary = buffer.substr(buffer.find_last_of("boundary=") + 1);
 					d_header->boundary.pop_back();
 				}
-				if (d_header->method == "POST" && d_header->Content_type.empty() == true)
-				{
-					d_header->res_status = 415;
-					return ;
-				}
 			}
 			if (buffer.find("Host:") != std::string::npos)
 			{
@@ -615,6 +609,11 @@ void request::parse(std::string &header)
 	}
 	if (d_header->method == "POST") 
 	{
+		if (d_header->Content_type.empty() == true)
+		{
+			d_header->res_status = 415;
+			return ;
+		}
 		if (server_data->max_body_size == -1)
 		{
 			d_header->res_status = 501;
@@ -628,11 +627,11 @@ void request::parse(std::string &header)
 		if (d_header->transfer_encoding.empty() == false)
 		{
 			save_chunk_improve(header);
-			// if (size > server_data->max_body_size)
-			// {
-			// 	d_header->res_status = 413;
-			// 	return ;
-			// }
+			if (size > server_data->max_body_size)
+			{
+				d_header->res_status = 413;
+				return ;
+			}
 		}
 		else 
 		{
