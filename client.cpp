@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 16:39:08 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/21 22:57:14 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/22 09:50:45 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@ data_header::data_header() : Content_Length(-2), res_status(0), is_redirect(fals
 	exec_p = true;
 	is_dir = false;
 	_uploaded = true;
+	_error = false;
 }
 
 Client::Client( const data_serv *dptr, Socket *Pbase, int cfd ): Base(Pbase), fd(cfd)
@@ -85,6 +86,11 @@ int	Client::read_from_socket()
 	if (client_request->end_of_file == false && header_data->res_status == 0)
 	{
 		client_request->parse(request_buffer);
+	}
+	if (header_data->_error == true)
+	{
+		user_data->set_is_terminated(true);
+		return (-1);
 	}
 	return  (1);
 }

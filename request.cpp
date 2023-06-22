@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   request.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hharik <hharik@student.42.fr>              +#+  +:+       +#+        */
+/*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/06/17 14:00:04 by hharik            #+#    #+#             */
-/*   Updated: 2023/06/22 09:19:50 by hharik           ###   ########.fr       */
+/*   Updated: 2023/06/22 10:07:53 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -415,23 +415,31 @@ void	request::save_chunk_improve(std::string &body)
 	{
 		file_obj.open(d_header->requested_resource, std::fstream::out | std::fstream::trunc | std::fstream::binary);
 	}
-	std::stringstream to_hex;
-
+	std::string test;
 	while (chunked_size != 0)
 	{
 		if (chunked_size == -2)
 		{
 			/*parce hexa */ 
-			first = std::search(body.begin(), body.end(), to_delete.begin(), to_delete.end());
-
-			std::string::iterator last = std::search(first + 1, body.end(), to_delete.begin(), to_delete.end());
-			std::string test(first, last);
-			chunked_size = std::stoi(test, NULL, 16);
+			try
+			{
+				first = std::search(body.begin(), body.end(), to_delete.begin(), to_delete.end());
+				std::string::iterator last = std::search(first + 1, body.end(), to_delete.begin(), to_delete.end());				
+				test = std::string(first, last);
+				chunked_size = std::stoi(test, NULL, 16);
+			}
+			catch( std::exception &e )
+			{
+				std::cerr << e.what() << std::endl;
+				d_header->_error = true;
+				file_obj.close();
+				unlink(d_header->requested_resource.c_str());
+				return ;
+			}
 			if (chunked_size == 0)
 			{
 				end_of_file = true;
 				d_header->res_status = 201;
-				std::cout << "Finished " << std::endl;
 			}
 			body.erase(0, test.length() + 2);
 		}

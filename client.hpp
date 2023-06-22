@@ -6,7 +6,7 @@
 /*   By: ajemraou <ajemraou@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/05/25 14:51:32 by ajemraou          #+#    #+#             */
-/*   Updated: 2023/06/21 22:34:12 by ajemraou         ###   ########.fr       */
+/*   Updated: 2023/06/22 09:48:52 by ajemraou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,6 +53,7 @@ struct data_header {
 	bool			exec_p;
 	bool			is_dir;
 	bool			_uploaded;
+	bool			_error;
 	data_header();
 };
 
